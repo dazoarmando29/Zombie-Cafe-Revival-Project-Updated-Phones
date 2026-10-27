@@ -1,37 +1,38 @@
-/* Import trampoline dispatch: the emulated engine calls imported functions
- * through 16-byte stubs on STUB_PAGE. Executing a stub traps into the host,
- * which forwards to a native implementation (libc, zlib, OpenGL ES, ...). */
+/* Import trampoline dispatch.
+ *
+ * The engine's GOT is filled with 16-byte stubs on STUB_PAGE. Executing one
+ * traps into the host. Simple handlers run inline in the hook (fast path);
+ * handlers that must call back into emulated code (qsort comparators) are
+ * deferred to the call driver so emulation is never nested inside a hook. */
 #pragma once
 
 #include <cstdint>
 #include <string>
-#include <unordered_map>
+
+#include "emu_mem.h"
 
 struct uc_struct;
 typedef struct uc_struct uc_engine;
 
-/* Handler signature: receives the uc handle so it can read emulated memory.
- * args[0..3] = r0..r3 as the emulated caller set them; extra args live on the
- * emulated stack (readable via uc_mem_read at emu sp). Return value is placed
- * in r0. Returning true means "handled"; false = stub left unimplemented. */
-using ImportHandler = bool (*)(uc_engine *uc, uint32_t args[4], uint32_t *retval);
+using ImportHandler = void (*)(uc_engine *uc, const emu::Args &args,
+                              uint32_t *retval);
 
 void stubs_init();
-
-/* Register a handler for an imported symbol name. */
 void stubs_register(const std::string &name, ImportHandler fn);
+void stubs_register_recursive(const std::string &name, ImportHandler fn);
 
-/* Fill STUB_PAGE: one slot per engine import, in kEngineImportNames order.
- * Returns the stub address for the given import slot. */
 uint32_t stubs_slot_addr(uint32_t slot);
 
-/* Called by the CPU-code hook when PC lands on a stub. Dispatches to the
- * handler registered for that slot and advances LR return. */
-bool stubs_dispatch(uc_engine *uc, uint32_t pc);
+enum class StubResult {
+    kHandled,        /* handler ran inline; PC advanced */
+    kNeedsDriver,    /* recursive handler queued; emulation must stop */
+    kUnknown,
+};
 
-/* Dispatch by handler name (used for JNIEnv trap slots). */
-bool stubs_dispatch_by_name(uc_engine *uc, const char *name, uint32_t args[4],
-                            uint32_t *retval);
+StubResult stubs_dispatch(uc_engine *uc, uint32_t pc);
 
-/* 16-byte stub layout helper shared with the loader. */
-uint32_t stubs_trap_addr_for_slot(uint32_t slot);
+/* Pop a deferred recursive call (valid after kNeedsDriver). */
+void stubs_take_pending(ImportHandler *fn, emu::Args *args);
+
+bool stubs_dispatch_by_name(uc_engine *uc, const char *name,
+                            const emu::Args &args, uint32_t *retval);

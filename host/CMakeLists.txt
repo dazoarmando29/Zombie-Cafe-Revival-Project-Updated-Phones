@@ -19,13 +19,26 @@ add_library(zcr_host SHARED
   engine_loader.cpp
   stub_dispatch.cpp
   jni_bridge.cpp
+  emu_mem.cpp
+  imports_posix.cpp
+  imports_gl.cpp
 )
 
 target_include_directories(zcr_host PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# 16 KB page-size support (Android 15+ requirement for arm64)
+target_link_options(zcr_host PRIVATE "-Wl,-z,max-page-size=16384")
 
 target_link_libraries(zcr_host
   unicorn
   android
   log
   z
+  GLESv2
+  EGL
 )
+
+# arm64 no-op stand-in for the original 32-bit extension
+add_library(ZombieCafeExtension SHARED ext_stub.cpp)
+target_link_libraries(ZombieCafeExtension android log)
+target_link_options(ZombieCafeExtension PRIVATE "-Wl,-z,max-page-size=16384")
