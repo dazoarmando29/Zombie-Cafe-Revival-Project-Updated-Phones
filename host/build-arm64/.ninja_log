@@ -1,6 +1,0 @@
-# ninja log v7
-17	1038	8148232274117646	CMakeFiles/zcr_host.dir/stub_dispatch.cpp.o	10e24f86d520b2b6
-11	1072	8148232274051722	CMakeFiles/zcr_host.dir/engine_loader.cpp.o	cac5de46184501b
-24	1219	8148232274178671	CMakeFiles/zcr_host.dir/jni_bridge.cpp.o	60171106aff48157
-9	1026	8148232718236602	CMakeFiles/zcr_host.dir/zcr_host.cpp.o	d81a4db6333377fc
-1027	1165	8148232728407149	libzcr_host.so	3233c59bc1e07129
