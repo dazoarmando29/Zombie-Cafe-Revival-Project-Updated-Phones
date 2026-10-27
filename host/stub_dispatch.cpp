@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <unordered_map>
 
 #include <unicorn/unicorn.h>
 
@@ -13,66 +14,98 @@ namespace {
 struct StubSlot {
     const char *name = nullptr;
     ImportHandler fn = nullptr;
+    bool recursive = false;
 };
 
 StubSlot g_slots[ENGINE_IMPORT_COUNT];
 std::unordered_map<std::string, ImportHandler> g_handlers;
 
+/* deferred recursive call */
+ImportHandler g_pending_fn = nullptr;
+emu::Args g_pending_args;
+
+emu::Args fill_args(uc_engine *uc) {
+    emu::Args a;
+    a.uc = uc;
+    uc_reg_read(uc, UC_ARM_REG_R0, &a.r[0]);
+    uc_reg_read(uc, UC_ARM_REG_R1, &a.r[1]);
+    uc_reg_read(uc, UC_ARM_REG_R2, &a.r[2]);
+    uc_reg_read(uc, UC_ARM_REG_R3, &a.r[3]);
+    uc_reg_read(uc, UC_ARM_REG_SP, &a.sp);
+    return a;
+}
+
 }  // namespace
 
 void stubs_init() {
-    for (uint32_t i = 0; i < ENGINE_IMPORT_COUNT; i++) {
+    for (uint32_t i = 0; i < ENGINE_IMPORT_COUNT; i++)
         g_slots[i].name = kEngineImportNames[i];
-    }
 }
 
 void stubs_register(const std::string &name, ImportHandler fn) {
     g_handlers[name] = fn;
-    for (uint32_t i = 0; i < ENGINE_IMPORT_COUNT; i++) {
-        if (name == kEngineImportNames[i]) g_slots[i].fn = fn;
-    }
+    for (uint32_t i = 0; i < ENGINE_IMPORT_COUNT; i++)
+        if (name == kEngineImportNames[i]) {
+            g_slots[i].fn = fn;
+            g_slots[i].recursive = false;
+        }
+}
+
+void stubs_register_recursive(const std::string &name, ImportHandler fn) {
+    g_handlers[name] = fn;
+    for (uint32_t i = 0; i < ENGINE_IMPORT_COUNT; i++)
+        if (name == kEngineImportNames[i]) {
+            g_slots[i].fn = fn;
+            g_slots[i].recursive = true;
+        }
 }
 
 uint32_t stubs_slot_addr(uint32_t slot) {
     return STUB_PAGE + slot * STUB_SLOT_SIZE;
 }
-uint32_t stubs_trap_addr_for_slot(uint32_t slot) {
-    return stubs_slot_addr(slot);
+
+void stubs_take_pending(ImportHandler *fn, emu::Args *args) {
+    *fn = g_pending_fn;
+    *args = g_pending_args;
+    g_pending_fn = nullptr;
 }
 
-bool stubs_dispatch_by_name(uc_engine *uc, const char *name, uint32_t args[4],
-                            uint32_t *retval) {
+bool stubs_dispatch_by_name(uc_engine *uc, const char *name,
+                            const emu::Args &args, uint32_t *retval) {
     auto it = g_handlers.find(name);
     if (it == g_handlers.end() || !it->second) return false;
     *retval = 0;
-    return it->second(uc, args, retval);
+    it->second(uc, args, retval);
+    return true;
 }
 
-bool stubs_dispatch(uc_engine *uc, uint32_t pc) {
-    if (pc < STUB_PAGE) return false;
+StubResult stubs_dispatch(uc_engine *uc, uint32_t pc) {
+    if (pc < STUB_PAGE) return StubResult::kUnknown;
     uint32_t slot = (pc - STUB_PAGE) / STUB_SLOT_SIZE;
-    if (slot >= ENGINE_IMPORT_COUNT) return false;
+    if (slot >= ENGINE_IMPORT_COUNT) return StubResult::kUnknown;
 
-    uint32_t regs[4];
-    uc_reg_read(uc, UC_ARM_REG_R0, &regs[0]);
-    uc_reg_read(uc, UC_ARM_REG_R1, &regs[1]);
-    uc_reg_read(uc, UC_ARM_REG_R2, &regs[2]);
-    uc_reg_read(uc, UC_ARM_REG_R3, &regs[3]);
-
+    emu::Args args = fill_args(uc);
     uint32_t lr = 0;
     uc_reg_read(uc, UC_ARM_REG_LR, &lr);
 
-    uint32_t retval = 0;
-    bool ok = false;
-    if (g_slots[slot].fn) {
-        ok = g_slots[slot].fn(uc, regs, &retval);
-    }
-    if (!ok) {
+    if (!g_slots[slot].fn) {
         fprintf(stderr, "[zcr-host] UNIMPLEMENTED import: %s\n",
                 g_slots[slot].name);
+        uint32_t z = 0;
+        uc_reg_write(uc, UC_ARM_REG_R0, &z);
+        uc_reg_write(uc, UC_ARM_REG_PC, &lr);
+        return StubResult::kHandled;
     }
 
+    if (g_slots[slot].recursive) {
+        g_pending_fn = g_slots[slot].fn;
+        g_pending_args = args;
+        return StubResult::kNeedsDriver;
+    }
+
+    uint32_t retval = 0;
+    g_slots[slot].fn(uc, args, &retval);
     uc_reg_write(uc, UC_ARM_REG_R0, &retval);
     uc_reg_write(uc, UC_ARM_REG_PC, &lr);
-    return true;
+    return StubResult::kHandled;
 }

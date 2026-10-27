@@ -2,21 +2,19 @@
 .SYNOPSIS
   Zombie Cafe Revival - Updated Phones. Windows build pipeline.
 
-  Replaces the Linux commands in README.md:
-    1. Go build_tool   -> packs human-readable assets into game formats
-    2. CMake/NDK       -> builds libZombieCafeExtension.so (armeabi-v7a)
-    3. apktool         -> rebuilds the APK
-    4. zipalign+apksigner -> aligns and signs with debug.keystore
+  Produces a universal APK:
+    lib/armeabi-v7a/  original 32-bit engine + original extension (native path)
+    lib/arm64-v8a/    zcr_host emulating the engine + extension stub (64-bit path)
+    assets/engine/    the 32-bit engine image loaded by the emulator host
 
 .EXAMPLE
   .\build.ps1              # build APK
-  .\build.ps1 -Install     # build + adb install
+  .\build.ps1 -Install     # build + adb install (bypasses low-target-sdk block)
   .\build.ps1 -Clean       # remove build output first
 #>
 param(
     [switch]$Install,
-    [switch]$Clean,
-    [string]$Abi = "armeabi-v7a"
+    [switch]$Clean
 )
 
 $ErrorActionPreference = "Stop"
@@ -49,44 +47,80 @@ try {
     }
 
     # ------------------------------------------------ 1. pack game assets
-    Write-Host "[1/5] Go build_tool: packing assets..." -ForegroundColor Cyan
+    Write-Host "[1/7] Go build_tool: packing assets..." -ForegroundColor Cyan
     & $Go run ./tool/build_tool/ -i src/ -o build/
     if ($LASTEXITCODE -ne 0) { throw "build_tool failed" }
 
-    # ------------------------------------------------ 2. extension .so
-    Write-Host "[2/5] CMake/NDK: building libZombieCafeExtension ($Abi)..." -ForegroundColor Cyan
+    # ------------------------------------------------ 2. 32-bit extension
+    Write-Host "[2/7] CMake/NDK: libZombieCafeExtension (armeabi-v7a)..." -ForegroundColor Cyan
     $ExtBuild = Join-Path $ProjectRoot "src\lib\cpp\build"
     & $Cmake -S (Join-Path $ProjectRoot "src\lib\cpp") -B $ExtBuild -G Ninja `
         "-DCMAKE_MAKE_PROGRAM=$Ninja" `
         "-DCMAKE_TOOLCHAIN_FILE=$NdkRoot\build\cmake\android.toolchain.cmake" `
-        "-DANDROID_ABI=$Abi" `
+        "-DANDROID_ABI=armeabi-v7a" `
         "-DANDROID_PLATFORM=android-21" `
         "-DCMAKE_BUILD_TYPE=Release"
-    if ($LASTEXITCODE -ne 0) { throw "cmake configure failed" }
+    if ($LASTEXITCODE -ne 0) { throw "cmake configure failed (32-bit ext)" }
     & $Cmake --build $ExtBuild
-    if ($LASTEXITCODE -ne 0) { throw "cmake build failed" }
+    if ($LASTEXITCODE -ne 0) { throw "cmake build failed (32-bit ext)" }
 
-    # NOTE: game loads libs from lib/armeabi/ (original layout); the extension
-    # is compiled armeabi-v7a and installed there, same as upstream.
-    $ExtSo = Join-Path $ExtBuild "libZombieCafeExtension.so"
-    $DestDir = Join-Path $BuildDir "lib\armeabi"
-    New-Item -ItemType Directory -Force -Path $DestDir | Out-Null
-    Copy-Item -Force $ExtSo (Join-Path $DestDir "libZombieCafeExtension.so")
-    Write-Host "      copied -> build\lib\armeabi\libZombieCafeExtension.so" -ForegroundColor DarkGray
+    # ------------------------------------------------ 3. arm64 host + stub
+    Write-Host "[3/7] CMake/NDK: zcr_host + extension stub (arm64-v8a)..." -ForegroundColor Cyan
+    $HostBuild = Join-Path $ProjectRoot "host\build-arm64"
+    & $Cmake -S (Join-Path $ProjectRoot "host") -B $HostBuild -G Ninja `
+        "-DCMAKE_MAKE_PROGRAM=$Ninja" `
+        "-DCMAKE_TOOLCHAIN_FILE=$NdkRoot\build\cmake\android.toolchain.cmake" `
+        "-DANDROID_ABI=arm64-v8a" `
+        "-DANDROID_PLATFORM=android-21" `
+        "-DCMAKE_BUILD_TYPE=Release"
+    if ($LASTEXITCODE -ne 0) { throw "cmake configure failed (host)" }
+    & $Cmake --build $HostBuild
+    if ($LASTEXITCODE -ne 0) { throw "cmake build failed (host)" }
 
-    # ------------------------------------------------ 3. apktool rebuild
-    Write-Host "[3/5] apktool: rebuilding APK..." -ForegroundColor Cyan
+    # ------------------------------------------------ 4. stage libs + engine
+    Write-Host "[4/7] staging ABI folders + engine asset..." -ForegroundColor Cyan
+
+    $Strip = Join-Path $NdkRoot "toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-strip.exe"
+    & $Strip --strip-unneeded (Join-Path $HostBuild "libzcr_host.so")
+
+    $Engine = Join-Path $ProjectRoot "src\lib\armeabi\libZombieCafeAndroid.so"
+
+    # drop the copylist's legacy armeabi output (armeabi-v7a covers all32-bit)
+    Remove-Item -Recurse -Force (Join-Path $BuildDir "lib\armeabi") -ErrorAction SilentlyContinue
+
+    # 32-bit native path (original engine + original extension)
+    $V7 = Join-Path $BuildDir "lib\armeabi-v7a"
+    New-Item -ItemType Directory -Force -Path $V7 | Out-Null
+    Copy-Item -Force $Engine (Join-Path $V7 "libZombieCafeAndroid.so")
+    Copy-Item -Force (Join-Path $ExtBuild "libZombieCafeExtension.so") `
+        (Join-Path $V7 "libZombieCafeExtension.so")
+
+    # arm64 emulation path (host keeps the engine's soname)
+    $V8 = Join-Path $BuildDir "lib\arm64-v8a"
+    New-Item -ItemType Directory -Force -Path $V8 | Out-Null
+    Copy-Item -Force (Join-Path $HostBuild "libzcr_host.so") `
+        (Join-Path $V8 "libZombieCafeAndroid.so")
+    Copy-Item -Force (Join-Path $HostBuild "libZombieCafeExtension.so") `
+        (Join-Path $V8 "libZombieCafeExtension.so")
+
+    # engine image consumed by zcr_host
+    $EngDir = Join-Path $BuildDir "assets\engine"
+    New-Item -ItemType Directory -Force -Path $EngDir | Out-Null
+    Copy-Item -Force $Engine (Join-Path $EngDir "game.so")
+
+    # ------------------------------------------------ 5. apktool rebuild
+    Write-Host "[5/7] apktool: rebuilding APK..." -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path (Split-Path $OutUnsigned) | Out-Null
     & $Java -jar $ApktoolJar b build -o $OutUnsigned
     if ($LASTEXITCODE -ne 0) { throw "apktool failed" }
 
-    # ------------------------------------------------ 4. zipalign
-    Write-Host "[4/5] zipalign..." -ForegroundColor Cyan
-    & (Join-Path $BuildTools "zipalign.exe") -f -p 4 $OutUnsigned $OutAligned
+    # ------------------------------------------------ 6. zipalign (16 KB)
+    Write-Host "[6/7] zipalign -P 16 (16 KB page size)..." -ForegroundColor Cyan
+    & (Join-Path $BuildTools "zipalign.exe") -f -P 16 4 $OutUnsigned $OutAligned
     if ($LASTEXITCODE -ne 0) { throw "zipalign failed" }
 
-    # ------------------------------------------------ 5. sign
-    Write-Host "[5/5] apksigner: signing with debug.keystore..." -ForegroundColor Cyan
+    # ------------------------------------------------ 7. sign
+    Write-Host "[7/7] apksigner: signing with debug.keystore..." -ForegroundColor Cyan
     & (Join-Path $BuildTools "apksigner.bat") sign `
         --ks debug.keystore `
         --ks-pass pass:zombiecafe `
