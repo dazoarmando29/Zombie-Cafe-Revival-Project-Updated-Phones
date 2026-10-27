@@ -55,7 +55,7 @@ bool on_code(uc_engine *uc, uint32_t address, uint32_t, void *) {
         if (!stubs_dispatch_by_name(uc, nm, args, &rv))
             LOGE("unimplemented JNIEnv fn #%u", idx);
         uc_reg_write(uc, UC_ARM_REG_R0, &rv);
-        uc_reg_write(uc, UC_ARM_REG_PC, &lr);
+        emu_set_pc(uc, lr);
         return true;
     }
     if (address >= STUB_PAGE && address < STUB_PAGE + 0x10000) {
@@ -175,36 +175,20 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
 namespace {
 
 uint32_t str_word(JNIEnv *env, jstring s) {
-    if (!s) return 0;
-    const char *p = env->GetStringUTFChars(s, nullptr);
-    if (!p) return 0;
-    uint32_t addr = emu::intern_string(emu::engine(), p);
-    env->ReleaseStringUTFChars(s, p);
-    return addr;
+    /* pass the real jstring as a handle – the engine reads it through the
+       JNI vtable (GetStringUTFChars), not as a raw pointer */
+    (void)env;
+    return jni_handle_for(s);
 }
 
 uint32_t bytes_word(JNIEnv *env, jbyteArray arr) {
-    if (!arr) return 0;
-    jsize n = env->GetArrayLength(arr);
-    uint32_t addr = emu::heap_alloc(emu::engine(), n ? n : 1);
-    if (n) {
-        jbyte *el = env->GetByteArrayElements(arr, nullptr);
-        emu::write(emu::engine(), addr, el, n);
-        env->ReleaseByteArrayElements(arr, el, JNI_ABORT);
-    }
-    return addr;
+    (void)env;
+    return jni_handle_for(arr);
 }
 
 uint32_t floats_word(JNIEnv *env, jfloatArray arr) {
-    if (!arr) return 0;
-    jsize n = env->GetArrayLength(arr);
-    uint32_t addr = emu::heap_alloc(emu::engine(), n ? n * 4 : 4);
-    if (n) {
-        jfloat *el = env->GetFloatArrayElements(arr, nullptr);
-        emu::write(emu::engine(), addr, el, n * 4);
-        env->ReleaseFloatArrayElements(arr, el, JNI_ABORT);
-    }
-    return addr;
+    (void)env;
+    return jni_handle_for(arr);
 }
 
 float fbits(jfloat f) {

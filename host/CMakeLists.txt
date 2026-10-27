@@ -34,7 +34,7 @@ target_link_libraries(zcr_host
   android
   log
   z
-  GLESv2
+  GLESv1_CM
   EGL
 )
 

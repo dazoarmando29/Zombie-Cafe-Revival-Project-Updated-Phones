@@ -34,5 +34,9 @@ StubResult stubs_dispatch(uc_engine *uc, uint32_t pc);
 /* Pop a deferred recursive call (valid after kNeedsDriver). */
 void stubs_take_pending(ImportHandler *fn, emu::Args *args);
 
+/* Set emulated PC with correct ARM/Thumb state (CPSR.T). Required for every
+ * control transfer back into the engine (stub returns, longjmp, calls). */
+void emu_set_pc(uc_engine *uc, uint32_t addr);
+
 bool stubs_dispatch_by_name(uc_engine *uc, const char *name,
                             const emu::Args &args, uint32_t *retval);

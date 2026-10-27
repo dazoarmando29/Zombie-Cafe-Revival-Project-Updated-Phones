@@ -393,6 +393,9 @@ void f_get_string_utf_length(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     jstring s = (jstring)handle_get(a.r[1]);
     *rv = s ? (uint32_t)g_env->GetStringUTFLength(s) : 0;
 }
+void f_new_byte_array(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    *rv = handle_for(g_env->NewByteArray((jsize)a.r[1]));
+}
 void f_release_string_utf(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     *rv = 0;
 }
@@ -400,34 +403,140 @@ void f_get_array_length(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     jarray arr = (jarray)handle_get(a.r[1]);
     *rv = arr ? (uint32_t)g_env->GetArrayLength(arr) : 0;
 }
-void f_new_byte_array(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
-    *rv = handle_for(g_env->NewByteArray((jsize)a.r[1]));
-}
-void f_get_byte_array_elements(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
-    jbyteArray arr = (jbyteArray)handle_get(a.r[1]);
+
+/* Generic Get<prim>ArrayElements: copy into emulated heap, return emu ptr. */
+void get_elements(uc_engine *uc, jarray arr, jsize n, jsize esz,
+                  void (*region)(JNIEnv *, jarray, jsize, jsize, void *),
+                  uint32_t *rv) {
     if (!arr) {
         *rv = 0;
         return;
     }
-    jsize n = g_env->GetArrayLength(arr);
-    uint32_t p = emu::heap_alloc(uc, n ? n : 1);
+    uint32_t p = emu::heap_alloc(uc, (size_t)n * esz ? (size_t)n * esz : 1);
     if (n) {
-        jbyte *el = g_env->GetByteArrayElements(arr, nullptr);
-        emu::write(uc, p, el, n);
-        g_env->ReleaseByteArrayElements(arr, el, JNI_ABORT);
+        std::vector<uint8_t> buf((size_t)n * esz);
+        region(g_env, arr, 0, n, buf.data());
+        emu::write(uc, p, buf.data(), buf.size());
     }
     *rv = p;
+}
+
+/* Generic Release<prim>ArrayElements: write back unless JNI_ABORT. */
+void release_elements(uc_engine *uc, jarray arr, uint32_t ptr, jint mode,
+                      jsize n, jsize esz,
+                      void (*setregion)(JNIEnv *, jarray, jsize, jsize, void *)) {
+    if (arr && mode != JNI_ABORT && n) {
+        std::vector<uint8_t> buf((size_t)n * esz);
+        emu::read(uc, ptr, buf.data(), buf.size());
+        setregion(g_env, arr, 0, n, buf.data());
+    }
+    emu::heap_free(uc, ptr);
+}
+
+void f_get_byte_array_elements(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    jbyteArray arr = (jbyteArray)handle_get(a.r[1]);
+    jsize n = arr ? g_env->GetArrayLength(arr) : 0;
+    get_elements(uc, arr, n, 1,
+                 [](JNIEnv *e, jarray x, jsize s, jsize c, void *p) {
+                     e->GetByteArrayRegion((jbyteArray)x, s, c, (jbyte *)p);
+                 },
+                 rv);
 }
 void f_release_byte_array_elements(uc_engine *uc, const emu::Args &a,
                                    uint32_t *rv) {
     jbyteArray arr = (jbyteArray)handle_get(a.r[1]);
-    if (arr && a.r[3] != JNI_ABORT) {
-        jsize n = g_env->GetArrayLength(arr);
-        std::vector<jbyte> buf(n);
-        if (n) emu::read(uc, a.r[2], buf.data(), n);
-        g_env->SetByteArrayRegion(arr, 0, n, buf.data());
+    jsize n = arr ? g_env->GetArrayLength(arr) : 0;
+    release_elements(uc, arr, a.r[2], (jint)a.r[3], n, 1,
+                     [](JNIEnv *e, jarray x, jsize s, jsize c, void *p) {
+                         e->SetByteArrayRegion((jbyteArray)x, s, c, (jbyte *)p);
+                     });
+    *rv = 0;
+}
+void f_get_int_array_elements(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    jintArray arr = (jintArray)handle_get(a.r[1]);
+    jsize n = arr ? g_env->GetArrayLength(arr) : 0;
+    get_elements(uc, arr, n, 4,
+                 [](JNIEnv *e, jarray x, jsize s, jsize c, void *p) {
+                     e->GetIntArrayRegion((jintArray)x, s, c, (jint *)p);
+                 },
+                 rv);
+}
+void f_release_int_array_elements(uc_engine *uc, const emu::Args &a,
+                                  uint32_t *rv) {
+    jintArray arr = (jintArray)handle_get(a.r[1]);
+    jsize n = arr ? g_env->GetArrayLength(arr) : 0;
+    release_elements(uc, arr, a.r[2], (jint)a.r[3], n, 4,
+                     [](JNIEnv *e, jarray x, jsize s, jsize c, void *p) {
+                         e->SetIntArrayRegion((jintArray)x, s, c, (jint *)p);
+                     });
+    *rv = 0;
+}
+void f_get_float_array_elements(uc_engine *uc, const emu::Args &a,
+                                uint32_t *rv) {
+    jfloatArray arr = (jfloatArray)handle_get(a.r[1]);
+    jsize n = arr ? g_env->GetArrayLength(arr) : 0;
+    get_elements(uc, arr, n, 4,
+                 [](JNIEnv *e, jarray x, jsize s, jsize c, void *p) {
+                     e->GetFloatArrayRegion((jfloatArray)x, s, c, (jfloat *)p);
+                 },
+                 rv);
+}
+void f_release_float_array_elements(uc_engine *uc, const emu::Args &a,
+                                    uint32_t *rv) {
+    jfloatArray arr = (jfloatArray)handle_get(a.r[1]);
+    jsize n = arr ? g_env->GetArrayLength(arr) : 0;
+    release_elements(uc, arr, a.r[2], (jint)a.r[3], n, 4,
+                     [](JNIEnv *e, jarray x, jsize s, jsize c, void *p) {
+                         e->SetFloatArrayRegion((jfloatArray)x, s, c, (jfloat *)p);
+                     });
+    *rv = 0;
+}
+void f_new_int_array(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    *rv = handle_for(g_env->NewIntArray((jsize)a.r[1]));
+}
+void f_new_float_array(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    *rv = handle_for(g_env->NewFloatArray((jsize)a.r[1]));
+}
+void f_get_int_array_region(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    jintArray arr = (jintArray)handle_get(a.r[1]);
+    if (arr) {
+        std::vector<jint> buf(a.r[3]);
+        if (!buf.empty())
+            g_env->GetIntArrayRegion(arr, (jsize)a.r[2], (jsize)a.r[3], buf.data());
+        emu::write(uc, a.arg(4), buf.data(), buf.size() * 4);
     }
-    emu::heap_free(uc, a.r[2]);
+    *rv = 0;
+}
+void f_set_int_array_region(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    jintArray arr = (jintArray)handle_get(a.r[1]);
+    if (arr) {
+        std::vector<jint> buf(a.r[3]);
+        if (!buf.empty()) {
+            emu::read(uc, a.arg(4), buf.data(), buf.size() * 4);
+            g_env->SetIntArrayRegion(arr, (jsize)a.r[2], (jsize)a.r[3], buf.data());
+        }
+    }
+    *rv = 0;
+}
+void f_get_float_array_region(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    jfloatArray arr = (jfloatArray)handle_get(a.r[1]);
+    if (arr) {
+        std::vector<jfloat> buf(a.r[3]);
+        if (!buf.empty())
+            g_env->GetFloatArrayRegion(arr, (jsize)a.r[2], (jsize)a.r[3], buf.data());
+        emu::write(uc, a.arg(4), buf.data(), buf.size() * 4);
+    }
+    *rv = 0;
+}
+void f_set_float_array_region(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    jfloatArray arr = (jfloatArray)handle_get(a.r[1]);
+    if (arr) {
+        std::vector<jfloat> buf(a.r[3]);
+        if (!buf.empty()) {
+            emu::read(uc, a.arg(4), buf.data(), buf.size() * 4);
+            g_env->SetFloatArrayRegion(arr, (jsize)a.r[2], (jsize)a.r[3], buf.data());
+        }
+    }
     *rv = 0;
 }
 void f_get_byte_array_region(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
@@ -540,10 +649,20 @@ const JniFn kJniFns[] = {
     {JIDX(ReleaseStringUTFChars), "ReleaseStringUTFChars", f_release_string_utf},
     {JIDX(GetArrayLength), "GetArrayLength", f_get_array_length},
     {JIDX(NewByteArray), "NewByteArray", f_new_byte_array},
+    {JIDX(NewIntArray), "NewIntArray", f_new_int_array},
+    {JIDX(NewFloatArray), "NewFloatArray", f_new_float_array},
     {JIDX(GetByteArrayElements), "GetByteArrayElements", f_get_byte_array_elements},
+    {JIDX(GetIntArrayElements), "GetIntArrayElements", f_get_int_array_elements},
+    {JIDX(GetFloatArrayElements), "GetFloatArrayElements", f_get_float_array_elements},
     {JIDX(ReleaseByteArrayElements), "ReleaseByteArrayElements", f_release_byte_array_elements},
+    {JIDX(ReleaseIntArrayElements), "ReleaseIntArrayElements", f_release_int_array_elements},
+    {JIDX(ReleaseFloatArrayElements), "ReleaseFloatArrayElements", f_release_float_array_elements},
     {JIDX(GetByteArrayRegion), "GetByteArrayRegion", f_get_byte_array_region},
     {JIDX(SetByteArrayRegion), "SetByteArrayRegion", f_set_byte_array_region},
+    {JIDX(GetIntArrayRegion), "GetIntArrayRegion", f_get_int_array_region},
+    {JIDX(SetIntArrayRegion), "SetIntArrayRegion", f_set_int_array_region},
+    {JIDX(GetFloatArrayRegion), "GetFloatArrayRegion", f_get_float_array_region},
+    {JIDX(SetFloatArrayRegion), "SetFloatArrayRegion", f_set_float_array_region},
     {JIDX(NewGlobalRef), "NewGlobalRef", f_new_global_ref},
     {JIDX(DeleteGlobalRef), "DeleteGlobalRef", f_delete_global_ref},
     {JIDX(DeleteLocalRef), "DeleteLocalRef", f_delete_local_ref},
@@ -631,8 +750,8 @@ uint32_t jni_call_engine(uc_engine *uc, uint32_t fn_rva, const uint32_t *words,
             uc_reg_read(uc, UC_ARM_REG_LR, &lr2);
             fn(uc, args, &retval);
             uc_reg_write(uc, UC_ARM_REG_R0, &retval);
-            uc_reg_write(uc, UC_ARM_REG_PC, &lr2);
-            pc = lr2;
+            emu_set_pc(uc, lr2);
+            pc = lr2;   /* bit0 selects Thumb for uc_emu_start */
             continue;
         }
         break;
