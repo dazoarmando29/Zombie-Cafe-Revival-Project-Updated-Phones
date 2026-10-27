@@ -75,6 +75,24 @@ bool on_code(uc_engine *uc, uint32_t address, uint32_t, void *) {
     return true;
 }
 
+/* ---- memory fault logging: pinpoint bad pointers the engine chases ---- */
+bool on_mem_fault(uc_engine *uc, uc_mem_type type, uint64_t address,
+                  int size, int64_t value, void *) {
+    uint32_t pc = 0, lr = 0, ip = 0;
+    uc_reg_read(uc, UC_ARM_REG_PC, &pc);
+    uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+    uc_reg_read(uc, UC_ARM_REG_R12, &ip);
+    diag_log("[mem-fault] type=%d addr=0x%llx size=%d pc=0x%x lr=0x%x ip=0x%x",
+             (int)type, (unsigned long long)address, size, pc, lr, ip);
+    /* inspect the PLT GOT slot MaxTextureSize's stub loads from */
+    uint32_t slot = 0;
+    uc_mem_read(uc, ENG_BASE + 0x1d5c04, &slot, 4);
+    uint32_t slot2 = 0;
+    uc_mem_read(uc, ENG_BASE + 0x1d5aa8, &slot2, 4);
+    diag_log("[mem-fault] got[0x1d5c04]=0x%x got[0x1d5aa8]=0x%x", slot, slot2);
+    return false;  /* stop emulation */
+}
+
 bool load_engine_from_assets(JNIEnv *env) {
     jclass atCls = env->FindClass("android/app/ActivityThread");
     jmethodID curApp = env->GetStaticMethodID(atCls, "currentApplication",
@@ -136,11 +154,26 @@ bool host_init(JNIEnv *env) {
     jni_bridge_init(g_uc, g_vm);
 
     /* ranged code hooks: only the two trap pages */
-    uc_hook h1, h2;
+    uc_hook h1, h2, h3;
     uc_hook_add(g_uc, &h1, UC_HOOK_CODE, (void *)on_code, nullptr, STUB_PAGE,
                 STUB_PAGE + 0x10000);
     uc_hook_add(g_uc, &h2, UC_HOOK_CODE, (void *)on_code, nullptr,
                 JNI_STUB_PAGE, JNI_STUB_PAGE + 0x10000);
+    uc_hook_add(g_uc, &h3,
+                UC_HOOK_MEM_READ_UNMAPPED | UC_HOOK_MEM_WRITE_UNMAPPED |
+                    UC_HOOK_MEM_FETCH_UNMAPPED,
+                (void *)on_mem_fault, nullptr, 1, 0);
+
+    /* run global constructors (DT_INIT + DT_INIT_ARRAY) exactly like
+     * dlopen would, before JNI_OnLoad */
+    const std::vector<uint32_t> &ctors = engine_init_routines();
+    diag_log("[diag] running %u engine constructors", (unsigned)ctors.size());
+    for (uint32_t fn : ctors) {
+        uint32_t rva = fn - ENG_BASE;
+        uint32_t args[2] = {0, 0};
+        jni_call_engine_r0(g_uc, rva, 0, args, 2);
+    }
+    diag_log("[diag] constructors done");
 
     /* run the engine's own JNI_OnLoad */
     for (uint32_t i = 0; i < ENGINE_JNI_COUNT; i++) {
@@ -236,8 +269,8 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
         glClear(GL_COLOR_BUFFER_BIT);
         return 0;
     }
-    /* diag: solid magenta underlay; the engine normally clears/draws over it.
-       If the screen shows magenta, the engine's render produced no GL calls. */
+    /* diag: underlay so a dead engine shows magenta; the engine normally
+       draws over it. */
     glClearColor(1.f, 0.f, 1.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -247,11 +280,25 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
         diag_log("[diag] render rva lookup FAILED");
         return 0;
     }
+    uint32_t draws_before = g_diag_draws;
     uint32_t rv = jni_call_engine(g_uc, rva, w, 2);
 
     static int frame_count = 0;
-    if ((frame_count++ % 120) == 0) {
-        diag_log("[diag] frame=%d emu_ret=%u", frame_count, rv);
+    frame_count++;
+    if ((frame_count % 60) == 1) {
+        /* readback probe: what did the engine actually put on screen? */
+        unsigned char px[4] = {0, 0, 0, 0};
+        glReadPixels(1400, 630, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, px);
+        GLenum err = glGetError();
+        GLint vp[4] = {0, 0, 0, 0};
+        glGetIntegerv(GL_VIEWPORT, vp);
+        GLint blend = glIsEnabled(GL_BLEND), scis = glIsEnabled(GL_SCISSOR_TEST),
+             depth = glIsEnabled(GL_DEPTH_TEST), cull = glIsEnabled(GL_CULL_FACE),
+             tex2d = glIsEnabled(GL_TEXTURE_2D);
+        diag_log("[diag] f=%d draws=%u px=(%u,%u,%u,%u) glErr=%u vp=(%d,%d,%d,%d) blend=%d scis=%d depth=%d cull=%d tex=%d",
+                 frame_count, g_diag_draws - draws_before, px[0], px[1], px[2],
+                 px[3], err, vp[0], vp[1], vp[2], vp[3], blend, scis, depth,
+                 cull, tex2d);
         diag_summary();
     }
     return (jint)rv;

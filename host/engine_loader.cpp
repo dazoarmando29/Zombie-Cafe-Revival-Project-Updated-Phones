@@ -35,8 +35,11 @@ struct Sym {
 
 constexpr uint32_t DT_HASH = 4, DT_STRTAB = 5, DT_SYMTAB = 6, DT_RELA = 7,
                    DT_RELASZ = 8, DT_RELAENT = 9, DT_STRSZ = 10, DT_SYMENT = 11,
+                   DT_INIT = 12, DT_FINI = 13,
                    DT_REL = 17, DT_RELSZ = 18, DT_RELENT = 19, DT_PLTREL = 20,
-                   DT_JMPREL = 23, DT_PLTRELSZ = 2;
+                   DT_JMPREL = 23, DT_PLTRELSZ = 2,
+                   DT_INIT_ARRAY = 25, DT_INIT_ARRAYSZ = 27,
+                   DT_FINI_ARRAY = 26, DT_FINI_ARRAYSZ = 28;
 constexpr uint32_t PT_LOAD = 1, PT_DYNAMIC = 2;
 
 constexpr uint32_t R_ARM_ABS32 = 2, R_ARM_GLOB_DAT = 21, R_ARM_JUMP_SLOT = 22,
@@ -51,15 +54,23 @@ T read_at(const std::vector<uint8_t> &b, size_t off) {
     return v;
 }
 
+#include <android/log.h>
+#include <cstdarg>
+
 void log(const char *fmt, ...) {
+    char buf[1024];
     va_list ap;
     va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    fprintf(stderr, "\n");
+    vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
+    __android_log_print(ANDROID_LOG_INFO, "zcr-engine", "%s", buf);
 }
 
+std::vector<uint32_t> g_init_routines;
+
 }  // namespace
+
+const std::vector<uint32_t> &engine_init_routines() { return g_init_routines; }
 
 bool engine_load_image(const std::string &path, EngineImage *out) {
     FILE *f = fopen(path.c_str(), "rb");
@@ -123,6 +134,7 @@ bool engine_map(uc_engine *uc, const EngineImage &img) {
 
     uint32_t strtab_va = 0, symtab_va = 0, rel_va = 0, rel_sz = 0,
              jmprel_va = 0, pltrelsz = 0, pltrel = 0, relent = 8, syment = 16;
+    uint32_t init_va = 0, init_array_va = 0, init_array_sz = 0;
     for (uint32_t o = 0; o + 8 <= dyn_sz; o += 8) {
         const Dyn d = read_at<Dyn>(b, dyn_off + o);
         if (d.tag == 0) break;
@@ -136,6 +148,9 @@ bool engine_map(uc_engine *uc, const EngineImage &img) {
             case DT_PLTRELSZ: pltrelsz = d.val; break;
             case DT_PLTREL: pltrel = d.val; break;
             case DT_SYMENT: syment = d.val; break;
+            case DT_INIT: init_va = d.val; break;
+            case DT_INIT_ARRAY: init_array_va = d.val; break;
+            case DT_INIT_ARRAYSZ: init_array_sz = d.val; break;
             default: break;
         }
     }
@@ -188,6 +203,12 @@ bool engine_map(uc_engine *uc, const EngineImage &img) {
                     const Sym s2 = read_at<Sym>(b, sym_off);
                     value = ENG_BASE + s2.value;
                 }
+                /* R_ARM_ABS32: value = S + A (addend lives at the slot) */
+                if (type == R_ARM_ABS32) {
+                    uint32_t addend = 0;
+                    uc_mem_read(uc, where, &addend, 4);
+                    value += addend;
+                }
             }
             uc_mem_write(uc, where, &value, 4);
         }
@@ -195,7 +216,42 @@ bool engine_map(uc_engine *uc, const EngineImage &img) {
     apply_rel(rel_va, rel_sz);
     if (jmprel_va && pltrel == DT_REL) apply_rel(jmprel_va, pltrelsz);
 
-    log("engine mapped at 0x%x (entry rva 0x%x)", ENG_BASE, img.entry_rva);
+    /* validate PLT relocations: report any GOT slot left as 0 */
+    {
+        uint32_t zero_slots = 0, total = 0;
+        for (uint32_t o = 0; o + 8 <= pltrelsz; o += 8) {
+            const Rel r = read_at<Rel>(b, va_to_off(jmprel_va) + o);
+            uint32_t where = ENG_BASE + r.offset;
+            uint32_t val = 0;
+            uc_mem_read(uc, where, &val, 4);
+            total++;
+            if (val == 0 || val == 0xFFFFFFFFu) {
+                uint32_t nm = read_at<uint32_t>(
+                    b, va_to_off(symtab_va) + (r.info >> 8) * syment);
+                const char *s = (const char *)(b.data() + va_to_off(strtab_va) + nm);
+                log("PLT reloc UNAPPLIED: got@0x%x type=%u sym=%s", r.offset,
+                    r.info & 0xFF, s);
+                if (++zero_slots > 10) break;
+            }
+        }
+        log("PLT reloc check: %u slots, %u zero", total, zero_slots);
+    }
+
+    /* Collect global constructors (DT_INIT + DT_INIT_ARRAY) - a real
+     * dlopen runs these before JNI_OnLoad; static vtables/singletons live
+     * here. Values are relocated emulated code addresses (bit0 = Thumb). */
+    g_init_routines.clear();
+    if (init_va) g_init_routines.push_back(init_va);
+    if (init_array_va && init_array_sz) {
+        uint32_t count = init_array_sz / 4;
+        for (uint32_t i = 0; i < count; i++) {
+            uint32_t fn = 0;
+            uc_mem_read(uc, ENG_BASE + init_array_va + i * 4, &fn, 4);
+            if (fn && fn != 0xFFFFFFFFu) g_init_routines.push_back(fn);
+        }
+    }
+    log("engine mapped at 0x%x (entry rva 0x%x), %u constructors",
+        ENG_BASE, img.entry_rva, (unsigned)g_init_routines.size());
     return true;
 }
 

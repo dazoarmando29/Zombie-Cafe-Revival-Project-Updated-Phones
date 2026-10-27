@@ -25,7 +25,23 @@
 namespace {
 
 JavaVM *g_vm = nullptr;
-JNIEnv *g_env = nullptr;
+
+/* JNIEnv is THREAD-SPECIFIC in ART. The engine calls us from the GL thread,
+ * the UI thread, etc. - never cache one env; fetch the caller's own. */
+JNIEnv *thread_env() {
+    JNIEnv *e = nullptr;
+    if (!g_vm) return nullptr;
+    jint s = g_vm->GetEnv((void **)&e, JNI_VERSION_1_6);
+    if (s == JNI_EDETACHED) {
+        JavaVMAttachArgs args;
+        args.version = JNI_VERSION_1_6;
+        args.name = (char *)"zcr-engine";
+        args.group = nullptr;
+        g_vm->AttachCurrentThread(&e, &args);
+    }
+    return e;
+}
+#define g_env (thread_env())
 
 /* ---- handle table: 32-bit handle <-> real JNI reference ---- */
 std::mutex g_mu;
@@ -703,14 +719,13 @@ bool g_inited = false;
 
 }  // namespace
 
-JNIEnv *jni_real_env() { return g_env; }
+JNIEnv *jni_real_env() { return thread_env(); }
 uint32_t jni_handle_for(jobject obj) { return handle_for(obj); }
 jobject jni_handle_get(uint32_t h) { return (jobject)handle_get(h); }
 
 bool jni_bridge_init(uc_engine *uc, JavaVM *vm) {
     if (g_inited) return true;
     g_vm = vm;
-    vm->GetEnv((void **)&g_env, JNI_VERSION_1_6);
 
     /* Fake JNIEnv object: first word = JNIEnv vtable. */
     uint32_t env_vtable = JNI_STUB_PAGE;
@@ -782,7 +797,11 @@ uint32_t jni_call_engine_r0(uc_engine *uc, uint32_t fn_rva, uint32_t r0,
         uc_reg_read(uc, UC_ARM_REG_PC, &pc);
         if (pc == EMU_RETURN_ADDR) break;
         if (err != UC_ERR_OK) {
+            uint32_t bad_pc = 0;
+            uc_reg_read(uc, UC_ARM_REG_PC, &bad_pc);
             diag_note_emu_error("jni_call_engine", uc_strerror(err));
+            diag_log("[emu-error] at pc=0x%x lr=? (engine rva 0x%x)", bad_pc,
+                     fn_rva);
             break;
         }
         ImportHandler fn = nullptr;

@@ -21,6 +21,11 @@ bool engine_load_image(const std::string &path, EngineImage *out);
  * (imported symbols are redirected to stub page addresses). */
 bool engine_map(uc_engine *uc, const EngineImage &img);
 
+/* Global constructors discovered during engine_map (DT_INIT +
+ * DT_INIT_ARRAY), as emulated code addresses (bit0 = Thumb). Must be
+ * executed once before JNI_OnLoad - just like a real dlopen does. */
+const std::vector<uint32_t> &engine_init_routines();
+
 /* Apply the ZCR runtime patches (URL strings, crash NOPs, toxin patch) -
  * identical in effect to libZombieCafeExtension's JNI_OnLoad. */
 bool engine_apply_zcr_patches(uc_engine *uc);
