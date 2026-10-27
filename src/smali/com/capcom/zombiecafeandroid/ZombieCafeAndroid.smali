@@ -4552,6 +4552,36 @@
 
     invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
 
+    # ZCR: targetSdk >= 23 enables the runtime-permission model; request the
+    # two dangerous permissions the original game used. Guarded for API < 23.
+    sget v0, Landroid/os/Build$VERSION;->SDK_INT:I
+
+    const/16 v1, 0x17
+
+    if-ge v0, v1, :zcr_perms_done
+
+    const/4 v0, 0x2
+
+    new-array v0, v0, [Ljava/lang/String;
+
+    const/4 v1, 0x0
+
+    const-string v2, "android.permission.READ_PHONE_STATE"
+
+    aput-object v2, v0, v1
+
+    const/4 v1, 0x1
+
+    const-string v2, "android.permission.WRITE_EXTERNAL_STORAGE"
+
+    aput-object v2, v0, v1
+
+    const/16 v1, 0x2a
+
+    invoke-virtual {p0, v0, v1}, Landroid/app/Activity;->requestPermissions([Ljava/lang/String;I)V
+
+    :zcr_perms_done
+
     sget-object v0, Landroid/os/Build;->MODEL:Ljava/lang/String;
 
     sput-object v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->mDeviceModel:Ljava/lang/String;

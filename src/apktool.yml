@@ -12,7 +12,7 @@ packageInfo:
   renameManifestPackage: null
 sdkInfo:
   minSdkVersion: 8
-  targetSdkVersion: 14
+  targetSdkVersion: 28
 sharedLibrary: false
 sparseResources: true
 unknownFiles:
@@ -25,5 +25,5 @@ usesFramework:
   tag: null
 version: 2.5.0-dirty
 versionInfo:
-  versionCode: 19
-  versionName: ZombieCafeAndroid 1.1.2.0a
+  versionCode: 20
+  versionName: ZombieCafeAndroid 1.1.2.0a ZCR v0.1.1
