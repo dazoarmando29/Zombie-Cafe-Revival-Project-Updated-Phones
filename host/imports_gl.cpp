@@ -20,6 +20,7 @@
 
 #include "emu_mem.h"
 #include "stub_dispatch.h"
+#include "diag.h"
 
 #define TAG "zcr-gl"
 
@@ -255,11 +256,13 @@ static void h_glLightfv(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
 }
 
 static void h_glDrawArrays(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    diag_note_draw();
     apply_arrays(uc, (uint32_t)a.r[1], (uint32_t)a.r[2]);
     glDrawArrays((GLenum)a.r[0], (GLint)a.r[1], (GLsizei)a.r[2]);
     *rv = 0;
 }
 static void h_glDrawElements(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    diag_note_draw();
     GLenum mode = (GLenum)a.r[0];
     GLsizei count = (GLsizei)a.r[1];
     GLenum type = (GLenum)a.r[2];
@@ -331,13 +334,21 @@ static void h_glDeleteTextures(uc_engine *uc, const emu::Args &a, uint32_t *rv) 
 
 static void h_glTexImage2D(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     uint32_t pixels = a.arg(8);
+    GLsizei w = (GLsizei)a.r[3], h = (GLsizei)a.arg(4);
+    GLenum format = (GLenum)a.arg(6), type = (GLenum)a.arg(7);
     const GLvoid *p = nullptr;
     if (pixels) {
-        size_t n = (size_t)a.r[3] * a.r[4] * 8; /* generous upper bound */
+        size_t bpp = 4;
+        if (type == GL_UNSIGNED_SHORT_5_6_5 || type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+            type == GL_UNSIGNED_SHORT_5_5_5_1)
+            bpp = 2;
+        else if (format == GL_RGB) bpp = 3;
+        else if (format == GL_ALPHA || format == GL_LUMINANCE) bpp = 1;
+        size_t n = (size_t)w * h * bpp + 32;
         p = gl_ptr(uc, pixels, n, &g_tmp_misc);
     }
-    glTexImage2D((GLenum)a.r[0], (GLint)a.r[1], (GLint)a.r[2], (GLsizei)a.r[3],
-                 (GLsizei)a.r[4], (GLint)a.r[5], (GLenum)a.r[6], (GLenum)a.r[7], p);
+    glTexImage2D((GLenum)a.r[0], (GLint)a.r[1], (GLint)a.r[2], w, h,
+                 (GLint)a.arg(5), format, type, p);
     *rv = 0;
 }
 static void h_glCompressedTexImage2D(uc_engine *uc, const emu::Args &a,
@@ -347,14 +358,14 @@ static void h_glCompressedTexImage2D(uc_engine *uc, const emu::Args &a,
     const GLvoid *p = nullptr;
     if (data && size > 0) p = gl_ptr(uc, data, (size_t)size, &g_tmp_misc);
     glCompressedTexImage2D((GLenum)a.r[0], (GLint)a.r[1], (GLenum)a.r[2],
-                           (GLsizei)a.r[3], (GLsizei)a.r[4], (GLint)a.r[5],
+                           (GLsizei)a.r[3], (GLsizei)a.arg(4), (GLint)a.arg(5),
                            size, p);
     *rv = 0;
 }
 static void h_glReadPixels(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     std::vector<uint8_t> buf((size_t)a.r[2] * a.r[3] * 4);
     glReadPixels((GLint)a.r[0], (GLint)a.r[1], (GLsizei)a.r[2], (GLsizei)a.r[3],
-                 (GLenum)a.r[4], (GLenum)a.r[5], buf.data());
+                 (GLenum)a.arg(4), (GLenum)a.arg(5), buf.data());
     emu::write(uc, a.arg(6), buf.data(), buf.size());
     *rv = 0;
 }

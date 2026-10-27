@@ -25,7 +25,10 @@
 #include "imports_posix.h"
 #include "jni_bridge.h"
 #include "stub_dispatch.h"
+#include "diag.h"
 #include "generated/engine_tables.h"
+
+#include <GLES/gl.h>
 
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "zcr-host", __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "zcr-host", __VA_ARGS__)
@@ -52,8 +55,11 @@ bool on_code(uc_engine *uc, uint32_t address, uint32_t, void *) {
         uc_reg_read(uc, UC_ARM_REG_SP, &args.sp);
         uint32_t lr = 0, rv = 0;
         uc_reg_read(uc, UC_ARM_REG_LR, &lr);
-        if (!stubs_dispatch_by_name(uc, nm, args, &rv))
-            LOGE("unimplemented JNIEnv fn #%u", idx);
+        if (!stubs_dispatch_by_name(uc, nm, args, &rv)) {
+            char un[80];
+            snprintf(un, sizeof(un), "JNIEnv fn #%u", idx);
+            diag_note_unimpl(un);
+        }
         uc_reg_write(uc, UC_ARM_REG_R0, &rv);
         emu_set_pc(uc, lr);
         return true;
@@ -139,12 +145,16 @@ bool host_init(JNIEnv *env) {
     /* run the engine's own JNI_OnLoad */
     for (uint32_t i = 0; i < ENGINE_JNI_COUNT; i++) {
         if (strcmp(kEngineJniExports[i].name, "JNI_OnLoad") == 0) {
-            uint32_t vm = JAVA_VM_OBJ;
-            jni_call_engine(g_uc, kEngineJniExports[i].rva, &vm, 1);
+            diag_log("[diag] running engine JNI_OnLoad at rva 0x%x",
+                     kEngineJniExports[i].rva);
+            uint32_t r = jni_call_engine_r0(g_uc, kEngineJniExports[i].rva,
+                                            JAVA_VM_OBJ, nullptr, 0);
+            diag_log("[diag] engine JNI_OnLoad returned %u", r);
             break;
         }
     }
     LOGI("host initialized");
+    diag_log("[diag] host initialized OK");
     return true;
 }
 
@@ -220,11 +230,31 @@ uint32_t jf(jfloat f) {
 extern "C" JNIEXPORT jint JNICALL
 Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
                                                        jint frame) {
-    if (!host_init(env)) return 0;
+    if (!host_init(env)) {
+        /* diag: solid red = host init failed */
+        glClearColor(1.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        return 0;
+    }
+    /* diag: solid magenta underlay; the engine normally clears/draws over it.
+       If the screen shows magenta, the engine's render produced no GL calls. */
+    glClearColor(1.f, 0.f, 1.f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     uint32_t w[2] = {jni_handle_for(cls), (uint32_t)frame};
-    return (jint)jni_call_engine(g_uc,
-                                 engine_rva("Java_com_capcom_zombiecafeandroid_CapcomRenderer_render"),
-                                 w, 2);
+    uint32_t rva = engine_rva("Java_com_capcom_zombiecafeandroid_CapcomRenderer_render");
+    if (!rva) {
+        diag_log("[diag] render rva lookup FAILED");
+        return 0;
+    }
+    uint32_t rv = jni_call_engine(g_uc, rva, w, 2);
+
+    static int frame_count = 0;
+    if ((frame_count++ % 120) == 0) {
+        diag_log("[diag] frame=%d emu_ret=%u", frame_count, rv);
+        diag_summary();
+    }
+    return (jint)rv;
 }
 ENTRY(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_InitMethodCalls) {
     GUARD();
