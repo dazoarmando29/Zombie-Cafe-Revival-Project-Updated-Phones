@@ -1,0 +1,9 @@
+go 1.23
+
+use (
+	./tool/build_tool
+	./tool/resource_manager
+	./tool/file_types
+	./tool/server
+	./tool/cctpacker
+)
