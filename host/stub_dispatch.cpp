@@ -72,16 +72,11 @@ void stubs_take_pending(ImportHandler *fn, emu::Args *args) {
 }
 
 void emu_set_pc(uc_engine *uc, uint32_t addr) {
-    /* bit0 of an ARM code address encodes Thumb state */
-    uint32_t cpsr = 0;
-    uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
-    if (addr & 1u)
-        cpsr |= 0x20u;   /* T bit */
-    else
-        cpsr &= ~0x20u;
-    uc_reg_write(uc, UC_ARM_REG_CPSR, &cpsr);
-    uint32_t pc = addr & ~1u;
-    uc_reg_write(uc, UC_ARM_REG_PC, &pc);
+    /* Unicorn: writing an odd PC selects Thumb mode automatically
+     * (see unicorn_arm.c reg_write: env->thumb = value & 1). Never mask
+     * bit 0 - that would force the CPU into ARM mode and the engine's
+     * Thumb code would decode as garbage (UC_ERR_INSN_INVALID). */
+    uc_reg_write(uc, UC_ARM_REG_PC, &addr);
 }
 
 bool stubs_dispatch_by_name(uc_engine *uc, const char *name,

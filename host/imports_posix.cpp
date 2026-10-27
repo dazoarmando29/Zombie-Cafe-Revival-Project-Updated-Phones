@@ -153,16 +153,21 @@ z_stream *zget(uc_engine *uc, uint32_t addr) {
     return it == g_zstreams.end() ? nullptr : it->second;
 }
 
-void zwrite_back(uc_engine *uc, uint32_t addr, z_stream *z) {
-    /* emulated z_stream layout (32-bit): next_in, avail_in, total_in,
-       next_out, avail_out, total_out, msg, state ... */
+/* Write stream progress back in EMULATED pointer space. Host buffer
+ * pointers must never leak into the engine's z_stream - libpng/deflate
+ * call inflate() repeatedly and continue from next_in/next_out. */
+void zwrite_back(uc_engine *uc, uint32_t addr, z_stream *z,
+                 uint32_t in_ptr, uint32_t in_len, uint32_t out_ptr,
+                 uint32_t out_len) {
     uint32_t v;
-    v = (uint32_t)(uintptr_t)z->next_in;  emu::write(uc, addr + 0, &v, 4);
-    v = z->avail_in;                      emu::write(uc, addr + 4, &v, 4);
-    v = (uint32_t)z->total_in;            emu::write(uc, addr + 8, &v, 4);
-    v = (uint32_t)(uintptr_t)z->next_out; emu::write(uc, addr + 12, &v, 4);
-    v = z->avail_out;                     emu::write(uc, addr + 16, &v, 4);
-    v = (uint32_t)z->total_out;           emu::write(uc, addr + 20, &v, 4);
+    uint32_t in_used = in_len - z->avail_in;
+    uint32_t out_used = out_len - z->avail_out;
+    v = in_ptr + in_used;        emu::write(uc, addr + 0, &v, 4);   /* next_in  */
+    v = z->avail_in;             emu::write(uc, addr + 4, &v, 4);   /* avail_in */
+    v = (uint32_t)z->total_in;   emu::write(uc, addr + 8, &v, 4);
+    v = out_ptr + out_used;      emu::write(uc, addr + 12, &v, 4);  /* next_out */
+    v = z->avail_out;            emu::write(uc, addr + 16, &v, 4);  /* avail_out*/
+    v = (uint32_t)z->total_out;  emu::write(uc, addr + 20, &v, 4);
 }
 
 }  // namespace
@@ -576,15 +581,16 @@ static void h_inflate(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     emu::read(uc, a.r[0] + 4, &in_len, 4);
     emu::read(uc, a.r[0] + 12, &out_ptr, 4);
     emu::read(uc, a.r[0] + 16, &out_len, 4);
-    std::vector<uint8_t> in(in_len), out(out_len);
+    std::vector<uint8_t> in(in_len ? in_len : 1), out(out_len ? out_len : 1);
     if (in_len) emu::read(uc, in_ptr, in.data(), in_len);
     z->next_in = in.data();
     z->avail_in = in_len;
     z->next_out = out.data();
     z->avail_out = out_len;
     int r = inflate(z, (int)a.r[1]);
-    emu::write(uc, out_ptr, out.data(), out_len - z->avail_out);
-    zwrite_back(uc, a.r[0], z);
+    uint32_t out_used = out_len - z->avail_out;
+    if (out_used) emu::write(uc, out_ptr, out.data(), out_used);
+    zwrite_back(uc, a.r[0], z, in_ptr, in_len, out_ptr, out_len);
     *rv = (uint32_t)r;
 }
 static void h_inflateEnd(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
@@ -617,15 +623,16 @@ static void h_deflate(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     emu::read(uc, a.r[0] + 4, &in_len, 4);
     emu::read(uc, a.r[0] + 12, &out_ptr, 4);
     emu::read(uc, a.r[0] + 16, &out_len, 4);
-    std::vector<uint8_t> in(in_len), out(out_len);
+    std::vector<uint8_t> in(in_len ? in_len : 1), out(out_len ? out_len : 1);
     if (in_len) emu::read(uc, in_ptr, in.data(), in_len);
     z->next_in = in.data();
     z->avail_in = in_len;
     z->next_out = out.data();
     z->avail_out = out_len;
     int r = deflate(z, (int)a.r[1]);
-    emu::write(uc, out_ptr, out.data(), out_len - z->avail_out);
-    zwrite_back(uc, a.r[0], z);
+    uint32_t out_used = out_len - z->avail_out;
+    if (out_used) emu::write(uc, out_ptr, out.data(), out_used);
+    zwrite_back(uc, a.r[0], z, in_ptr, in_len, out_ptr, out_len);
     *rv = (uint32_t)r;
 }
 static void h_deflateEnd(uc_engine *uc, const emu::Args &a, uint32_t *rv) {

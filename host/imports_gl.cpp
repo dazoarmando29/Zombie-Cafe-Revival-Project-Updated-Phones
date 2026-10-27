@@ -65,10 +65,15 @@ struct ClientArray {
     uint32_t ptr = 0;
 };
 ClientArray g_va, g_tc, g_co, g_no;
+int g_tex_env_mode = 0x2100; /* GL_MODULATE */
 
 std::vector<uint8_t> g_tmp_va, g_tmp_tc, g_tmp_co, g_tmp_no, g_tmp_idx, g_tmp_misc;
 
 void apply_arrays(uc_engine *uc, uint32_t first, uint32_t elems) {
+    /* zero-filled fallback so a bad pointer never feeds garbage to the GPU */
+    static std::vector<uint8_t> s_zero;
+    if (s_zero.size() < 4096) s_zero.resize(4096, 0);
+
     auto resolve = [&](ClientArray &a, std::vector<uint8_t> &scratch,
                        const void **out) -> void {
         size_t esz = (a.type == GL_BYTE || a.type == GL_UNSIGNED_BYTE) ? 1
@@ -81,7 +86,7 @@ void apply_arrays(uc_engine *uc, uint32_t first, uint32_t elems) {
         } else {
             scratch.resize(off + bytes);
             if (!emu::read(uc, a.ptr, scratch.data(), scratch.size())) {
-                *out = nullptr;
+                *out = s_zero.data();
                 return;
             }
             *out = scratch.data() + off;
@@ -90,22 +95,26 @@ void apply_arrays(uc_engine *uc, uint32_t first, uint32_t elems) {
     if (g_va.enabled && g_va.ptr) {
         const void *p = nullptr;
         resolve(g_va, g_tmp_va, &p);
-        if (p) glVertexPointer(g_va.size, g_va.type, g_va.stride, p);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(g_va.size, g_va.type, g_va.stride, p);
     }
     if (g_tc.enabled && g_tc.ptr) {
         const void *p = nullptr;
         resolve(g_tc, g_tmp_tc, &p);
-        if (p) glTexCoordPointer(g_tc.size, g_tc.type, g_tc.stride, p);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer(g_tc.size, g_tc.type, g_tc.stride, p);
     }
     if (g_co.enabled && g_co.ptr) {
         const void *p = nullptr;
         resolve(g_co, g_tmp_co, &p);
-        if (p) glColorPointer(g_co.size, g_co.type, g_co.stride, p);
+        glEnableClientState(GL_COLOR_ARRAY);
+        glColorPointer(g_co.size, g_co.type, g_co.stride, p);
     }
     if (g_no.enabled && g_no.ptr) {
         const void *p = nullptr;
         resolve(g_no, g_tmp_no, &p);
-        if (p) glNormalPointer(g_no.type, g_no.stride, p);
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glNormalPointer(g_no.type, g_no.stride, p);
     }
 }
 
@@ -169,24 +178,28 @@ static void h_glOrthof(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
 
 static void h_glEnableClientState(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     (void)uc;
-    switch (a.r[0]) {
+    GLenum state = (GLenum)a.r[0];
+    switch (state) {
         case GL_VERTEX_ARRAY: g_va.enabled = true; break;
         case GL_TEXTURE_COORD_ARRAY: g_tc.enabled = true; break;
         case GL_COLOR_ARRAY: g_co.enabled = true; break;
         case GL_NORMAL_ARRAY: g_no.enabled = true; break;
-        default: glEnableClientState((GLenum)a.r[0]); break;
     }
+    /* MUST reach the real context: with the array disabled GLES1 draws every
+       vertex from one constant - degenerate triangles, zero fragments. */
+    glEnableClientState(state);
     *rv = 0;
 }
 static void h_glDisableClientState(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     (void)uc;
-    switch (a.r[0]) {
+    GLenum state = (GLenum)a.r[0];
+    switch (state) {
         case GL_VERTEX_ARRAY: g_va.enabled = false; break;
         case GL_TEXTURE_COORD_ARRAY: g_tc.enabled = false; break;
         case GL_COLOR_ARRAY: g_co.enabled = false; break;
         case GL_NORMAL_ARRAY: g_no.enabled = false; break;
-        default: glDisableClientState((GLenum)a.r[0]); break;
     }
+    glDisableClientState(state);
     *rv = 0;
 }
 static void h_glVertexPointer(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
@@ -224,16 +237,25 @@ static void h_glNormalPointer(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
 
 static void h_glColor4f(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     (void)uc;
+    static int logged = 0;
+    if (logged++ < 10)
+        diag_log("[color] 4f=(%f,%f,%f,%f)", u2f(a.r[0]), u2f(a.r[1]),
+                 u2f(a.r[2]), u2f(a.r[3]));
     glColor4f(u2f(a.r[0]), u2f(a.r[1]), u2f(a.r[2]), u2f(a.r[3]));
     *rv = 0;
 }
 static void h_glColor4ub(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     (void)uc;
+    static int logged = 0;
+    if (logged++ < 10)
+        diag_log("[color] 4ub=(%u,%u,%u,%u)", a.r[0] & 0xFF, a.r[1] & 0xFF,
+                 a.r[2] & 0xFF, a.r[3] & 0xFF);
     glColor4ub((GLubyte)a.r[0], (GLubyte)a.r[1], (GLubyte)a.r[2], (GLubyte)a.r[3]);
     *rv = 0;
 }
 static void h_glTexEnvi(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     (void)uc;
+    if (a.r[1] == 0x2200) g_tex_env_mode = (int)a.r[2];
     glTexEnvi((GLenum)a.r[0], (GLenum)a.r[1], (GLint)a.r[2]);
     *rv = 0;
 }
@@ -258,6 +280,18 @@ static void h_glLightfv(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
 static void h_glDrawArrays(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     diag_note_draw();
     apply_arrays(uc, (uint32_t)a.r[1], (uint32_t)a.r[2]);
+    /* diag: sample the resolved vertex + color data of the first draw */
+    static int logged = 0;
+    if (logged < 3 && g_va.enabled && g_va.ptr) {
+        float v[4] = {0};
+        emu::read(uc, g_va.ptr, v, 16);
+        unsigned char c[4] = {0};
+        if (g_co.enabled && g_co.ptr) emu::read(uc, g_co.ptr, c, 4);
+        diag_log("[draw] mode=%u first=%d count=%d vptr=0x%x vert=(%f,%f,%f) col=(%u,%u,%u,%u) blend=%d",
+                 a.r[0], (int)a.r[1], (int)a.r[2], g_va.ptr, v[0], v[1], v[2],
+                 c[0], c[1], c[2], c[3], glIsEnabled(GL_BLEND));
+        logged++;
+    }
     glDrawArrays((GLenum)a.r[0], (GLint)a.r[1], (GLsizei)a.r[2]);
     *rv = 0;
 }
@@ -275,6 +309,8 @@ static void h_glDrawElements(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     /* find the max referenced index so array copies cover it */
     std::vector<uint8_t> idx((size_t)count * isz);
     if (!emu::read(uc, idx_ptr, idx.data(), idx.size())) {
+        diag_log("[draw] ELEM index read FAILED ptr=0x%x count=%d type=%u",
+                 idx_ptr, (int)count, type);
         *rv = 0;
         return;
     }
@@ -282,6 +318,33 @@ static void h_glDrawElements(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     for (GLsizei i = 0; i < count; i++) {
         uint32_t v = (isz == 2) ? (idx[i * 2] | (idx[i * 2 + 1] << 8)) : idx[i];
         if (v > max_idx) max_idx = v;
+    }
+    static int logged = 0;
+    if (logged < 4) {
+        float v[8] = {0};
+        emu::read(uc, g_va.ptr, v, 32);
+        unsigned char c[8] = {0};
+        if (g_co.enabled && g_co.ptr) emu::read(uc, g_co.ptr, c, 8);
+        float t[4] = {0};
+        if (g_tc.enabled && g_tc.ptr) emu::read(uc, g_tc.ptr, t, 16);
+        float proj[16], mv[16];
+        glGetFloatv(GL_PROJECTION_MATRIX, proj);
+        glGetFloatv(GL_MODELVIEW_MATRIX, mv);
+        float cc[4] = {0};
+        glGetFloatv(GL_CURRENT_COLOR, cc);
+        diag_log("[draw] ELEM mode=%u count=%d va(%u,%u,%u) co_en=%d tc_en=%d vert=(%f,%f) col=(%u,%u,%u,%u) tcs=(%f,%f)",
+                 mode, (int)count, g_va.size, g_va.type, g_va.stride,
+                 g_co.enabled, g_tc.enabled, v[0], v[1], c[0], c[1], c[2], c[3],
+                 t[0], t[1]);
+        diag_log("[draw] proj=[%f %f %f %f | %f %f %f %f | %f %f %f %f | %f %f %f %f]",
+                 proj[0], proj[4], proj[8], proj[12], proj[1], proj[5], proj[9],
+                 proj[13], proj[2], proj[6], proj[10], proj[14], proj[3], proj[7],
+                 proj[11], proj[15]);
+        diag_log("[draw] mv=[%f %f %f %f | %f %f %f %f | %f %f %f %f | %f %f %f %f] curcol=(%f,%f,%f,%f) texenv=%d",
+                 mv[0], mv[4], mv[8], mv[12], mv[1], mv[5], mv[9], mv[13],
+                 mv[2], mv[6], mv[10], mv[14], mv[3], mv[7], mv[11], mv[15],
+                 cc[0], cc[1], cc[2], cc[3], g_tex_env_mode);
+        logged++;
     }
     apply_arrays(uc, 0, max_idx + 1);
     glDrawElements(mode, count, type, idx.data());
@@ -370,15 +433,26 @@ static void h_glReadPixels(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     *rv = 0;
 }
 static void h_glGetFloatv(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    /* write ONLY the storage the caller provided: matrices are 16 floats,
+     * everything else is 1 (GL_MAX_TEXTURE_SIZE style queries). Writing a
+     * fixed 16-float block smashes the caller's stack frame. */
+    GLenum pname = (GLenum)a.r[0];
+    int nfloats = 1;
+    if (pname == 0x0BA6 || pname == 0x0BA7 || pname == 0x0BA8 || pname == 0x0BA5)
+        nfloats = 16;
     GLfloat v[16] = {0};
-    glGetFloatv((GLenum)a.r[0], v);
-    emu::write(uc, a.r[1], v, sizeof(v));
+    glGetFloatv(pname, v);
+    emu::write(uc, a.r[1], v, (size_t)nfloats * 4);
     *rv = 0;
 }
 static void h_glGetIntegerv(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    GLenum pname = (GLenum)a.r[0];
+    int nints = 1;
+    if (pname == 0x0BA2 /* GL_VIEWPORT */ || pname == 0x0C10 /* GL_SCISSOR_BOX */)
+        nints = 4;
     GLint v[4] = {0};
-    glGetIntegerv((GLenum)a.r[0], v);
-    emu::write(uc, a.r[1], v, sizeof(v));
+    glGetIntegerv(pname, v);
+    emu::write(uc, a.r[1], v, (size_t)nints * 4);
     *rv = 0;
 }
 
