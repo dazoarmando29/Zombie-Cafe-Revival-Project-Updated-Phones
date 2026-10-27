@@ -14,8 +14,12 @@
 #define STUB_PAGE       0xF0000000u
 #define STUB_SLOT_SIZE  16u
 
-/* Fake JNIEnv/JavaVM function pointer page (same trap trick). */
+/* Fake JNIEnv / JavaVM function pointer pages (same trap trick).
+ * JNIEnv vtable slots:  JNI_STUB_PAGE + i*16         (i < 512)
+ * JavaVM  vtable slots: JNI_STUB_PAGE + (512+i)*16   (JNI_STUB_PAGE+0x8000 area) */
 #define JNI_STUB_PAGE   0xF1000000u
+#define JAVA_VM_VTABLE  0xF1008000u
+#define JAVA_VM_SLOT_BASE 512u
 
 /* Magic return address: finishing a host->engine call lands here. */
 #define EMU_RETURN_ADDR 0xEFFFF000u

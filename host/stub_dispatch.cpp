@@ -8,6 +8,7 @@
 
 #include "engine_memory.h"
 #include "generated/engine_tables.h"
+#include "diag.h"
 
 namespace {
 
@@ -100,8 +101,7 @@ StubResult stubs_dispatch(uc_engine *uc, uint32_t pc) {
     emu::Args args = fill_args(uc);
 
     if (!g_slots[slot].fn) {
-        fprintf(stderr, "[zcr-host] UNIMPLEMENTED import: %s\n",
-                g_slots[slot].name);
+        diag_note_unimpl(g_slots[slot].name);
         uint32_t lr = 0, z = 0;
         uc_reg_read(uc, UC_ARM_REG_LR, &lr);
         uc_reg_write(uc, UC_ARM_REG_R0, &z);

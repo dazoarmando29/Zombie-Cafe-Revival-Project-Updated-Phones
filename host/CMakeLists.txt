@@ -22,6 +22,7 @@ add_library(zcr_host SHARED
   emu_mem.cpp
   imports_posix.cpp
   imports_gl.cpp
+  diag.cpp
 )
 
 target_include_directories(zcr_host PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

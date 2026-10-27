@@ -606,8 +606,8 @@ static void h_deflateInit2_(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     std::lock_guard<std::mutex> lk(g_zmu);
     g_zstreams[a.r[0]] = z;
     *rv = (uint32_t)deflateInit2_(z, (int)a.r[1], (int)a.r[2], (int)a.r[3],
-                                  (int)a.r[4], (int)a.r[5], (const char *)"1.2.11",
-                                  sizeof(z_stream));
+                                  (int)a.arg(4), (int)a.arg(5),
+                                  (const char *)"1.2.11", sizeof(z_stream));
 }
 static void h_deflate(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     z_stream *z = zget(uc, a.r[0]);

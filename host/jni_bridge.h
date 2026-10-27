@@ -17,6 +17,10 @@ bool jni_bridge_init(uc_engine *uc, JavaVM *vm);
 uint32_t jni_call_engine(uc_engine *uc, uint32_t fn_rva, const uint32_t *words,
                          uint32_t nwords);
 
+/* Same, but with an explicit r0 (e.g. JAVA_VM_OBJ for JNI_OnLoad). */
+uint32_t jni_call_engine_r0(uc_engine *uc, uint32_t fn_rva, uint32_t r0,
+                            const uint32_t *words, uint32_t nwords);
+
 /* Handle <-> real JNI object mapping (used by the Java_* forwarders). */
 uint32_t jni_handle_for(jobject obj);
 jobject jni_handle_get(uint32_t h);

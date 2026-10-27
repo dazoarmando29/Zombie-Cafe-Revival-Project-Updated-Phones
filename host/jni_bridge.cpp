@@ -17,6 +17,7 @@
 #include "engine_memory.h"
 #include "emu_mem.h"
 #include "stub_dispatch.h"
+#include "diag.h"
 
 #define TAG "zcr-jni"
 #define JIDX(field) ((uint32_t)(offsetof(JNINativeInterface, field) / sizeof(void *)))
@@ -591,11 +592,29 @@ void f_get_version(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     *rv = 0x00010006;
 }
 void f_get_java_vm(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
-    uint32_t h = handle_for(g_vm);
-    emu::write(uc, a.r[1], &h, 4);
+    /* the engine keeps this as a JavaVM* in emulated memory -> must be the
+       emulated fake VM object, not a host handle */
+    uint32_t vm = JAVA_VM_OBJ;
+    emu::write(uc, a.r[1], &vm, 4);
     *rv = 0;
 }
 void f_noop(uc_engine *uc, const emu::Args &a, uint32_t *rv) { *rv = 0; }
+
+/* ---- JavaVM (JNIInvokeInterface) ----
+ * indices: 3 DestroyJavaVM, 4 AttachCurrentThread, 5 DetachCurrentThread,
+ *          6 GetEnv, 7 AttachCurrentThreadAsDaemon */
+void f_vm_get_env(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    /* GetEnv(JavaVM*, void** env, jint version) -> hand back the fake env */
+    uint32_t env = JNI_ENV_OBJ;
+    if (a.r[1]) emu::write(uc, a.r[1], &env, 4);
+    *rv = 0; /* JNI_OK */
+}
+void f_vm_attach(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    /* AttachCurrentThread(JavaVM*, void** env, void* args) */
+    uint32_t env = JNI_ENV_OBJ;
+    if (a.r[1]) emu::write(uc, a.r[1], &env, 4);
+    *rv = 0;
+}
 
 /* ---- vtable registration ---- */
 struct JniFn {
@@ -671,6 +690,13 @@ const JniFn kJniFns[] = {
     {JIDX(ExceptionClear), "ExceptionClear", f_exception_clear},
     {JIDX(ExceptionDescribe), "ExceptionDescribe", f_exception_describe},
     {JIDX(GetJavaVM), "GetJavaVM", f_get_java_vm},
+
+    /* JavaVM vtable (registered under JVM# slots 512+i) */
+    {JAVA_VM_SLOT_BASE + 6, "JVM#6:GetEnv", f_vm_get_env},
+    {JAVA_VM_SLOT_BASE + 4, "JVM#4:AttachCurrentThread", f_vm_attach},
+    {JAVA_VM_SLOT_BASE + 5, "JVM#5:DetachCurrentThread", f_noop},
+    {JAVA_VM_SLOT_BASE + 3, "JVM#3:DestroyJavaVM", f_noop},
+    {JAVA_VM_SLOT_BASE + 7, "JVM#7:AttachAsDaemon", f_vm_attach},
 };
 
 bool g_inited = false;
@@ -686,15 +712,25 @@ bool jni_bridge_init(uc_engine *uc, JavaVM *vm) {
     g_vm = vm;
     vm->GetEnv((void **)&g_env, JNI_VERSION_1_6);
 
-    /* Fake JNIEnv + JavaVM objects: first word = trap vtable. */
-    uint32_t vtable = JNI_STUB_PAGE;
-    emu::write(uc, JNI_ENV_OBJ, &vtable, 4);
-    emu::write(uc, JAVA_VM_OBJ, &vtable, 4);
+    /* Fake JNIEnv object: first word = JNIEnv vtable. */
+    uint32_t env_vtable = JNI_STUB_PAGE;
+    emu::write(uc, JNI_ENV_OBJ, &env_vtable, 4);
 
-    /* Fill the emulated vtable: entry i -> trap address for slot i. */
+    /* Fake JavaVM object: its vtable is the JNIInvokeInterface layout
+     * (reserved x3, DestroyJavaVM, AttachCurrentThread, DetachCurrentThread,
+     * GetEnv, AttachCurrentThreadAsDaemon) - distinct from JNIEnv's. */
+    uint32_t vm_vtable = JAVA_VM_VTABLE;
+    emu::write(uc, JAVA_VM_OBJ, &vm_vtable, 4);
+
+    /* Fill the emulated JNIEnv vtable: entry i -> trap address for slot i. */
     for (uint32_t i = 0; i < 256; i++) {
         uint32_t trap = JNI_STUB_PAGE + i * STUB_SLOT_SIZE;
         emu::write(uc, JNI_STUB_PAGE + i * 4, &trap, 4);
+    }
+    /* JavaVM vtable: entry i -> trap at slot (512 + i) */
+    for (uint32_t i = 0; i < 16; i++) {
+        uint32_t trap = JNI_STUB_PAGE + (JAVA_VM_SLOT_BASE + i) * STUB_SLOT_SIZE;
+        emu::write(uc, JAVA_VM_VTABLE + i * 4, &trap, 4);
     }
 
     for (const auto &f : kJniFns) {
@@ -711,12 +747,21 @@ bool jni_bridge_init(uc_engine *uc, JavaVM *vm) {
 
 uint32_t jni_call_engine(uc_engine *uc, uint32_t fn_rva, const uint32_t *words,
                          uint32_t nwords) {
+    return jni_call_engine_r0(uc, fn_rva, JNI_ENV_OBJ, words, nwords);
+}
+
+uint32_t jni_call_engine_r0(uc_engine *uc, uint32_t fn_rva, uint32_t r0,
+                            const uint32_t *words, uint32_t nwords) {
+    /* render thread + UI thread both drive the emulator; the engine's own
+       Java callbacks can re-enter on the same thread -> recursive mutex */
+    static std::recursive_mutex call_mu;
+    std::lock_guard<std::recursive_mutex> lk(call_mu);
+
     uint32_t sp = STACK_BASE + STACK_SIZE - 1024;
     uint32_t lr = EMU_RETURN_ADDR;
     uint32_t pc = ENG_ADDR(fn_rva);
-    uint32_t env = JNI_ENV_OBJ;
 
-    uint32_t regs[4] = {env, 0, 0, 0};
+    uint32_t regs[4] = {r0, 0, 0, 0};
     for (uint32_t i = 0; i < nwords && i < 3; i++) regs[i + 1] = words[i];
     uint32_t stack_words[16] = {0};
     uint32_t nstack = 0;
@@ -737,9 +782,7 @@ uint32_t jni_call_engine(uc_engine *uc, uint32_t fn_rva, const uint32_t *words,
         uc_reg_read(uc, UC_ARM_REG_PC, &pc);
         if (pc == EMU_RETURN_ADDR) break;
         if (err != UC_ERR_OK) {
-            __android_log_print(ANDROID_LOG_ERROR, TAG,
-                                "emu stopped: %s at pc=0x%x", uc_strerror(err),
-                                pc);
+            diag_note_emu_error("jni_call_engine", uc_strerror(err));
             break;
         }
         ImportHandler fn = nullptr;
