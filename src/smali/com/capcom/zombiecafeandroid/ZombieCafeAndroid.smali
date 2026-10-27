@@ -817,43 +817,14 @@
 .end method
 
 .method static a()Z
-    .locals 2
+    .locals 1
 
-    sget-object v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->mURLManager:Lcom/capcom/zombiecafeandroid/URLManager;
-
-    sget-object v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->CONTEXT:Landroid/content/Context;
-
-    invoke-static {v0}, Lcom/capcom/zombiecafeandroid/URLManager;->a(Landroid/content/Context;)Z
-
-    sget-boolean v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->USEINTERNET:Z
-
-    if-eqz v0, :cond_0
-
-    sget-boolean v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->CONNECTED:Z
-
-    if-eqz v0, :cond_0
-
-    const-string v0, "We have internet"
-
-    const-string v1, "and are connected"
-
-    invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-
-    const/4 v0, 0x1
-
-    :goto_0
-    return v0
-
-    :cond_0
-    const-string v0, "We are not connected"
-
-    const-string v1, "ignore server time"
-
-    invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-
+    # ZCR offline mode: never report connectivity so the game skips all
+    # server requests (gift fetch crash workaround from upstream article).
+    # Restore original body when tool/server is wired up (Phase 3).
     const/4 v0, 0x0
 
-    goto :goto_0
+    return v0
 .end method
 
 .method public static addSounds()V

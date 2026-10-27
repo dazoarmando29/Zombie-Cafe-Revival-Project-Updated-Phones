@@ -704,10 +704,21 @@
 
     invoke-direct {v2}, Ljava/lang/StringBuilder;-><init>()V
 
+    :try_start_zcr1
     invoke-virtual {v0}, Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;
 
     move-result-object v3
+    :try_end_zcr1
+    .catch Ljava/lang/SecurityException; {:try_start_zcr1 .. :try_end_zcr1} :catch_zcr1
 
+    goto :goto_zcr1
+
+    :catch_zcr1
+    move-exception v9
+
+    const-string v3, ""
+
+    :goto_zcr1
     invoke-virtual {v2, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
     move-result-object v2
@@ -720,10 +731,21 @@
 
     invoke-direct {v3}, Ljava/lang/StringBuilder;-><init>()V
 
+    :try_start_zcr2
     invoke-virtual {v0}, Landroid/telephony/TelephonyManager;->getSimSerialNumber()Ljava/lang/String;
 
     move-result-object v0
+    :try_end_zcr2
+    .catch Ljava/lang/SecurityException; {:try_start_zcr2 .. :try_end_zcr2} :catch_zcr2
 
+    goto :goto_zcr2
+
+    :catch_zcr2
+    move-exception v9
+
+    const-string v0, ""
+
+    :goto_zcr2
     invoke-virtual {v3, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
 
     move-result-object v0

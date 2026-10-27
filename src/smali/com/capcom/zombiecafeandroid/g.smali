@@ -1585,10 +1585,21 @@
     const-string v4, "AndroidGSM"
 
     :cond_0
+    :try_start_zcr3
     invoke-virtual {v2}, Landroid/telephony/TelephonyManager;->getDeviceId()Ljava/lang/String;
 
     move-result-object v2
+    :try_end_zcr3
+    .catch Ljava/lang/SecurityException; {:try_start_zcr3 .. :try_end_zcr3} :catch_zcr3
 
+    goto :goto_zcr3
+
+    :catch_zcr3
+    move-exception v2
+
+    const/4 v2, 0x0
+
+    :goto_zcr3
     const-string v18, "Phone"
 
     const-string v19, "utf-8"
