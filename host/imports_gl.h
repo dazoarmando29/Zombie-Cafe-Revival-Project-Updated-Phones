@@ -1,9 +1,16 @@
 /* OpenGL ES bridge.
  *
- * The engine mixes GLES1 fixed-function (glMatrixMode/glVertexPointer/...)
- * with GLES2 shader calls (glCreateShader/...). We request a GLES2 context
- * from the Java side, pass shader calls straight through to the driver, and
- * translate the fixed-function subset through a built-in shader program. */
+ * The game's GLSurfaceView creates a GLES 1.x context (n.smali passes a null
+ * attrib array to eglCreateContext). The engine's fixed-function calls
+ * (glMatrixMode / glVertexPointer / glDrawArrays / ...) are therefore
+ * forwarded straight to the real libGLESv1_CM. Its shader calls
+ * (glCreateShader / ...) fail against a GLES1 context exactly like on the
+ * original devices ("shader compile error" in the startup log) and the engine
+ * falls back to fixed-function rendering.
+ *
+ * Pointers passed to GL live in emulated memory. The emulated heap/stack are
+ * zero-copy host aliases, so most client-array pointers resolve directly;
+ * anything else is copied into scratch buffers at draw time. */
 #pragma once
 
 #include <cstdint>

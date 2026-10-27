@@ -70,6 +70,19 @@ void stubs_take_pending(ImportHandler *fn, emu::Args *args) {
     g_pending_fn = nullptr;
 }
 
+void emu_set_pc(uc_engine *uc, uint32_t addr) {
+    /* bit0 of an ARM code address encodes Thumb state */
+    uint32_t cpsr = 0;
+    uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
+    if (addr & 1u)
+        cpsr |= 0x20u;   /* T bit */
+    else
+        cpsr &= ~0x20u;
+    uc_reg_write(uc, UC_ARM_REG_CPSR, &cpsr);
+    uint32_t pc = addr & ~1u;
+    uc_reg_write(uc, UC_ARM_REG_PC, &pc);
+}
+
 bool stubs_dispatch_by_name(uc_engine *uc, const char *name,
                             const emu::Args &args, uint32_t *retval) {
     auto it = g_handlers.find(name);
@@ -85,15 +98,14 @@ StubResult stubs_dispatch(uc_engine *uc, uint32_t pc) {
     if (slot >= ENGINE_IMPORT_COUNT) return StubResult::kUnknown;
 
     emu::Args args = fill_args(uc);
-    uint32_t lr = 0;
-    uc_reg_read(uc, UC_ARM_REG_LR, &lr);
 
     if (!g_slots[slot].fn) {
         fprintf(stderr, "[zcr-host] UNIMPLEMENTED import: %s\n",
                 g_slots[slot].name);
-        uint32_t z = 0;
+        uint32_t lr = 0, z = 0;
+        uc_reg_read(uc, UC_ARM_REG_LR, &lr);
         uc_reg_write(uc, UC_ARM_REG_R0, &z);
-        uc_reg_write(uc, UC_ARM_REG_PC, &lr);
+        emu_set_pc(uc, lr);
         return StubResult::kHandled;
     }
 
@@ -105,7 +117,10 @@ StubResult stubs_dispatch(uc_engine *uc, uint32_t pc) {
 
     uint32_t retval = 0;
     g_slots[slot].fn(uc, args, &retval);
+    /* read LR after the handler: longjmp rewrites it to divert control */
+    uint32_t lr = 0;
+    uc_reg_read(uc, UC_ARM_REG_LR, &lr);
     uc_reg_write(uc, UC_ARM_REG_R0, &retval);
-    uc_reg_write(uc, UC_ARM_REG_PC, &lr);
+    emu_set_pc(uc, lr);
     return StubResult::kHandled;
 }
