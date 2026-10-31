@@ -273,7 +273,18 @@ static void h_strdup(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
 }
 
 static void h_malloc(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
-    *rv = emu::heap_alloc(uc, a.r[0]);
+    *rv = emu::heap_alloc_tagged(uc, a.r[0], "engine-malloc");
+    if ((a.r[0] >= 640 && a.r[0] <= 656) || a.r[0] == 168 || a.r[0] == 328 ||
+        a.r[0] == 1288 || a.r[0] == 2568 || a.r[0] == 5128 || a.r[0] == 10248 ||
+        a.r[0] == 88) {
+        uint32_t lr = 0, sp = 0, stk[4] = {0, 0, 0, 0};
+        uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+        uc_reg_read(uc, UC_ARM_REG_SP, &sp);
+        uc_mem_read(uc, sp, stk, 16);
+        __android_log_print(ANDROID_LOG_INFO, "zcr-heap",
+                            "[alloc648] size=%u ptr=0x%x lr=0x%x sp=0x%x stack=%08x %08x %08x %08x",
+                            a.r[0], *rv, lr, sp, stk[0], stk[1], stk[2], stk[3]);
+    }
 }
 static void h_free(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     emu::heap_free(uc, a.r[0]);

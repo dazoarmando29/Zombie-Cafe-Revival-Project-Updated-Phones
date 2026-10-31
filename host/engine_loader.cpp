@@ -270,9 +270,13 @@ bool engine_apply_zcr_patches(uc_engine *uc) {
         uc_mem_write(uc, ENG_ADDR(p.rva), p.text, strlen(p.text) + 1);
     }
 
-    /* Thumb NOP = 00 bf (the extension filled pairs of these) */
+    /* Thumb NOP = 00 bf. Upstream also NOPed the texture destructors as a
+     * workaround for a scudo double-free crash on real devices - that crash
+     * mechanism doesn't exist here (we control the allocator, and the
+     * magic-tagged free list rejects bad frees), so we keep the destructors
+     * ALIVE. NOPing them leaks every texture forever and OOMs the cafe load. */
     static const uint32_t kNops[] = {
-        0x9dee8, 0x13d530, 0x13d550, 0x13d9e8, 0x13d9ee, 0x13d3ae, 0x13d3b4,
+        0x9dee8,
     };
     for (uint32_t rva : kNops) {
         uint8_t nop[4] = {0x00, 0xBF, 0x00, 0xBF};

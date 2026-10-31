@@ -51,10 +51,14 @@ std::unordered_map<void *, uint32_t> g_handle_of;
 struct MethodEntry {
     jmethodID id;
     std::string sig;
+    std::string name;
     bool is_static;
 };
 std::unordered_map<uint32_t, MethodEntry> g_methods;
 uint32_t g_method_next = 0x70000000;
+
+/* Per-call JNI buffers follow true Get/Release semantics (freed on Release);
+ * the engine creates fresh Java arrays per load, so caching never reclaims. */
 
 uint32_t handle_for(void *obj) {
     if (!obj) return 0;
@@ -77,16 +81,20 @@ const MethodEntry *method_of(uint32_t h) {
     return it == g_methods.end() ? nullptr : &it->second;
 }
 
-uint32_t method_handle(jmethodID m, const std::string &sig, bool is_static) {
+uint32_t method_handle(jmethodID m, const std::string &sig,
+                       const std::string &name, bool is_static) {
     std::lock_guard<std::mutex> lk(g_mu);
     uint32_t h = g_method_next++;
-    g_methods[h] = {m, sig, is_static};
+    g_methods[h] = {m, sig, name, is_static};
     return h;
 }
 
 /* ---- argument sources ---- */
 struct WordSrc {
     virtual uint32_t next() = 0;
+    /* C varargs promote float->double and AAPCS 8-aligns 64-bit values;
+     * skip a word when the stream is at an odd position. */
+    virtual void align8() = 0;
     virtual ~WordSrc() = default;
 };
 
@@ -96,6 +104,7 @@ struct RegSrc : WordSrc {
     unsigned i = 3;
     explicit RegSrc(const emu::Args &args) : a(args) {}
     uint32_t next() override { return a.arg(i++); }
+    void align8() override { if (i & 1) i++; }
 };
 
 /* words at a memory address (va_list on ARM32 is char*) */
@@ -109,7 +118,14 @@ struct MemSrc : WordSrc {
         addr += 4;
         return v;
     }
+    void align8() override { if (addr & 7) addr += 4; }
 };
+
+uint64_t next64(WordSrc &src) {
+    src.align8();
+    uint32_t lo = src.next(), hi = src.next();
+    return ((uint64_t)hi << 32) | lo;
+}
 
 void marshal(WordSrc &src, const std::string &sig, std::vector<jvalue> *out) {
     size_t p = sig.find('(');
@@ -125,19 +141,22 @@ void marshal(WordSrc &src, const std::string &sig, std::vector<jvalue> *out) {
             case 'S': v.s = (jshort)src.next(); break;
             case 'I': v.i = (jint)src.next(); break;
             case 'J': {
-                uint32_t lo = src.next(), hi = src.next();
-                v.j = ((jlong)hi << 32) | lo;
+                v.j = (jlong)next64(src);
                 break;
             }
             case 'F': {
-                uint32_t u = src.next();
-                memcpy(&v.f, &u, 4);
+                /* float is promoted to double in C varargs! */
+                uint64_t u = next64(src);
+                double d;
+                memcpy(&d, &u, 8);
+                v.f = (jfloat)d;
                 break;
             }
             case 'D': {
-                uint32_t lo = src.next(), hi = src.next();
-                uint64_t u = ((uint64_t)hi << 32) | lo;
-                memcpy(&v.d, &u, 8);
+                uint64_t u = next64(src);
+                double d;
+                memcpy(&d, &u, 8);
+                v.d = d;
                 break;
             }
             case 'L': {
@@ -226,6 +245,17 @@ void do_call(uc_engine *uc, const emu::Args &a, WordSrc &src, Ret ret,
     }
     std::vector<jvalue> args;
     marshal(src, m->sig, &args);
+    diag_trace("jni %s(%s) n=%u", m->name.c_str(), m->sig.c_str(),
+               (unsigned)args.size());
+    /* diag: trace audio-related calls (volume mystery) */
+    if (m->name.find("Volume") != std::string::npos ||
+        m->name.find("Music") != std::string::npos) {
+        diag_log("[jni-call] %s(%s) nargs=%u arg0.i=%d arg0.f=%f arg1.f=%f",
+                 m->name.c_str(), m->sig.c_str(), (unsigned)args.size(),
+                 args.empty() ? 0 : args[0].i,
+                 args.empty() ? 0.f : args[0].f,
+                 args.size() < 2 ? 0.f : args[1].f);
+    }
     jobject obj = (jobject)handle_get(obj_or_cls);
     if (!obj) {
         *rv = 0;
@@ -263,6 +293,9 @@ void do_call(uc_engine *uc, const emu::Args &a, WordSrc &src, Ret ret,
             jobject o = is_static ? g_env->CallStaticObjectMethodA((jclass)obj, m->id, args.data())
                                   : g_env->CallObjectMethodA(obj, m->id, args.data());
             *rv = handle_for(o);
+            if (m->name.find("fileRead") != std::string::npos && o)
+                diag_log("[fileRead] returned array len=%d",
+                         (int)g_env->GetArrayLength((jarray)o));
             break;
         }
     }
@@ -278,6 +311,8 @@ void do_call_a(uc_engine *uc, const emu::Args &a, Ret ret, uint32_t *rv,
     }
     std::vector<jvalue> args;
     marshal_a(uc, jvals, m->sig, &args);
+    diag_trace("jniA %s(%s) n=%u", m->name.c_str(), m->sig.c_str(),
+               (unsigned)args.size());
     jobject obj = (jobject)handle_get(obj_or_cls);
     if (!obj) {
         *rv = 0;
@@ -363,7 +398,7 @@ void f_get_static_method_id(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
         *rv = 0;
         return;
     }
-    *rv = method_handle(m, sig, true);
+    *rv = method_handle(m, sig, name, true);
 }
 void f_get_method_id(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     std::string name, sig;
@@ -380,7 +415,7 @@ void f_get_method_id(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
         *rv = 0;
         return;
     }
-    *rv = method_handle(m, sig, false);
+    *rv = method_handle(m, sig, name, false);
 }
 
 /* ---- class / string / array ---- */
@@ -403,8 +438,9 @@ void f_get_string_utf_chars(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
         return;
     }
     const char *p = g_env->GetStringUTFChars(s, nullptr);
-    *rv = p ? emu::intern_string(uc, p) : 0;
+    uint32_t addr = p ? emu::intern_string(uc, p) : 0;
     if (p) g_env->ReleaseStringUTFChars(s, p);
+    *rv = addr;
 }
 void f_get_string_utf_length(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     jstring s = (jstring)handle_get(a.r[1]);
@@ -414,6 +450,8 @@ void f_new_byte_array(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     *rv = handle_for(g_env->NewByteArray((jsize)a.r[1]));
 }
 void f_release_string_utf(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    /* JNI semantics: the chars pointer is invalid after Release -> free it */
+    emu::heap_free(uc, a.r[2]);
     *rv = 0;
 }
 void f_get_array_length(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
@@ -421,7 +459,9 @@ void f_get_array_length(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     *rv = arr ? (uint32_t)g_env->GetArrayLength(arr) : 0;
 }
 
-/* Generic Get<prim>ArrayElements: copy into emulated heap, return emu ptr. */
+/* Cache one emulated buffer per JNI object so repeated Get/Release cycles
+ * don't leak the emulated heap. See declarations above handle_for. */
+
 void get_elements(uc_engine *uc, jarray arr, jsize n, jsize esz,
                   void (*region)(JNIEnv *, jarray, jsize, jsize, void *),
                   uint32_t *rv) {
@@ -429,25 +469,32 @@ void get_elements(uc_engine *uc, jarray arr, jsize n, jsize esz,
         *rv = 0;
         return;
     }
-    uint32_t p = emu::heap_alloc(uc, (size_t)n * esz ? (size_t)n * esz : 1);
+    uint32_t want = (uint32_t)((size_t)n * esz ? (size_t)n * esz : 1);
+    /* fresh buffer per Get; freed at Release. The engine hands each texture
+     * load a brand-new Java array, so caching per handle never reclaims. */
+    uint32_t p = emu::heap_alloc_tagged(uc, want, "jni-array");
+    if (!p) {
+        *rv = 0;
+        return;
+    }
     if (n) {
-        std::vector<uint8_t> buf((size_t)n * esz);
+        std::vector<uint8_t> buf(want);
         region(g_env, arr, 0, n, buf.data());
-        emu::write(uc, p, buf.data(), buf.size());
+        emu::write(uc, p, buf.data(), want);
     }
     *rv = p;
 }
 
-/* Generic Release<prim>ArrayElements: write back unless JNI_ABORT. */
+/* Release: write back unless JNI_ABORT, then free (true JNI semantics). */
 void release_elements(uc_engine *uc, jarray arr, uint32_t ptr, jint mode,
                       jsize n, jsize esz,
                       void (*setregion)(JNIEnv *, jarray, jsize, jsize, void *)) {
-    if (arr && mode != JNI_ABORT && n) {
+    if (arr && ptr && mode != JNI_ABORT && n) {
         std::vector<uint8_t> buf((size_t)n * esz);
         emu::read(uc, ptr, buf.data(), buf.size());
         setregion(g_env, arr, 0, n, buf.data());
     }
-    emu::heap_free(uc, ptr);
+    if (ptr) emu::heap_free(uc, ptr);
 }
 
 void f_get_byte_array_elements(uc_engine *uc, const emu::Args &a, uint32_t *rv) {

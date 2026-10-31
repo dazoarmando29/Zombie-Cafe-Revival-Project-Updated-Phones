@@ -74,6 +74,37 @@ void diag_note_emu_error(const char *where, const char *what) {
 
 void diag_note_draw() { g_diag_draws++; }
 
+/* ---- trace ring ---- */
+namespace {
+constexpr int kTraceN = 48;
+std::string g_traces[kTraceN];
+int g_trace_w = 0;
+}  // namespace
+
+void diag_trace(const char *fmt, ...) {
+    char buf[256];
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    /* collapse identical consecutive calls (volume/GetDate spam) */
+    if (g_trace_w > 0) {
+        std::string &last = g_traces[(g_trace_w - 1) % kTraceN];
+        if (last == buf) return;
+    }
+    g_traces[g_trace_w % kTraceN] = buf;
+    g_trace_w++;
+    /* live too (filterable); bounded by logd rate limits */
+    __android_log_print(ANDROID_LOG_INFO, "zcr", "[trace] %s", buf);
+}
+
+void diag_dump_traces() {
+    diag_log("[trace] ---- last %d calls before fault ----", kTraceN);
+    int start = g_trace_w > kTraceN ? g_trace_w - kTraceN : 0;
+    for (int i = start; i < g_trace_w; i++)
+        diag_log("[trace] %s", g_traces[i % kTraceN].c_str());
+}
+
 void diag_summary() {
     diag_log("[summary] draws=%u unimpl=%u emu_errors=%u", g_diag_draws,
              g_diag_unimpl, g_diag_emu_errors);

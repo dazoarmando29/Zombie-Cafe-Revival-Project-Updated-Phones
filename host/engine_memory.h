@@ -28,9 +28,10 @@
 #define STACK_BASE      0xE0000000u
 #define STACK_SIZE      (8u * 1024u * 1024u)
 
-/* Emulated heap used by hooked malloc/free. */
+/* Emulated heap used by hooked malloc/free. The cafe's texture loading peaks
+ * well over 256MB with JNI buffers in play - give it real headroom. */
 #define HEAP_BASE       0x70000000u
-#define HEAP_SIZE       (256u * 1024u * 1024u)
+#define HEAP_SIZE       (1536u * 1024u * 1024u)
 
 /* Where the fake JNIEnv / JavaVM objects live. */
 #define JNI_ENV_OBJ     0xF2000000u
