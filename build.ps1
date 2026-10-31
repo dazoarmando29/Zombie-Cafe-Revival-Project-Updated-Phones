@@ -108,6 +108,18 @@ try {
     New-Item -ItemType Directory -Force -Path $EngDir | Out-Null
     Copy-Item -Force $Engine (Join-Path $EngDir "game.so")
 
+    # ------------------------------------------------ 4b. Java-side fixes
+    # patches/ holds the modified smali + manifest (build/ is gitignored and
+    # gets re-decoded from the original APK): readFully file reads, landscape
+    # screen-size normalization, configChanges for rotation. Copy them over
+    # the decoded tree every build so the fixes survive a clean checkout.
+    $PatchRoot = Join-Path $ProjectRoot "patches"
+    if (Test-Path $PatchRoot) {
+        Write-Host "[4b/7] applying Java-side patches..." -ForegroundColor Cyan
+        Copy-Item -Force (Join-Path $PatchRoot "AndroidManifest.xml") (Join-Path $BuildDir "AndroidManifest.xml")
+        Copy-Item -Force (Join-Path $PatchRoot "smali\*") (Join-Path $BuildDir "smali") -Recurse
+    }
+
     # ------------------------------------------------ 5. apktool rebuild
     Write-Host "[5/7] apktool: rebuilding APK..." -ForegroundColor Cyan
     New-Item -ItemType Directory -Force -Path (Split-Path $OutUnsigned) | Out-Null

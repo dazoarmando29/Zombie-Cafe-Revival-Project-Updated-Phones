@@ -82,14 +82,68 @@ bool on_mem_fault(uc_engine *uc, uc_mem_type type, uint64_t address,
     uc_reg_read(uc, UC_ARM_REG_PC, &pc);
     uc_reg_read(uc, UC_ARM_REG_LR, &lr);
     uc_reg_read(uc, UC_ARM_REG_R12, &ip);
-    diag_log("[mem-fault] type=%d addr=0x%llx size=%d pc=0x%x lr=0x%x ip=0x%x",
-             (int)type, (unsigned long long)address, size, pc, lr, ip);
-    /* inspect the PLT GOT slot MaxTextureSize's stub loads from */
-    uint32_t slot = 0;
-    uc_mem_read(uc, ENG_BASE + 0x1d5c04, &slot, 4);
-    uint32_t slot2 = 0;
-    uc_mem_read(uc, ENG_BASE + 0x1d5aa8, &slot2, 4);
-    diag_log("[mem-fault] got[0x1d5c04]=0x%x got[0x1d5aa8]=0x%x", slot, slot2);
+    uint32_t used_kb = 0, total_kb = 0, free_blocks = 0;
+    emu::heap_stats(&used_kb, &total_kb, &free_blocks);
+    diag_log("[mem-fault] type=%d addr=0x%llx size=%d pc=0x%x lr=0x%x ip=0x%x heap=%u/%uKB free=%u",
+             (int)type, (unsigned long long)address, size, pc, lr, ip,
+             used_kb, total_kb, free_blocks);
+    /* full register state: r0=dst String, r1=src String in copy-ctor crashes */
+    uint32_t r[16] = {0};
+    static const int kRegs[16] = {
+        UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R3,
+        UC_ARM_REG_R4, UC_ARM_REG_R5, UC_ARM_REG_R6, UC_ARM_REG_R7,
+        UC_ARM_REG_R8, UC_ARM_REG_R9, UC_ARM_REG_R10, UC_ARM_REG_R11,
+        UC_ARM_REG_R12, UC_ARM_REG_SP, UC_ARM_REG_LR, UC_ARM_REG_PC};
+    for (int i = 0; i < 16; i++) uc_reg_read(uc, kRegs[i], &r[i]);
+    diag_log("[regs] r0=0x%x r1=0x%x r2=0x%x r3=0x%x r4=0x%x r5=0x%x r6=0x%x r7=0x%x",
+             r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+    diag_log("[regs] r8=0x%x r9=0x%x r10=0x%x r11=0x%x r12=0x%x sp=0x%x lr=0x%x pc=0x%x",
+             r[8], r[9], r[10], r[11], r[12], r[13], r[14], r[15]);
+    /* where do the interesting pointers live? */
+    char desc[256];
+    emu::heap_describe((uint32_t)address, desc, sizeof(desc));
+    diag_log("[fault-addr] %s", desc);
+    emu::heap_describe(r[1], desc, sizeof(desc));
+    diag_log("[r1-src] %s", desc);
+    emu::heap_describe(r[0], desc, sizeof(desc));
+    diag_log("[r0-dst] %s", desc);
+    /* dump 3 words at r0 and r1 (String = {StringRef*, off16, len16}) */
+    uint32_t w[4] = {0, 0, 0, 0};
+    if (emu::read(uc, r[1], w, 16))
+        diag_log("[r1-mem] %08x %08x %08x %08x", w[0], w[1], w[2], w[3]);
+    if (emu::read(uc, r[0], w, 16))
+        diag_log("[r0-mem] %08x %08x %08x %08x", w[0], w[1], w[2], w[3]);
+    /* String-copy-ctor crash: walk the HudElement lookup chain
+     *   game = [this(r4)+0x60]; fbc = [game+0xbc]; table = [fbc+8]
+     *   id = [r2]  (r2 = pointer into the engine ID table) */
+    if (pc == 0x10141bd4u || pc == 0x10141c42u) {
+        uint32_t game = 0, fbc = 0, table = 0, id = 0;
+        emu::read(uc, r[4] + 0x60, &game, 4);
+        emu::read(uc, r[2], &id, 4);
+        if (game) emu::read(uc, game + 0xbc, &fbc, 4);
+        if (fbc) emu::read(uc, fbc + 8, &table, 4);
+        diag_log("[strchain] game=0x%x fbc=0x%x table=0x%x id=%u idptr=0x%x",
+                 game, fbc, table, id, r[2]);
+        uint32_t cookie[3] = {0, 0, 0};
+        if (table && emu::read(uc, table - 12, cookie, 12))
+            diag_log("[strchain] cookie[-3..-1] %u %u %u", cookie[0], cookie[1], cookie[2]);
+        char d2[256];
+        emu::heap_describe(table, d2, sizeof(d2));
+        diag_log("[strchain] table: %s", d2);
+        emu::heap_describe(table ? table + id * 8 : 0, d2, sizeof(d2));
+        diag_log("[strchain] table[id]: %s", d2);
+        uint32_t tw[8] = {0};
+        if (table && emu::read(uc, table, tw, 32))
+            diag_log("[strchain] tbl[0..3] %08x %08x %08x %08x %08x %08x %08x %08x",
+                     tw[0], tw[1], tw[2], tw[3], tw[4], tw[5], tw[6], tw[7]);
+        if (table && emu::read(uc, table + (id > 2 ? (id - 2) * 8 : 0), tw, 32))
+            diag_log("[strchain] tbl[id-2..] %08x %08x %08x %08x %08x %08x %08x %08x",
+                     tw[0], tw[1], tw[2], tw[3], tw[4], tw[5], tw[6], tw[7]);
+        if (emu::read(uc, r[1] > 24 ? r[1] - 24 : r[1], tw, 32))
+            diag_log("[strchain] r1-24.. %08x %08x %08x %08x %08x %08x %08x %08x",
+                     tw[0], tw[1], tw[2], tw[3], tw[4], tw[5], tw[6], tw[7]);
+    }
+    diag_dump_traces();
     return false;  /* stop emulation */
 }
 
@@ -412,6 +466,7 @@ Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_mouseDown(JNIEnv *env,
                                                              jclass cls,
                                                              jfloat x,
                                                              jfloat y, jint t) {
+    diag_log("[input] mouseDown x=%.1f y=%.1f t=%d", x, y, t);
     if (!host_init(env)) return 0;
     uint32_t w[4] = {jni_handle_for(cls), jf(x), jf(y), (uint32_t)t};
     return (jint)jni_call_engine(g_uc,
@@ -422,6 +477,7 @@ extern "C" JNIEXPORT jint JNICALL
 Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_mouseUp(JNIEnv *env,
                                                            jclass cls, jfloat x,
                                                            jfloat y, jint t) {
+    diag_log("[input] mouseUp x=%.1f y=%.1f t=%d", x, y, t);
     if (!host_init(env)) return 0;
     uint32_t w[4] = {jni_handle_for(cls), jf(x), jf(y), (uint32_t)t};
     return (jint)jni_call_engine(g_uc,

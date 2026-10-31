@@ -97,6 +97,7 @@ StubResult stubs_dispatch(uc_engine *uc, uint32_t pc) {
 
     if (!g_slots[slot].fn) {
         diag_note_unimpl(g_slots[slot].name);
+        diag_trace("IMP-UNIMPL %s", g_slots[slot].name);
         uint32_t lr = 0, z = 0;
         uc_reg_read(uc, UC_ARM_REG_LR, &lr);
         uc_reg_write(uc, UC_ARM_REG_R0, &z);
@@ -109,6 +110,18 @@ StubResult stubs_dispatch(uc_engine *uc, uint32_t pc) {
         g_pending_args = args;
         return StubResult::kNeedsDriver;
     }
+
+    /* trace imports that matter for crash diagnosis (skip per-frame noise) */
+    const char *nm = g_slots[slot].name;
+    bool noisy = !strncmp(nm, "mem", 3) || !strncmp(nm, "str", 3) ||
+                 !strncmp(nm, "gl", 2) || !strcmp(nm, "free") ||
+                 !strcmp(nm, "malloc") || !strcmp(nm, "realloc") ||
+                 !strcmp(nm, "qsort") || !strncmp(nm, "inflate", 7) ||
+                 !strncmp(nm, "deflate", 7) || !strcmp(nm, "crc32") ||
+                 !strcmp(nm, "sprintf") || !strcmp(nm, "snprintf") ||
+                 !strcmp(nm, "__android_log_print") || !strcmp(nm, "setjmp") ||
+                 !strcmp(nm, "longjmp") || !strcmp(nm, "__aeabi_atexit");
+    if (!noisy) diag_trace("imp %s", nm);
 
     uint32_t retval = 0;
     g_slots[slot].fn(uc, args, &retval);
