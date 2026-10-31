@@ -1,4 +1,4 @@
-#include "engine_loader.h"
+﻿#include "engine_loader.h"
 
 #include <cstring>
 #include <cstdio>
@@ -289,6 +289,61 @@ bool engine_apply_zcr_patches(uc_engine *uc) {
     uint8_t nop2[2] = {0x00, 0xBF};
     uc_mem_write(uc, ENG_ADDR(0xab01a), nop2, 2);
 
+    static const bool kPatchCompletionHook = true;
+    static const bool kPatchLoadNewSet = true;
+    static const bool kPatchRaidType = true;
+
+    /* ---- offline-friendly objectives (no friend/online quests) ----
+     * Objective types: 0 raid-enemy, 1 raid-friend, 2 raid-any, 3 serve,
+     * 4 cook, 5 invite-friends, 6 spend, 7 collect-fees, 8 gifts, 9 orders.
+     * Types 1/5/7/8/9 need friends online and block solo play. */
+
+    /* (1) getObjectiveCompletion() returns the goal for friend types, so a
+     * stuck friend objective in an existing save shows as done and becomes
+     * claimable (tap it in the goals dialog). Cave code lives on a dedicated
+     * executable page; the original 12-byte accessor branches there. */
+    static const uint16_t kCave[] = {
+        0x68C2,             /* ldr r2, [r0, #0xc]   ; objective array      */
+        0x0089,             /* lsls r1, r1, #2                              */
+        0x588A,             /* ldr r2, [r1, r2]     ; obj                   */
+        0x8813,             /* ldrh r3, [r2, #0]    ; type                  */
+        0x2B01, 0xD009,     /* cmp r3, #1 / beq goal (raid-friend)          */
+        0x2B05, 0xD007,     /* cmp r3, #5 / beq goal (invite)               */
+        0x2B07, 0xD005,     /* cmp r3, #7 / beq goal (collect-fees)         */
+        0x2B08, 0xD003,     /* cmp r3, #8 / beq goal (gifts)                */
+        0x2B09, 0xD001,     /* cmp r3, #9 / beq goal (orders)               */
+        0x6850, 0x4770,     /* ldr r0, [r2, #4] / bx lr   ; completion      */
+        0x6890, 0x4770,     /* ldr r0, [r2, #8] / bx lr   ; goal           */
+    };
+    const uint32_t cave_addr = 0x11000000u; /* within BL range of the engine */
+    if (kPatchCompletionHook) {
+        uc_mem_map(uc, cave_addr, 0x1000, UC_PROT_ALL);
+        uc_mem_write(uc, cave_addr, kCave, sizeof(kCave));
+        /* getObjectiveCompletion (0xeae24): b.w cave; nops. Must be an
+         * unconditional BRANCH (not bl) - bl would clobber LR and the cave's
+         * bx lr would return to the branch itself, looping forever. With b.w
+         * the cave's bx lr returns straight to the original caller. */
+        uint8_t getcomp[12] = {0x15, 0xF3, 0xEC, 0x90,   /* b.w 0x11000000     */
+                               0x00, 0xBF, 0x00, 0xBF,   /* nop nop            */
+                               0x00, 0xBF, 0x00, 0xBF};  /* nop nop            */
+        uc_mem_write(uc, ENG_ADDR(0xeae24), getcomp, 12);
+    }
+
+    /* (2) loadNewSet: replace createSocialObjective with
+     * createServingObjective so new quest sets never ask for friends. */
+    if (kPatchLoadNewSet) {
+        uint8_t bl_serving[4] = {0xFF, 0xF7, 0x6F, 0xFA}; /* bl 0xeaf54 */
+        uc_mem_write(uc, ENG_ADDR(0xeba72), bl_serving, 4);
+    }
+
+    /* (3) createRaidObjective: NOP the branch to the friend/any variant so
+     * raid quests are always "raid enemy cafes" (local rival cafes). */
+    if (kPatchRaidType) {
+        uc_mem_write(uc, ENG_ADDR(0xeafec), nop2, 2);
+    }
+
+    log("ZCR quest patches: hook=%d loadnewset=%d raid=%d",
+        kPatchCompletionHook, kPatchLoadNewSet, kPatchRaidType);
     log("ZCR patches applied");
     return true;
 }
