@@ -504,6 +504,94 @@ Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_PurchaseAndroidToxin(
                                  engine_rva("Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_PurchaseAndroidToxin"),
                                  w, 2);
 }
+
+/* ---- Mod-menu natives (ported from LemL0/Zombie-Cafe-Revival-2.0
+ * ZombieCafeExtension.cpp - thanks LemL0!). The offsets are RVAs into the
+ * original engine binary which we emulate, so the same layout applies:
+ * the CapcomApp** global at 0x1daf80 -> app->field_4 = ZombieCafe*, whose
+ * toxin/money/xp fields live at fixed offsets. These write emulated memory
+ * directly; the engine picks the values up on its next tick. Only the
+ * ModMenu build wires UI to these; the vanilla build never calls them. */
+namespace {
+constexpr uint32_t kAppHolderRva = 0x1daf80;
+constexpr uint32_t kToxinOff = 0xb8;
+constexpr uint32_t kMoneyOff = 0x1ac;
+constexpr uint32_t kLevelXpOff = 0x1b4;
+constexpr uint32_t kTotalXpOff = 0x1b8; /* float */
+constexpr int32_t kMaxToxin = 999;
+constexpr int32_t kMaxMoney = 999999;
+constexpr int32_t kMaxXp = 999999;
+
+uint32_t zombie_cafe_instance() {
+    if (!g_uc) return 0;
+    uint32_t app = 0, game = 0;
+    if (!emu::read(g_uc, ENG_BASE + kAppHolderRva, &app, 4) || !app) return 0;
+    if (!emu::read(g_uc, app + 4, &game, 4)) return 0;
+    return game;
+}
+}  // namespace
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_DebugAddMoney(JNIEnv *env,
+                                                                 jclass, jint amount) {
+    if (!host_init(env)) return;
+    uint32_t game = zombie_cafe_instance();
+    if (!game) { diag_log("[mod] DebugAddMoney: game not ready"); return; }
+    int32_t money = 0;
+    emu::read(g_uc, game + kMoneyOff, &money, 4);
+    int64_t next = (int64_t)money + amount;
+    if (amount >= kMaxMoney || next > kMaxMoney) next = kMaxMoney;
+    else if (next < 0) next = 0;
+    money = (int32_t)next;
+    emu::write(g_uc, game + kMoneyOff, &money, 4);
+    diag_log("[mod] DebugAddMoney -> %d", money);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_DebugSetToxin(JNIEnv *env,
+                                                                 jclass, jint amount) {
+    if (!host_init(env)) return;
+    uint32_t game = zombie_cafe_instance();
+    if (!game) { diag_log("[mod] DebugSetToxin: game not ready"); return; }
+    int32_t toxin = amount > kMaxToxin ? kMaxToxin : (amount < 0 ? 0 : amount);
+    emu::write(g_uc, game + kToxinOff, &toxin, 4);
+    diag_log("[mod] DebugSetToxin -> %d", toxin);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_DebugAddXp(JNIEnv *env,
+                                                              jclass, jint amount) {
+    if (!host_init(env)) return;
+    uint32_t game = zombie_cafe_instance();
+    if (!game) { diag_log("[mod] DebugAddXp: game not ready"); return; }
+    int32_t level_xp = 0;
+    float total_xp = 0.f;
+    emu::read(g_uc, game + kLevelXpOff, &level_xp, 4);
+    emu::read(g_uc, game + kTotalXpOff, &total_xp, 4);
+    int64_t next = (int64_t)level_xp + amount;
+    if (amount >= kMaxXp || next > kMaxXp) next = kMaxXp;
+    else if (next < 0) next = 0;
+    level_xp = (int32_t)next;
+    total_xp += (float)amount;
+    if (total_xp > (float)kMaxXp) total_xp = (float)kMaxXp;
+    else if (total_xp < 0.f) total_xp = 0.f;
+    emu::write(g_uc, game + kLevelXpOff, &level_xp, 4);
+    emu::write(g_uc, game + kTotalXpOff, &total_xp, 4);
+    diag_log("[mod] DebugAddXp -> %d / %.0f", level_xp, (double)total_xp);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_DebugSetXp(JNIEnv *env,
+                                                              jclass, jint amount) {
+    if (!host_init(env)) return;
+    uint32_t game = zombie_cafe_instance();
+    if (!game) { diag_log("[mod] DebugSetXp: game not ready"); return; }
+    int32_t xp = amount > kMaxXp ? kMaxXp : (amount < 0 ? 0 : amount);
+    float total = (float)xp;
+    emu::write(g_uc, game + kLevelXpOff, &xp, 4);
+    emu::write(g_uc, game + kTotalXpOff, &total, 4);
+    diag_log("[mod] DebugSetXp -> %d", xp);
+}
 extern "C" JNIEXPORT jint JNICALL
 Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_setDeviceModel(JNIEnv *env,
                                                                   jclass cls,

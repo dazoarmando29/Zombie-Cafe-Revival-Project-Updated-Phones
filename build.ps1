@@ -8,13 +8,15 @@
     assets/engine/    the 32-bit engine image loaded by the emulator host
 
 .EXAMPLE
-  .\build.ps1              # build APK
+  .\build.ps1              # build vanilla APK (out.apk)
+  .\build.ps1 -ModMenu     # build mod-menu APK (out-mod.apk)
   .\build.ps1 -Install     # build + adb install (bypasses low-target-sdk block)
   .\build.ps1 -Clean       # remove build output first
 #>
 param(
     [switch]$Install,
-    [switch]$Clean
+    [switch]$Clean,
+    [switch]$ModMenu
 )
 
 $ErrorActionPreference = "Stop"
@@ -33,7 +35,11 @@ $ProjectRoot = $PSScriptRoot
 $BuildDir    = Join-Path $ProjectRoot "build"
 $OutUnsigned = Join-Path $BuildDir "out\out-unsigned.apk"
 $OutAligned  = Join-Path $BuildDir "out\out-aligned.apk"
-$OutApk      = Join-Path $BuildDir "out\out.apk"
+if ($ModMenu) {
+    $OutApk = Join-Path $BuildDir "out\out-mod.apk"
+} else {
+    $OutApk = Join-Path $BuildDir "out\out.apk"
+}
 
 foreach ($t in @($Go, $Java, $ApktoolJar, $NdkRoot, $BuildTools, $Adb, $Cmake, $Ninja)) {
     if (-not (Test-Path $t)) { throw "Missing tool: $t" }
@@ -118,6 +124,19 @@ try {
         Write-Host "[4b/7] applying Java-side patches..." -ForegroundColor Cyan
         Copy-Item -Force (Join-Path $PatchRoot "AndroidManifest.xml") (Join-Path $BuildDir "AndroidManifest.xml")
         Copy-Item -Force (Join-Path $PatchRoot "smali\*") (Join-Path $BuildDir "smali") -Recurse
+    }
+    # patches-mod/ overlays the mod-menu variant (DebugMenu classes + a
+    # ZombieCafeAndroid.smali with the 'D' button and Debug* natives).
+    if ($ModMenu) {
+        $ModRoot = Join-Path $ProjectRoot "patches-mod"
+        Write-Host "[4b/7] overlaying mod-menu patches..." -ForegroundColor Cyan
+        Copy-Item -Force (Join-Path $ModRoot "smali\*") (Join-Path $BuildDir "smali") -Recurse
+    } else {
+        # vanilla build: drop mod-menu classes left over from a previous
+        # -ModMenu build so the clean APK stays clean
+        Remove-Item -Force -ErrorAction SilentlyContinue `
+            (Join-Path $BuildDir "smali\com\capcom\zombiecafeandroid\DebugMenuButtonListener.smali"),
+            (Join-Path $BuildDir "smali\com\capcom\zombiecafeandroid\DebugMenuItemClickListener.smali")
     }
 
     # ------------------------------------------------ 5. apktool rebuild
