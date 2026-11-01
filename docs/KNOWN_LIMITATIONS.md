@@ -2,14 +2,15 @@
 
 ## Engine / content
 
-1. **Third character texture sheet: engine-side loading is blocked.**
-   The tool chain packs any number of `characterPartsN` folders, but the
-   English engine binary loads exactly two sheets (filename literals at
-   RVA 0x1a4c08/0x1a4c64 etc.). The strings are referenced through
-   PIC-computed addresses; the call sites are not yet identified, so no
-   safe binary patch exists. The JP 1.7 build proves the engine family can
-   handle 5 sheets. See `docs/ASSET_EXPANSION_GUIDE.md` §3 for the exact
-   evidence and next steps.
+1. **Third character texture sheet: engine-side loading is not yet
+   wired.** The tool chain packs any number of `characterPartsN` folders
+   (proven with a `characterParts3` PoC), and the engine's structures are
+   generic (`loadImagePack` accepts pack indexes 1..254 with a dynamic
+   table), but `ZombieCafe::initData` loads the two sheets from two
+   unrolled code blocks storing to fixed object fields (+0x14c/+0x16c).
+   A third sheet needs a cave patch replicating that block (or discovery
+   of the data-driven manifest source). See `docs/ASSET_EXPANSION_GUIDE.md`
+   §3 for the full RE findings and the exact patch plan.
 2. **255 characters / 255 foods format cap** — the count fields are one
    byte (`tool/file_types`). 219 characters ship today. Lifting this
    requires an engine-side format change (risky for saves).

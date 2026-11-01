@@ -179,7 +179,7 @@ func characterSheetOutputs(folderName, variant string) (PackedCharacterData, boo
 	}
 	suffix := strings.TrimPrefix(folderName, "characterParts")
 	if suffix != "" {
-		if _, err := strconv.Atoi(suffix); err != nil {
+		if n, err := strconv.Atoi(suffix); err != nil || n < 1 {
 			return PackedCharacterData{}, false
 		}
 	}

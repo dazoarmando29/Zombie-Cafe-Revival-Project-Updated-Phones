@@ -55,28 +55,69 @@ Tool side — **already supported** (data driven since this upgrade):
    `characterArt3.bin.mid` automatically (`characterSheetOutputs()` in
    `tool/resource_manager/serialization/serialization.go`).
 
-Engine side — **blocked, with evidence** (Phase 6 investigation):
+Engine side — **structures are generic; two unrolled load blocks are the
+limit** (Phase 6 investigation, dynamic tracing + symbol-table RE):
 
-* The English engine binary loads exactly two sheet triplets; the
-  filenames are literal strings in `.rodata`
-  (`images/characterParts.cct.mid` at RVA 0x1a4c08 and the `2` variant at
-  0x1a4c64, plus offsets/art filenames). Exhaustive analysis shows the
-  strings are referenced through PIC-computed addresses (no literal pool
-  entries, no pointer table, no `adr`/`movw+movt` materialization found),
-  so the load sites cannot be patched by swapping a filename constant.
-* The Japanese 1.7 build shipped five sheets (`characterParts3..5` in the
-  tool maps), proving the engine family's runtime structures support more
-  than two sheets — the difference is inside the binary's load/indexing
-  code, not the file formats.
-* **Exact blocker**: the call sites that consume those two filename
-  strings (and any loop bound / sheet-indexed arrays behind them) are not
-  yet identified. Static reference tracing failed (see above); the next
-  step is dynamic tracing (log every `fopen`/`fileRead` path and the
-  sheet-index registers at load time) or a full disassembly of the asset
-  manager class in `engine_loader`-mapped memory.
+**What the engine binary actually contains** (verified 2026-11-01):
 
-Until that is solved, a packed `characterParts3` is ignored by the engine
-(harmless: it is simply never loaded).
+* The engine exports its **full C++ symbol table** (~6,270 dynsyms —
+  `llvm-readelf --dyn-syms`). Classes like `ZombieCafe`, `PackedImage`,
+  `CCAssetManager`, `ResourceManager`, `Constants` are all named.
+* `ZombieCafe::loadImagePack(String name, unsigned char index)` (RVA
+  0x125d05) is a **generic pack loader**: it validates the pack index in
+  **1..254**, appends to a dynamically grown table (24-byte records,
+  `operator new[]` growth), and resolves packs **by name** through
+  `ZombieCafe::getImageSubpack(String)` (failure logs
+  `DID NOT FIND PACK NAME` / `getImageSubPack FAILED` exist in the binary).
+* `PackedImage::createPackedImage(String, int, String, int)` is the
+  generic atlas constructor; filename variants are selected through
+  device-indexed global `String` arrays (`SmDev()` returns the device
+  index; `iphone3_`/`iphone4_`/`images/` prefixes are per-device entries).
+* In `ZombieCafe::initData` (RVA 0x12b850, a 13-step load state machine,
+  `Loadstep=%d` logged), the two character sheets are loaded by **two
+  unrolled code blocks** (NOT a loop): block 1 parses
+  `data/characterArt.bin.mid`, calls `createPackedImage`, and stores the
+  `PackedImage*` at `ZombieCafe+0x14c`; block 2 does the same for sheet 2
+  and stores at `ZombieCafe+0x16c`. The blocks differ only in GOT string
+  slots and destination fields.
+* Runtime `[filetrace]` (added in this branch) confirms the startup order:
+  `characterArt` → `characterParts.cct` + `characterOffsets` →
+  `characterArt2` → `characterParts2.cct` + `characterOffsets2`, then
+  `characterData`. Each `fileRead` trace carries the emulated caller PC
+  and stack, which is how the load blocks were located.
+
+**Proof of concept (tool side, done):** a synthetic `characterParts3/`
+tree (54 real pieces reused as a fixture) packs through the actual
+pipeline into `characterParts3.cct.mid` (23.5 KB atlas),
+`characterOffsets3.bin.mid` and `characterArt3.bin.mid`. The tool chain
+fully supports N sheets.
+
+**Exact remaining blocker (engine side):** `initData` contains exactly
+two unrolled sheet blocks. Adding a third sheet requires replicating
+block 2 in a code cave (the cave page pattern used by the quest patches
+at 0x11000000 works and is within BL range), wiring:
+
+1. three new filename `String`s (`data/characterArt3.bin.mid`,
+   `images/characterParts3.cct.mid`, `images/characterOffsets3.bin.mid`)
+   plus a device-variant entry (can reuse the `images/` variant only);
+2. the art-list parse + `createPackedImage` sequence (identical to
+   block 2, ~150 Thumb instructions including the readUTF list loop);
+3. a third `PackedImage*` field — `ZombieCafe` object layout has not
+   been fully mapped beyond +0x14c/+0x16c, so a safe location (e.g. a
+   host-side side table keyed by the returned pointer, or a verified
+   free field) must be established;
+4. every consumer that iterates sheets 1..2 (character art resolution
+   uses the two art lists; `ReloadTextures` at RVA 0x12b1ad has its own
+   `loadImagePack` call at 0x12b514) must also cover sheet 3.
+
+Alternative path: the data-driven manifest loop in `initData` (reads
+`readUTF, readUTF, readByte` entries from a `DataInputStream` and calls
+`loadImagePack(name, index)` for each) is the *intended* generic
+mechanism — identifying its source data file (the stream is opened
+earlier in the same load step; it is one of `constants.bin.mid` /
+`globalData.dat`, neither of which contains the names as plain text)
+would make a third sheet a **data-only** addition. This is the preferred
+next investigation.
 
 ## 4. Adding furniture / food / recipes
 
