@@ -4857,23 +4857,87 @@
 
     invoke-direct {v1, p0}, Landroid/widget/Button;-><init>(Landroid/content/Context;)V
 
-    const-string v2, "D"
+    const-string v2, "MOD"
 
     invoke-virtual {v1, v2}, Landroid/widget/Button;->setText(Ljava/lang/CharSequence;)V
 
-    new-instance v2, Landroid/widget/RelativeLayout$LayoutParams;
+    const/4 v2, 0x0
+
+    invoke-virtual {v1, v2}, Landroid/widget/Button;->setAllCaps(Z)V
+
+    const/16 v2, 0xc
+
+    int-to-float v2, v2
+
+    invoke-virtual {v1, v2}, Landroid/widget/Button;->setTextSize(F)V
+
+    sget-object v2, Landroid/graphics/Typeface;->DEFAULT_BOLD:Landroid/graphics/Typeface;
+
+    invoke-virtual {v1, v2}, Landroid/widget/Button;->setTypeface(Landroid/graphics/Typeface;)V
+
+    const/16 v2, 0x11
+
+    invoke-virtual {v1, v2}, Landroid/widget/Button;->setGravity(I)V
+
+    const/4 v2, 0x0
+
+    invoke-virtual {v1, v2, v2, v2, v2}, Landroid/widget/Button;->setPadding(IIII)V
+
+    const-string v2, "#86F04E"
+
+    invoke-static {v2}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    move-result v2
+
+    invoke-virtual {v1, v2}, Landroid/widget/Button;->setTextColor(I)V
 
     invoke-virtual {p0}, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->getResources()Landroid/content/res/Resources;
 
-    move-result-object v3
+    move-result-object v2
 
-    invoke-virtual {v3}, Landroid/content/res/Resources;->getDisplayMetrics()Landroid/util/DisplayMetrics;
+    invoke-virtual {v2}, Landroid/content/res/Resources;->getDisplayMetrics()Landroid/util/DisplayMetrics;
 
-    move-result-object v3
+    move-result-object v2
 
-    iget v3, v3, Landroid/util/DisplayMetrics;->density:F
+    iget v4, v2, Landroid/util/DisplayMetrics;->density:F
 
-    const/high16 v4, 0x42800000
+    new-instance v2, Landroid/graphics/drawable/GradientDrawable;
+
+    invoke-direct {v2}, Landroid/graphics/drawable/GradientDrawable;-><init>()V
+
+    const-string v3, "#CC14100C"
+
+    invoke-static {v3}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    move-result v3
+
+    invoke-virtual {v2, v3}, Landroid/graphics/drawable/GradientDrawable;->setColor(I)V
+
+    const/high16 v3, 0x41400000
+
+    mul-float/2addr v3, v4
+
+    invoke-virtual {v2, v3}, Landroid/graphics/drawable/GradientDrawable;->setCornerRadius(F)V
+
+    const/high16 v3, 0x40000000
+
+    mul-float/2addr v3, v4
+
+    float-to-int v3, v3
+
+    const-string v5, "#86F04E"
+
+    invoke-static {v5}, Landroid/graphics/Color;->parseColor(Ljava/lang/String;)I
+
+    move-result v5
+
+    invoke-virtual {v2, v3, v5}, Landroid/graphics/drawable/GradientDrawable;->setStroke(II)V
+
+    invoke-virtual {v1, v2}, Landroid/widget/Button;->setBackground(Landroid/graphics/drawable/Drawable;)V
+
+    new-instance v2, Landroid/widget/RelativeLayout$LayoutParams;
+
+    const/high16 v3, 0x42400000
 
     mul-float/2addr v3, v4
 
@@ -4888,6 +4952,14 @@
     const/16 v3, 0xb
 
     invoke-virtual {v2, v3}, Landroid/widget/RelativeLayout$LayoutParams;->addRule(I)V
+
+    const/high16 v3, 0x41000000
+
+    mul-float/2addr v3, v4
+
+    float-to-int v3, v3
+
+    invoke-virtual {v2, v3, v3, v3, v3}, Landroid/widget/RelativeLayout$LayoutParams;->setMargins(IIII)V
 
     new-instance v3, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;
 
