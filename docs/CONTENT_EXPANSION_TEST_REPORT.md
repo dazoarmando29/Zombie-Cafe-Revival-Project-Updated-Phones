@@ -68,16 +68,28 @@ host-side extension design.
 | N-sheet character loading (runtime, 3..12) | implemented + device-tested |
 | Test characters on sheets 3 and 4 | implemented + device-tested |
 | `ReloadTextures` coverage for extra sheets | implemented, not device-tested |
-| Content registry (Part 2.2) | planned (next milestone) |
-| Content expansion guides (Part 2.3) | partial (`ASSET_EXPANSION_GUIDE.md` updated) |
-| New characters (Stage C/D) | scaffolding ready; original artwork pending |
-| New recipes (Stage C/D) | planned |
+| Missing-art crash guard (host + 32-bit extension) | implemented + device-tested (arm64); 32-bit path unrunnable on Android 15 (pre-existing) |
+| Content registry (ZcrId, lockfile, build gate) | implemented + unit-tested (6 tests); exercised by every build |
+| New recipe `recipe.brain_burger` | implemented; data + 146-image recipe atlas verified at load on device; cookbook/cooking walkthrough pending manual test |
+| Content expansion guides (Part 2.3) | done (NEW_CHARACTER_GUIDE, NEW_RECIPE_GUIDE, CONTENT_REGISTRY) |
+| New characters (Stage C/D, original art) | scaffolding ready + pipeline proven; original artwork is the missing dependency |
 | Recipe mastery (Part 5.1) | planned |
-| Cooking QoL (Part 4) | planned |
+| Cooking QoL (Part 4) | planned (see QUALITY_OF_LIFE_FEATURES.md) |
 | Zombie management UI (Part 3.3) | planned (candidate: host overlay / mod menu) |
 | Raid QoL (Part 7.1) | planned |
 | Achievements / objectives (Part 8) | planned |
 | Offline events (Part 9) | planned |
+
+## 2.1 Test-data incident (2026-11-01)
+
+While forcing a 32-bit install to test missing-art behavior, the package
+was **uninstalled**, which wiped the app's internal storage and with it
+the device's existing Level-9 café save (the one used in §1.1). The
+post-reinstall testing therefore ran on a fresh save (Level 3). Lessons
+recorded: never `adb uninstall` a device carrying saves — use
+`adb install -r` (keeps data) or copy the save out first
+(`run-as`/backup). The engine save format itself was never at risk; no
+save compatibility change was made by this work.
 
 ## 3. Regression testing performed
 
@@ -120,3 +132,17 @@ Tested by forcing `adb install --abi armeabi-v7a` on the Android 15 device:
   legacy 32-bit devices they appear with missing art instead of crashing.
   New content that must render on 32-bit legacy devices should use art on
   sheets 1–2.
+
+## 6. Stage C � first content expansion (2026-11-01)
+
+| Check | Result |
+|---|---|
+| `recipe.brain_burger` row appended (217th food), registry-pinned | PASS (tooling) |
+| New recipe art packed (`recipeImages/145-brain burger.png` -> 146-rect atlas) | PASS (build pipeline) |
+| Game boots and runs with 217 foods + 146 recipe images, `emu_errors=0` | PASS (device) |
+| Recipe balance inside level-8 band (180 profit/h vs band 133-420; 8.6 XP/h vs 4.5-25) | PASS (data audit) |
+| Cookbook listing / cooking walkthrough | pending manual test |
+| Original art for the recipe | pending (art currently recycled from `134-ReactorBurger.png`, labelled as dev placeholder) |
+
+The content registry captured the new row (922 locked entries) and the
+build gate runs on every `build.ps1`.

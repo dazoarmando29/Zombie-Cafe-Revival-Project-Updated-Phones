@@ -5526,6 +5526,12 @@
             "file": "foodData.bin.mid.json",
             "row": 215,
             "hash": "c48873929fc0e54b"
+        },
+        {
+            "id": "recipe.brain_burger",
+            "file": "foodData.bin.mid.json",
+            "row": 216,
+            "hash": "381bc6ac2875c3cf"
         }
     ]
 }

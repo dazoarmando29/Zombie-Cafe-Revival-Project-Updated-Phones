@@ -3670,5 +3670,22 @@
         "U10": 0,
         "U11": 0,
         "U12": 2
+    },
+    {
+        "ZcrId": "recipe.brain_burger",
+        "Name": "Brain Burger",
+        "Price": 400,
+        "UnlockLevel": 8,
+        "CookTimeMinutes": 420,
+        "Servings": 420,
+        "PricePerSeving": 3,
+        "ExperiencePoints": 60,
+        "ImageID": 145,
+        "U7": 2,
+        "U8": 1,
+        "U9": 0,
+        "U10": 0,
+        "U11": 0,
+        "U12": 1
     }
 ]
