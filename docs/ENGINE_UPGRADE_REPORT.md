@@ -122,7 +122,7 @@ Same device, café loaded and idle (Android 15, arm64):
 | Full APK build pipeline | `build.ps1` | OK (39.2 MB) |
 | Boot + café render + 3 reports | Android 15 device | OK, unimpl=0 |
 | fileRead through patched smali | device (3.6 MB asset read) | OK |
-| Save write + backup | device | fileWrite not yet triggered in short sessions — manual test pending (play until first save, then `adb shell run-as` unavailable; verify via logcat `zcr-save`) |
+| Save write + backup | device | `fromNative_fileWrite` not triggered by idle/tap/press-home interaction in 2-minute sessions (the engine saves on gameplay progress). Manual procedure: play until a save occurs (watch `adb logcat -s zcr:I` for `[filetrace] ... fileWrite`), then verify `<save>.bak` exists and kill the app mid-save (`adb shell am kill`) to test `.bak` recovery via the `zcr-save` logcat tag |
 
 ## 7. Remaining limitations
 
