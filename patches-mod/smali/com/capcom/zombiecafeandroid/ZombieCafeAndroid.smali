@@ -4652,13 +4652,6 @@
 
     invoke-static {v0, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 
-    const/4 v0, 0x1
-
-    :try_start_0
-    invoke-static {v0}, Lcom/tapjoy/g;->a(Z)V
-    :try_end_0
-    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
-
     :goto_0
     new-instance v0, Lcom/capcom/zombiecafeandroid/y;
 
@@ -4773,9 +4766,6 @@
 
     invoke-virtual {v0, v1}, Lcom/chartboost/sdk/ChartBoost;->setAppSignature(Ljava/lang/String;)V
 
-    sget-object v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->_cb:Lcom/chartboost/sdk/ChartBoost;
-
-    invoke-virtual {v0}, Lcom/chartboost/sdk/ChartBoost;->install()V
     :try_end_1
     .catch Ljava/lang/Exception; {:try_start_1 .. :try_end_1} :catch_1
 
@@ -4873,11 +4863,23 @@
 
     new-instance v2, Landroid/widget/RelativeLayout$LayoutParams;
 
-    const/16 v3, 0x30
+    invoke-virtual {p0}, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->getResources()Landroid/content/res/Resources;
 
-    const/16 v4, 0x30
+    move-result-object v3
 
-    invoke-direct {v2, v3, v4}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
+    invoke-virtual {v3}, Landroid/content/res/Resources;->getDisplayMetrics()Landroid/util/DisplayMetrics;
+
+    move-result-object v3
+
+    iget v3, v3, Landroid/util/DisplayMetrics;->density:F
+
+    const/high16 v4, 0x42800000
+
+    mul-float/2addr v3, v4
+
+    float-to-int v3, v3
+
+    invoke-direct {v2, v3, v3}, Landroid/widget/RelativeLayout$LayoutParams;-><init>(II)V
 
     const/16 v3, 0xc
 
@@ -4902,17 +4904,6 @@
     invoke-virtual {p0, v0}, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->setContentView(Landroid/view/View;)V
 
     return-void
-
-    :catch_0
-    move-exception v0
-
-    const-string v0, "TAPJOY"
-
-    const-string v1, "Exception, CRASH!"
-
-    invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-
-    goto/16 :goto_0
 
     :catch_1
     move-exception v0

@@ -8,6 +8,7 @@
  *   - TCG buffer is enlarged via uc_ctl */
 #include <jni.h>
 
+#include <atomic>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -38,6 +39,7 @@ namespace {
 uc_engine *g_uc = nullptr;
 EngineImage g_img;
 JavaVM *g_vm = nullptr;
+std::atomic<bool> g_game_created{false};
 
 /* ---- code hook: only fires on stub pages (ranged) ---- */
 bool on_code(uc_engine *uc, uint32_t address, uint32_t, void *) {
@@ -416,6 +418,11 @@ Java_com_capcom_zombiecafeandroid_SoundManager_setEnabled(JNIEnv *env,
                                                          jobject thiz,
                                                          jboolean on) {
     if (!host_init(env)) return 0;
+    if (!g_game_created.load()) {
+        diag_log("[guard] SoundManager_setEnabled before CreateGame, dropped on=%d",
+                 (int)on);
+        return 0;
+    }
     uint32_t w[2] = {jni_handle_for(thiz), (uint32_t)on};
     return (jint)jni_call_engine(g_uc,
                                  engine_rva("Java_com_capcom_zombiecafeandroid_SoundManager_setEnabled"),
@@ -456,9 +463,11 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_CreateGame(JNIEnv *env,
     if (!host_init(env)) return 0;
     uint32_t w[8] = {jni_handle_for(thiz), jni_handle_for(cls), (uint32_t)a,
                      (uint32_t)b, jf(c), jf(d)};
-    return (jint)jni_call_engine(g_uc,
-                                 engine_rva("Java_com_capcom_zombiecafeandroid_CapcomRenderer_CreateGame"),
-                                 w, 6);
+    jint rv = (jint)jni_call_engine(g_uc,
+                                    engine_rva("Java_com_capcom_zombiecafeandroid_CapcomRenderer_CreateGame"),
+                                    w, 6);
+    g_game_created.store(true);
+    return rv;
 }
 
 extern "C" JNIEXPORT jint JNICALL

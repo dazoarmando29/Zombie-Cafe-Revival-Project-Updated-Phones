@@ -4640,13 +4640,6 @@
 
     invoke-static {v0, v1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 
-    const/4 v0, 0x1
-
-    :try_start_0
-    invoke-static {v0}, Lcom/tapjoy/g;->a(Z)V
-    :try_end_0
-    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
-
     :goto_0
     new-instance v0, Lcom/capcom/zombiecafeandroid/y;
 
@@ -4761,9 +4754,6 @@
 
     invoke-virtual {v0, v1}, Lcom/chartboost/sdk/ChartBoost;->setAppSignature(Ljava/lang/String;)V
 
-    sget-object v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->_cb:Lcom/chartboost/sdk/ChartBoost;
-
-    invoke-virtual {v0}, Lcom/chartboost/sdk/ChartBoost;->install()V
     :try_end_1
     .catch Ljava/lang/Exception; {:try_start_1 .. :try_end_1} :catch_1
 
@@ -4856,17 +4846,6 @@
     invoke-virtual {p0, v0}, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->setContentView(Landroid/view/View;)V
 
     return-void
-
-    :catch_0
-    move-exception v0
-
-    const-string v0, "TAPJOY"
-
-    const-string v1, "Exception, CRASH!"
-
-    invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
-
-    goto/16 :goto_0
 
     :catch_1
     move-exception v0
