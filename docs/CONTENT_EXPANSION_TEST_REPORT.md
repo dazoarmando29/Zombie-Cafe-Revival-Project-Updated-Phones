@@ -146,3 +146,48 @@ Tested by forcing `adb install --abi armeabi-v7a` on the Android 15 device:
 
 The content registry captured the new row (922 locked entries) and the
 build gate runs on every `build.ps1`.
+
+## 7. Save-survival layer (uninstall-proofing) - 2026-11-01
+
+Answering "can saves survive uninstall + reinstall":
+
+### Implemented and device-verified
+* **Save export to Download/ZombieCafeRevival/** via MediaStore on every save
+  write (per-file 10s throttle): device-verified that the exported files
+  (BACKUP*.dat/.caf, playerCafe.caf, ServerData.dat, globalData.dat,
+  raid*.dat) **survive db uninstall** across multiple uninstall cycles.
+  A user can also copy this folder manually.
+* **Internal .bak backup FIXED** - the previous branch's `backupMaybe` had
+  three inverted branches (throttle, exists-check, read loop) and had never
+  actually written a backup; all three are corrected and the throttle is now
+  per-file so every save slot gets backed up.
+* App-media-dir + legacy /sdcard export copies where the OS permits them.
+
+### Verified NOT working on Android 15 (documented, code in place for older)
+* **Automatic restore after reinstall**: the exported files survive, but the
+  reinstalled app cannot read them back automatically -
+  * File-API access to /sdcard/Download/ZombieCafeRevival/ is denied
+    (`EACCES` under scoped storage, even for the app's own MediaStore
+    creations);
+  * MediaStore queries return 0 rows: legacy-target apps' inserts get
+    `owner_package_name=NULL` and scoped visibility hides them (the shell
+    can see the rows).
+* The restore code path (`readExternal`: media-dir -> Download folder ->
+  MediaStore, with independent fallbacks) is in place and automatically
+  active on pre-Android-10 devices where the legacy File path works.
+
+### Remaining to investigate
+* A null-selection MediaStore probe is built in (`restore29: allrows` log)
+  to distinguish a selection-args bug from provider visibility; the driving
+  of the save-read moment needs a manual device session (the fresh-save
+  tutorial blocks UI automation).
+* If visibility is confirmed as the blocker, the viable path is an explicit
+  one-time user action (SAF folder grant or a manual restore button reading
+  the Download folder via SAF).
+
+### Incidents during this work
+* VerifyError from an unchecked `HashMap.get()` cast rejected the whole
+  SaveGuard class for one build (fixed with `check-cast`).
+* `String.concat` used as a static method crashed one build (fixed).
+* Several inverted conditionals were found and corrected; each was caught
+  by device logs, not by the build.

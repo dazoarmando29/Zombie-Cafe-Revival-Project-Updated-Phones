@@ -1408,6 +1408,14 @@
     :catch_0
     move-exception v1
 
+    # save file missing internally: try an uninstall-surviving export and
+    # report existence based on the restore result
+    sget-object v1, Lcom/capcom/zombiecafeandroid/CC_Android;->a:Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;
+
+    invoke-static {v1, p0}, Lcom/capcom/zombiecafeandroid/SaveGuard;->restoreInternal(Landroid/content/Context;Ljava/lang/String;)Z
+
+    move-result v0
+
     goto :goto_1
 
     :cond_2
@@ -1798,7 +1806,7 @@
 
     sget-object v0, Lcom/capcom/zombiecafeandroid/CC_Android;->a:Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;
 
-    invoke-static {v0, p0}, Lcom/capcom/zombiecafeandroid/SaveGuard;->readBackup(Landroid/content/Context;Ljava/lang/String;)[B
+    invoke-static {v0, p0}, Lcom/capcom/zombiecafeandroid/SaveGuard;->readFallback(Landroid/content/Context;Ljava/lang/String;)[B
 
     move-result-object v0
 
@@ -1886,12 +1894,14 @@
 .end method
 
 .method public static fromNative_fileWrite(Ljava/lang/String;II[B)Z
-    .locals 5
+    .locals 6
 
     const/4 v0, 0x0
 
     :try_start_0
     sget-object v1, Lcom/capcom/zombiecafeandroid/CC_Android;->a:Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;
+
+    move-object v5, v1
 
     invoke-static {v1, p0}, Lcom/capcom/zombiecafeandroid/SaveGuard;->backupMaybe(Landroid/content/Context;Ljava/lang/String;)V
 
@@ -1914,6 +1924,8 @@
     invoke-virtual {v1, p3, v2, p2}, Ljava/io/FileOutputStream;->write([BII)V
 
     invoke-virtual {v1}, Ljava/io/FileOutputStream;->close()V
+
+    invoke-static {v5, p0}, Lcom/capcom/zombiecafeandroid/SaveGuard;->exportSave(Landroid/content/Context;Ljava/lang/String;)V
     :try_end_0
     .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
 
