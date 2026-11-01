@@ -19,6 +19,7 @@ add_library(zcr_host SHARED
   engine_loader.cpp
   stub_dispatch.cpp
   jni_bridge.cpp
+  emu_heap.cpp
   emu_mem.cpp
   imports_posix.cpp
   imports_gl.cpp

@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#include "emu_heap.h"
+
 struct uc_struct;
 typedef struct uc_struct uc_engine;
 
@@ -49,6 +51,8 @@ uint32_t heap_alloc_tagged(uc_engine *uc, size_t n, const char *tag);
 void heap_free(uc_engine *uc, uint32_t addr);   // simple: no coalescing
 uint32_t heap_realloc(uc_engine *uc, uint32_t addr, size_t n);
 void heap_stats(uint32_t *used_kb, uint32_t *total_kb, uint32_t *free_blocks);
+/* Full allocator statistics (peaks, failures, coalescing) for reports. */
+void heap_stats_ex(HeapStats *out);
 void heap_dump_stats();
 /* Record which emulated caller (LR) allocated - identifies the leak source. */
 void heap_note_lr(uint32_t lr, size_t n);
