@@ -45,79 +45,86 @@ out.apk
 **Capacity**: `characterData` has a 1-byte count → **255 characters max**
 (219 in the shipped data). The validator fails the build if exceeded.
 
-## 3. Adding a new character texture sheet (the "third sheet")
+## 3. Adding a new character texture sheet (the "third sheet") — IMPLEMENTED
 
-Tool side — **already supported** (data driven since this upgrade):
+Tool side — **data driven** (since the engine upgrade):
 
 1. Create `src/assets/images/characterParts3/` with character folders.
 2. `build_tool` globs `characterParts*` and packs each sheet to
    `characterParts3.cct.mid`, `characterOffsets3.bin.mid`,
    `characterArt3.bin.mid` automatically (`characterSheetOutputs()` in
    `tool/resource_manager/serialization/serialization.go`).
+3. Point `CharacterArtStringHead`/`CharacterArtString` at folders inside the
+   new sheet. The validator already resolves art strings across every
+   `characterParts*` folder.
 
-Engine side — **structures are generic; two unrolled load blocks are the
-limit** (Phase 6 investigation, dynamic tracing + symbol-table RE):
+Engine side — **runtime support implemented** (2026-11-01, `feature/content-expansion`).
+Verified mechanics (ELF dynsym + Thumb disassembly of the shipped
+`libZombieCafeAndroid.so`, then confirmed on device):
 
-**What the engine binary actually contains** (verified 2026-11-01):
-
-* The engine exports its **full C++ symbol table** (~6,270 dynsyms —
-  `llvm-readelf --dyn-syms`). Classes like `ZombieCafe`, `PackedImage`,
-  `CCAssetManager`, `ResourceManager`, `Constants` are all named.
-* `ZombieCafe::loadImagePack(String name, unsigned char index)` (RVA
-  0x125d05) is a **generic pack loader**: it validates the pack index in
-  **1..254**, appends to a dynamically grown table (24-byte records,
-  `operator new[]` growth), and resolves packs **by name** through
-  `ZombieCafe::getImageSubpack(String)` (failure logs
-  `DID NOT FIND PACK NAME` / `getImageSubPack FAILED` exist in the binary).
-* `PackedImage::createPackedImage(String, int, String, int)` is the
-  generic atlas constructor; filename variants are selected through
-  device-indexed global `String` arrays (`SmDev()` returns the device
-  index; `iphone3_`/`iphone4_`/`images/` prefixes are per-device entries).
-* In `ZombieCafe::initData` (RVA 0x12b850, a 13-step load state machine,
-  `Loadstep=%d` logged), the two character sheets are loaded by **two
-  unrolled code blocks** (NOT a loop): block 1 parses
-  `data/characterArt.bin.mid`, calls `createPackedImage`, and stores the
-  `PackedImage*` at `ZombieCafe+0x14c`; block 2 does the same for sheet 2
-  and stores at `ZombieCafe+0x16c`. The blocks differ only in GOT string
-  slots and destination fields.
-* Runtime `[filetrace]` (added in this branch) confirms the startup order:
+* `ZombieCafe::loadImagePack(String, byte)` (RVA 0x125d04) resolves
+  per-character art, not sheets: it formats `"%s-human"` / `"%s-zombie"`
+  from the art string and calls `getImageSubpack`. The byte argument is the
+  character form selector (`0`=human, `1`=zombie, `0xFF`=both — the `U4`
+  field of `characterData`).
+* `ZombieCafe::initData` (RVA 0x12b850, 13-step `Loadstep` state machine)
+  loads the two shipped sheets with **two unrolled code blocks** (sheet 1 in
+  load step 5, sheet 2 in load step 11): each parses
+  `data/characterArtN.bin.mid` (`PiecesPerString` byte + UTF names until an
+  empty string), keeps the name list on the `ZombieCafe` object
+  (head +0x13c / +0x15c, tail +0x140 / +0x160, count +0x148 / +0x168) and
+  calls `PackedImage::createPackedImage(atlas, 0, offsets, 0)`, storing the
+  `PackedImage*` at **+0x14c / +0x16c** (`PiecesPerString` byte at
+  +0x150 / +0x170). The two blocks differ only in GOT string slots and
+  destination fields.
+* `ZombieCafe::getImageSubpack(String)` (RVA 0x125ac8) searches the two
+  name lists and, on a hit at list index `i`, returns
+  `PackedImage::createSubpack(i * PPS, PPS)` on the matching sheet's
+  `PackedImage` — subpacks are index-range views into the atlas (rects are
+  addressed by position, one `PiecesPerString`-sized group per art name).
+  Its single not-found entry is RVA 0x125bbe; every exit passes through the
+  shared epilogue at RVA 0x125bcc with the result in `r4`.
+* Per-character resolution order at runtime (confirmed via `[filetrace]`):
   `characterArt` → `characterParts.cct` + `characterOffsets` →
-  `characterArt2` → `characterParts2.cct` + `characterOffsets2`, then
-  `characterData`. Each `fileRead` trace carries the emulated caller PC
-  and stack, which is how the load blocks were located.
+  `characterArt2` → `characterParts2.cct` + `characterOffsets2` →
+  `characterData`.
 
-**Proof of concept (tool side, done):** a synthetic `characterParts3/`
-tree (54 real pieces reused as a fixture) packs through the actual
-pipeline into `characterParts3.cct.mid` (23.5 KB atlas),
-`characterOffsets3.bin.mid` and `characterArt3.bin.mid`. The tool chain
-fully supports N sheets.
+**Runtime extension** (`host/zcr_sheets.cpp`, no engine bytes modified):
 
-**Exact remaining blocker (engine side):** `initData` contains exactly
-two unrolled sheet blocks. Adding a third sheet requires replicating
-block 2 in a code cave (the cave page pattern used by the quest patches
-at 0x11000000 works and is within BL range), wiring:
+* A code hook at RVA 0x12c5ba (the instruction right after sheet 2's
+  `createPackedImage` block) creates the `PackedImage` for every extra
+  sheet discovered in the APK assets (`characterParts3` … `characterParts12`
+  with matching `characterArtN.bin.mid` / `characterOffsetsN.bin.mid`,
+  probed via `AAssetManager`) by calling the engine's own
+  `PackedImage::createPackedImage`, and copies the device scale fields
+  (PackedImage +0x18/+0x1c) from sheet 2.
+* A code hook at RVA 0x125bbe (the `getImageSubpack` not-found entry)
+  answers misses from the extra sheets via the engine's
+  `PackedImage::createSubpack`, returning the subpack through `r4` and
+  resuming at the shared epilogue. Exact string match against the art list
+  parsed from `characterArtN.bin.mid`.
+* A code hook at RVA 0x12b1ad (`ZombieCafe::ReloadTextures` entry)
+  re-creates the extra sheets on GL context loss, before the engine
+  re-resolves character art. Superseded `PackedImage` objects are
+  abandoned on the guest heap (a few KB per context loss).
+* Nested engine calls run on a stack frame below the interrupted frame
+  (`jni_call_engine_r0_sp`) and **must carry the Thumb bit on the RVA**
+  (engine export RVAs are odd; an even entry address selects ARM mode and
+  the Thumb code decodes as garbage).
 
-1. three new filename `String`s (`data/characterArt3.bin.mid`,
-   `images/characterParts3.cct.mid`, `images/characterOffsets3.bin.mid`)
-   plus a device-variant entry (can reuse the `images/` variant only);
-2. the art-list parse + `createPackedImage` sequence (identical to
-   block 2, ~150 Thumb instructions including the readUTF list loop);
-3. a third `PackedImage*` field — `ZombieCafe` object layout has not
-   been fully mapped beyond +0x14c/+0x16c, so a safe location (e.g. a
-   host-side side table keyed by the returned pointer, or a verified
-   free field) must be established;
-4. every consumer that iterates sheets 1..2 (character art resolution
-   uses the two art lists; `ReloadTextures` at RVA 0x12b1ad has its own
-   `loadImagePack` call at 0x12b514) must also cover sheet 3.
+**Verified on device** (Android 15, arm64): sheets 3 and 4 load at startup
+(`[sheet] sheet 3 loaded ... pi=...`), all four test art names resolve
+(`[sheet] resolved zzsheet3-human via sheet 3 idx=0 ...`), existing
+characters and animations render unchanged, the pre-existing Level-9 save
+loads and plays, saves write, `emu_errors=0` over 600k+ draws.
 
-Alternative path: the data-driven manifest loop in `initData` (reads
-`readUTF, readUTF, readByte` entries from a `DataInputStream` and calls
-`loadImagePack(name, index)` for each) is the *intended* generic
-mechanism — identifying its source data file (the stream is opened
-earlier in the same load step; it is one of `constants.bin.mid` /
-`globalData.dat`, neither of which contains the names as plain text)
-would make a third sheet a **data-only** addition. This is the preferred
-next investigation.
+The mechanism is **N-sheet capable** (3..12 probed); sheets 3 and 4 are
+both populated and exercised by the test characters appended to
+`characterData` ("ZCR Sheet3/4 Tester" — recycled development art,
+explicitly not final artwork).
+
+Known gap: `ReloadTextures` covers the extra sheets via the entry hook, but
+the superseded `PackedImage` heap objects are not freed (bounded, small).
 
 ## 4. Adding furniture / food / recipes
 

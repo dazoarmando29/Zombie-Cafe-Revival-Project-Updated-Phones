@@ -289,6 +289,19 @@ bool engine_apply_zcr_patches(uc_engine *uc) {
     uint8_t nop2[2] = {0x00, 0xBF};
     uc_mem_write(uc, ENG_ADDR(0xab01a), nop2, 2);
 
+    /* Missing-art safety: loadImagePack() logs "RM_HUMAN/RM_ZOMBIE ERROR"
+     * and then calls PackedImage::getImages(NULL) when getImageSubpack()
+     * cannot resolve "%s-human"/"%s-zombie", which faults at this+0x20.
+     * Redirect both tails to store a null image array instead:
+     *   0x125ffe: ldr r0,[r6,#8] / b 0x125e4a  ->  movs r0,#0 / b 0x125e50
+     *   0x12600e: ldr r0,[r6,#0xc] / b 0x125e9e ->  movs r0,#0 / b 0x125ea4
+     * (0x125e50 / 0x125ea4 are the corresponding str r0,[r6,#0x10]/#0x14
+     * sites, so the character keeps null art instead of crashing.) */
+    static const uint8_t kNullArtH[4] = {0x00, 0x20, 0x26, 0xE7};
+    static const uint8_t kNullArtZ[4] = {0x00, 0x20, 0x48, 0xE7};
+    uc_mem_write(uc, ENG_ADDR(0x125ffe), kNullArtH, 4);
+    uc_mem_write(uc, ENG_ADDR(0x12600e), kNullArtZ, 4);
+
     static const bool kPatchCompletionHook = true;
     static const bool kPatchLoadNewSet = true;
     static const bool kPatchRaidType = true;

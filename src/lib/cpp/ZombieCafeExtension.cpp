@@ -60,5 +60,17 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
   Memory::setProtection((void*)(base + 0xab018), 50, PROT_READ | PROT_WRITE | PROT_EXEC);
   *(char*)(base + 0x000ab018) = 0xb8;
   Memory::setNop((char*)(base + 0x000ab01a), 2);
+
+  /* Missing-art safety: loadImagePack() calls PackedImage::getImages(NULL)
+     when getImageSubpack() cannot resolve "%s-human"/"%s-zombie", which
+     faults at this+0x20. Redirect both error tails to store a null image
+     array instead (same patch as host/engine_loader.cpp):
+       0x125ffe: ldr r0,[r6,#8] / b 0x125e4a  ->  movs r0,#0 / b 0x125e50
+       0x12600e: ldr r0,[r6,#0xc] / b 0x125e9e ->  movs r0,#0 / b 0x125ea4 */
+  const char nullArtH[4] = {0x00, 0x20, 0x26, 0xe7};
+  Memory::memcpyProtected((void*)(base + 0x125ffe), nullArtH, 4);
+  const char nullArtZ[4] = {0x00, 0x20, 0x48, 0xe7};
+  Memory::memcpyProtected((void*)(base + 0x12600e), nullArtZ, 4);
+
   return JNI_VERSION_1_4;
 }

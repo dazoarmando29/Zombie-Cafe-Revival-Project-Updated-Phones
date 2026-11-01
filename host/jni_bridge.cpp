@@ -843,12 +843,18 @@ uint32_t jni_call_engine(uc_engine *uc, uint32_t fn_rva, const uint32_t *words,
 
 uint32_t jni_call_engine_r0(uc_engine *uc, uint32_t fn_rva, uint32_t r0,
                             const uint32_t *words, uint32_t nwords) {
+    return jni_call_engine_r0_sp(uc, fn_rva, r0, words, nwords,
+                                 STACK_BASE + STACK_SIZE - 1024);
+}
+
+uint32_t jni_call_engine_r0_sp(uc_engine *uc, uint32_t fn_rva, uint32_t r0,
+                               const uint32_t *words, uint32_t nwords,
+                               uint32_t sp) {
     /* render thread + UI thread both drive the emulator; the engine's own
        Java callbacks can re-enter on the same thread -> recursive mutex */
     static std::recursive_mutex call_mu;
     std::lock_guard<std::recursive_mutex> lk(call_mu);
 
-    uint32_t sp = STACK_BASE + STACK_SIZE - 1024;
     uint32_t lr = EMU_RETURN_ADDR;
     uint32_t pc = ENG_ADDR(fn_rva);
 

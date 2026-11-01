@@ -2,23 +2,29 @@
 
 ## Engine / content
 
-1. **Third character texture sheet: engine-side loading is not yet
-   wired.** The tool chain packs any number of `characterPartsN` folders
-   (proven with a `characterParts3` PoC), and the engine's structures are
-   generic (`loadImagePack` accepts pack indexes 1..254 with a dynamic
-   table), but `ZombieCafe::initData` loads the two sheets from two
-   unrolled code blocks storing to fixed object fields (+0x14c/+0x16c).
-   A third sheet needs a cave patch replicating that block (or discovery
-   of the data-driven manifest source). See `docs/ASSET_EXPANSION_GUIDE.md`
-   §3 for the full RE findings and the exact patch plan.
+1. **Third (and N-th) character texture sheet: IMPLEMENTED** (2026-11-01,
+   `feature/content-expansion`). Extra sheets (`characterParts3` ..
+   `characterParts12`) load through host-side engine hooks
+   (`host/zcr_sheets.cpp`) that call the engine's own
+   `createPackedImage`/`createSubpack`; `getImageSubpack` misses are
+   answered from the extra sheets. Verified on device with sheets 3 and 4
+   and two appended test characters. See
+   `docs/ASSET_EXPANSION_GUIDE.md` §3 for the verified mechanics.
+   Remaining gap: on GL context loss the superseded `PackedImage` heap
+   objects of the extra sheets are not freed (a few KB per loss).
 2. **255 characters / 255 foods format cap** — the count fields are one
-   byte (`tool/file_types`). 219 characters ship today. Lifting this
-   requires an engine-side format change (risky for saves).
+   byte (`tool/file_types`). 221 characters ship today (219 original + 2
+   test fixtures). Lifting this requires an engine-side format change
+   (risky for saves).
 3. **Furniture packs: 3 loaded by the engine** (furniture/furniture2/
-   furniture3 filename literals). Same engine-side constraint as sheets.
+   furniture3 filename literals). Same engine-side constraint the
+   character sheets had; the character-sheet hook technique has not yet
+   been applied to furniture.
 4. **Data row order is load-bearing.** The engine addresses characters/
    furniture by implicit index; inserting rows shifts ids and breaks saves.
-   Append-only is enforced by convention, not by tooling yet.
+   Append-only is enforced by convention and checked by the asset
+   validator's duplicate/art checks, but not by a dedicated row-identity
+   tool yet.
 
 ## Memory / graphics
 
@@ -53,8 +59,13 @@
 ## Testing / compatibility
 
 13. **Device coverage**: verified on one Android 15 arm64 device
-    (V2318). Android 14, low-RAM, x86 emulators and the armeabi-v7a path
-    are untested in this branch.
+    (V2318). Android 14, low-RAM and x86 emulators are untested in this
+    branch. The **armeabi-v7a path does not load on Android 15 at all**
+    (pre-existing: the original 32-bit engine has text relocations, which
+    `dlopen` rejects since API 23); it remains functional only on legacy
+    devices (Android < 6), where characters referencing `characterParts3+`
+    art now render with missing art instead of crashing (null-guard patch,
+    see `docs/CONTENT_EXPANSION_TEST_REPORT.md` §5).
 14. **Long-session behavior** (multi-hour) is unverified; the periodic
     reports exist precisely to catch slow leaks during such sessions.
 15. **Mod-menu variant** builds were not exercised by the new tests

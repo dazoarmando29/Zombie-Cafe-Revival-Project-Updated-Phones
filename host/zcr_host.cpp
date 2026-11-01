@@ -26,6 +26,7 @@
 #include "imports_posix.h"
 #include "jni_bridge.h"
 #include "stub_dispatch.h"
+#include "zcr_sheets.h"
 #include "diag.h"
 #include "generated/engine_tables.h"
 
@@ -40,6 +41,7 @@ uc_engine *g_uc = nullptr;
 EngineImage g_img;
 JavaVM *g_vm = nullptr;
 std::atomic<bool> g_game_created{false};
+AAssetManager *g_amgr = nullptr;
 
 /* ---- code hook: only fires on stub pages (ranged) ---- */
 bool on_code(uc_engine *uc, uint32_t address, uint32_t, void *) {
@@ -196,6 +198,7 @@ bool load_engine_from_assets(JNIEnv *env) {
     jobject am = env->CallObjectMethod(app, getAssets);
     AAssetManager *mgr = AAssetManager_fromJava(env, am);
     if (!mgr) return false;
+    g_amgr = mgr;
 
     AAsset *a = AAssetManager_open(mgr, "engine/game.so", AASSET_MODE_BUFFER);
     if (!a) {
@@ -256,6 +259,10 @@ bool host_init(JNIEnv *env) {
                 UC_HOOK_MEM_READ_UNMAPPED | UC_HOOK_MEM_WRITE_UNMAPPED |
                     UC_HOOK_MEM_FETCH_UNMAPPED,
                 (void *)on_mem_fault, nullptr, 1, 0);
+
+    /* extra character sheets (characterParts3+): asset pre-scan + engine
+     * hooks; must come after stubs/jni bridge so nested engine calls work */
+    zcr_sheets::init(g_uc, g_amgr);
 
     /* run global constructors (DT_INIT + DT_INIT_ARRAY) exactly like
      * dlopen would, before JNI_OnLoad */
