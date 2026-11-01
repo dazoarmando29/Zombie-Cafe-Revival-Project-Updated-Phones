@@ -73,3 +73,21 @@
 16. The engine's known String-copy crash sites (0x10141bd4/0x10141c42)
     have full diagnostics (`[strchain]`) but were not reproduced here;
     the root cause is still open.
+
+## Companion layer (recipe mastery + achievements, 2026-11-02)
+
+17. **Companion save is app-private + export-protected only.** The file
+    lives in internal storage and is exported via SaveGuard; automatic
+    restore after uninstall is subject to the same Android 15 read-back
+    limitation as the engine saves (item 13 context,
+    `docs/CONTENT_EXPANSION_TEST_REPORT.md` §7/§8.4). Manual restore
+    (SAF/button) remains the planned fix for both.
+18. **Companion flush has no pause hook** - the Java `onPause` never calls
+    the native `ZombieCafeAndroid_pause` entry (found 2026-11-02), so the
+    flush rides a throttled render-tick safety net (worst case ~10 s of
+    events unpersisted across a hard kill; event-triggered flushes cover
+    the common path and are device-verified).
+19. **Cook-completion counting follows the engine's own semantics** (the
+    `cookFood` accounting in `DishToCounterTask::completeObjective`):
+    dishes that burn unclaimed do not count, aborted carries do. Mastery
+    is therefore "successfully produced dishes", not "started cooks".

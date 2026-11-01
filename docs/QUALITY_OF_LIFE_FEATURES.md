@@ -31,8 +31,8 @@ for evidence and `docs/CONTENT_EXPANSION_ROADMAP.md` Stage B for order.
 
 | Feature | Design notes | Status |
 |---|---|---|
-| Toxin-spend confirmation | Optional confirm dialog before toxin purchases. | planned |
-| Earnable toxins | Limited rewards via achievements/mastery/quests; never infinitely farmable. | planned |
+| Toxin-spend confirmation | Optional confirm dialog before toxin purchases. NOTE: the original game already confirms toxin spends for cook instant-finish ("DO YOU WISH TO USE 1 TOXIN?" - device-observed 2026-11-02); the remaining gap is the buy/upgrade flows. | planned |
+| Earnable toxins | Limited rewards via achievements/mastery/quests; never infinitely farmable. | prototype (achievement rewards implemented: bounded, non-repeatable, see CONTENT_EXPANSION_TEST_REPORT.md §8) |
 | Daily/weekly objectives | Local tracker + reward claiming with save/reload exploit protection. | planned |
 
 ## Raids
@@ -60,3 +60,7 @@ for evidence and `docs/CONTENT_EXPANSION_ROADMAP.md` Stage B for order.
 | Missing-art crash guard (both engine paths) | `docs/CONTENT_EXPANSION_TEST_REPORT.md` §5 |
 | Save backup + recovery (previous branch) | `docs/ENGINE_UPGRADE_REPORT.md` |
 | Offline objective patches (previous branch) | `docs/ENGINE_UPGRADE_REPORT.md` |
+| Recipe mastery tracking (per-recipe cook counts, ZcrId-keyed, companion save) | `docs/CONTENT_EXPANSION_TEST_REPORT.md` §8 |
+| Achievements (15 data-driven defs, progress + bounded toxin rewards, claim latches) | `docs/CONTENT_EXPANSION_TEST_REPORT.md` §8 |
+| Toxin-spend/earn tracking (foundation for spend confirmation + economy telemetry) | `docs/CONTENT_EXPANSION_TEST_REPORT.md` §8 (spend hook device-verified) |
+| Companion save export/restore via SaveGuard | `docs/CONTENT_EXPANSION_TEST_REPORT.md` §8 |

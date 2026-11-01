@@ -26,6 +26,7 @@
 #include "imports_posix.h"
 #include "jni_bridge.h"
 #include "stub_dispatch.h"
+#include "zcr_companion.h"
 #include "zcr_sheets.h"
 #include "diag.h"
 #include "generated/engine_tables.h"
@@ -264,6 +265,10 @@ bool host_init(JNIEnv *env) {
      * hooks; must come after stubs/jni bridge so nested engine calls work */
     zcr_sheets::init(g_uc, g_amgr);
 
+    /* recipe mastery + achievements companion (host-side save + engine
+     * hooks; needs the jni bridge for SaveGuard export/restore) */
+    zcr_companion::init(g_uc, g_amgr);
+
     /* run global constructors (DT_INIT + DT_INIT_ARRAY) exactly like
      * dlopen would, before JNI_OnLoad */
     const std::vector<uint32_t> &ctors = engine_init_routines();
@@ -385,6 +390,11 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
 
     static int frame_count = 0;
     frame_count++;
+    /* companion save safety net: the Java onPause never calls the native
+     * pause entry, so backgrounding cannot flush from there - piggyback on
+     * the render tick (flush_locked is throttled + dirty-guarded, this is
+     * a cheap mutex+bool check every ~2s) */
+    if ((frame_count % 120) == 0) zcr_companion::flush(false);
     if (frame_count == 2 || (frame_count % 1800) == 0) {
         /* periodic memory report (heap + textures + host RSS) */
         diag_report(frame_count == 2 ? "startup" : "periodic");
@@ -412,6 +422,7 @@ ENTRY(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_InitMethodCalls) {
     CALL(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_InitMethodCalls);
 }
 ENTRY(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_pause) {
+    zcr_companion::flush(true); /* persist companion save on backgrounding */
     GUARD();
     CALL(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_pause);
 }

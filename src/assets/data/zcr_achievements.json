@@ -1,0 +1,147 @@
+{
+    "version": 1,
+    "mastery": {
+        "levels": [10, 50, 200]
+    },
+    "achievements": [
+        {
+            "id": "ach.cook_first",
+            "title": "First Dish",
+            "desc": "Cook and serve your first dish.",
+            "type": "cook_total",
+            "param": "",
+            "threshold": 1,
+            "reward_toxin": 1
+        },
+        {
+            "id": "ach.cook_10",
+            "title": "Short-Order Cook",
+            "desc": "Cook 10 dishes.",
+            "type": "cook_total",
+            "param": "",
+            "threshold": 10,
+            "reward_toxin": 1
+        },
+        {
+            "id": "ach.cook_50",
+            "title": "Line Cook",
+            "desc": "Cook 50 dishes.",
+            "type": "cook_total",
+            "param": "",
+            "threshold": 50,
+            "reward_toxin": 2
+        },
+        {
+            "id": "ach.cook_250",
+            "title": "Head Chef",
+            "desc": "Cook 250 dishes.",
+            "type": "cook_total",
+            "param": "",
+            "threshold": 250,
+            "reward_toxin": 3
+        },
+        {
+            "id": "ach.distinct_5",
+            "title": "Menu Sampler",
+            "desc": "Cook 5 different recipes.",
+            "type": "distinct_recipes",
+            "param": "",
+            "threshold": 5,
+            "reward_toxin": 1
+        },
+        {
+            "id": "ach.distinct_15",
+            "title": "Menu Builder",
+            "desc": "Cook 15 different recipes.",
+            "type": "distinct_recipes",
+            "param": "",
+            "threshold": 15,
+            "reward_toxin": 2
+        },
+        {
+            "id": "ach.distinct_50",
+            "title": "Menu Master",
+            "desc": "Cook 50 different recipes.",
+            "type": "distinct_recipes",
+            "param": "",
+            "threshold": 50,
+            "reward_toxin": 3
+        },
+        {
+            "id": "ach.mastery_first",
+            "title": "Signature Dish",
+            "desc": "Reach mastery level 1 on any recipe.",
+            "type": "mastery_count",
+            "param": "",
+            "param2": 1,
+            "threshold": 1,
+            "reward_toxin": 2
+        },
+        {
+            "id": "ach.mastery_three",
+            "title": "House Specials",
+            "desc": "Reach mastery level 1 on 3 recipes.",
+            "type": "mastery_count",
+            "param": "",
+            "param2": 1,
+            "threshold": 3,
+            "reward_toxin": 3
+        },
+        {
+            "id": "ach.mastery_gold",
+            "title": "Golden Spoon",
+            "desc": "Reach mastery level 3 on any recipe.",
+            "type": "mastery_count",
+            "param": "",
+            "param2": 3,
+            "threshold": 1,
+            "reward_toxin": 5
+        },
+        {
+            "id": "ach.brain_burger_first",
+            "title": "Brain Food",
+            "desc": "Cook a Brain Burger.",
+            "type": "cook_recipe",
+            "param": "recipe.brain_burger",
+            "threshold": 1,
+            "reward_toxin": 1
+        },
+        {
+            "id": "ach.brain_burger_mastery",
+            "title": "Brainiac",
+            "desc": "Master the Brain Burger (mastery level 1).",
+            "type": "mastery_recipe",
+            "param": "recipe.brain_burger",
+            "param2": 1,
+            "threshold": 1,
+            "reward_toxin": 2
+        },
+        {
+            "id": "ach.toxin_spent_10",
+            "title": "Big Spender",
+            "desc": "Spend 10 toxin.",
+            "type": "toxin_spent",
+            "param": "",
+            "threshold": 10,
+            "reward_toxin": 1
+        },
+        {
+            "id": "ach.toxin_spent_100",
+            "title": "Toxin Tycoon",
+            "desc": "Spend 100 toxin.",
+            "type": "toxin_spent",
+            "param": "",
+            "threshold": 100,
+            "reward_toxin": 2
+        },
+        {
+            "id": "ach.toxin_earned_25",
+            "title": "Earned It",
+            "desc": "Earn 25 toxin through gameplay.",
+            "type": "toxin_earned",
+            "param": "",
+            "threshold": 25,
+            "reward_toxin": 1
+        }
+    ]
+}

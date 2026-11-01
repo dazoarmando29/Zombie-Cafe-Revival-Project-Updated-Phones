@@ -73,11 +73,11 @@ host-side extension design.
 | New recipe `recipe.brain_burger` | implemented; data + 146-image recipe atlas verified at load on device; cookbook/cooking walkthrough pending manual test |
 | Content expansion guides (Part 2.3) | done (NEW_CHARACTER_GUIDE, NEW_RECIPE_GUIDE, CONTENT_REGISTRY) |
 | New characters (Stage C/D, original art) | scaffolding ready + pipeline proven; original artwork is the missing dependency |
-| Recipe mastery (Part 5.1) | planned |
+| Recipe mastery (Part 5.1) | prototype: host companion layer implemented + unit-tested (116 tests); cook-count + spend hooks device-verified (§8) |
 | Cooking QoL (Part 4) | planned (see QUALITY_OF_LIFE_FEATURES.md) |
 | Zombie management UI (Part 3.3) | planned (candidate: host overlay / mod menu) |
 | Raid QoL (Part 7.1) | planned |
-| Achievements / objectives (Part 8) | planned |
+| Achievements / objectives (Part 8) | prototype: 15 data-driven achievements, progress + rewards pipeline implemented + unit-tested; live progress + persistence device-verified (see §8) |
 | Offline events (Part 9) | planned |
 
 ## 2.1 Test-data incident (2026-11-01)
@@ -133,7 +133,7 @@ Tested by forcing `adb install --abi armeabi-v7a` on the Android 15 device:
   New content that must render on 32-bit legacy devices should use art on
   sheets 1–2.
 
-## 6. Stage C � first content expansion (2026-11-01)
+## 6. Stage C � first content expansion (2026-11-01)
 
 | Check | Result |
 |---|---|
@@ -191,3 +191,108 @@ Answering "can saves survive uninstall + reinstall":
 * `String.concat` used as a static method crashed one build (fixed).
 * Several inverted conditionals were found and corrected; each was caught
   by device logs, not by the build.
+
+## 8. Recipe mastery + achievements companion layer (2026-11-02)
+
+Host-side companion save (`host/companion_state.*` + `host/zcr_companion.*`)
+keyed by ZcrIds, versioned JSON next to the engine saves
+(`files/zcr_companion.json`), exported through the tested SaveGuard path.
+It never touches the engine save format. Engine hooks are read-only and
+land on disassembly-verified transitions (see
+`docs/ASSET_EXPANSION_GUIDE.md` §9).
+
+### 8.1 Implemented
+
+| Component | Status |
+|---|---|
+| Companion state (cook counts per recipe, totals, achievement latches) | implemented + unit-tested (116 checks) |
+| JSON serialization/parse (tolerant, tamper guards, deterministic) | implemented + unit-tested |
+| Mastery levels (10/50/200 cooks = level 1/2/3, data-driven) | implemented + unit-tested |
+| 15 data-driven achievements (`src/assets/data/zcr_achievements.json`, ZcrId params) | implemented + unit-tested |
+| Reward pipeline (persist-then-grant; claim latch prevents double-claim; loss-safe direction) | implemented + unit-tested |
+| Registry row -> ZcrId map from `data/zcr_registry.lock.json` (217 recipe rows) | implemented + device-verified (init log) |
+| Cook-count hook (`DishToCounterTask::completeObjective` = engine's own `cookFood` accounting) | implemented + device-verified (see 8.2) |
+| Toxin-spend hook (`ZombieCafe::spendToxin`) | implemented + device-verified (see 8.2) |
+| Toxin-earn hook (`ZombieCafe::addToxin`, flag=0 gameplay only) | implemented, not device-tested |
+| Reward grant (toxin field write, clamped 999) | implemented + unit-tested; on-device grant fired with `ach.cook_first` (state shows claimed) |
+| SaveGuard export/restore integration for the companion file | implemented + device-verified (export to Download; `restoreInternal` called OK) |
+| Flush safety net (render-tick flush; Java `onPause` never calls the native pause entry - found this session) | implemented, not device-tested |
+| Export retry (mirrors SaveGuard's 10s throttle so a throttled copy is retried instead of lost) | implemented, not device-tested |
+
+### 8.2 Device evidence (Android 15, 2026-11-02)
+
+* Init (two cold boots): `defs: 15 achievements, mastery thresholds=3`,
+  `registry: 217 recipe rows mapped to ZcrIds`, `restoreInternal -> 1`,
+  `selftest: pipeline ok (probe total=1 roundtrip=1)`,
+  `hooks installed (cooked@0x82048 spend@0x11fc94 add@0x122134)`.
+* **Persistence round-trip**: companion file created+exported at 01:12
+  (boot 1), read back at 01:15 (boot 2, `state loaded:` matching the file
+  contents).
+* **Live event pipeline**: in-game toxin instant-finish (tutorial) fired
+  `toxin spent: 1 (total 1)` at 02:05:26; the exported companion file
+  updated at 02:05 with `"toxin_spent":1`, `ach.toxin_spent_10/100`
+  `progress:1`, all 15 achievement records present.
+* **Cook-count hook device-verified end-to-end** (diag file evidence):
+  the tutorial's first dish (Mystery Meat) cooked, toxin-finished and
+  carried to the counter produced
+  `cooked: row=0 variant=0 key=recipe.mystery_meat total=1` (recipe row
+  byte 0 resolved through the 217-row registry map to its ZcrId),
+  then `achievement unlocked: ach.cook_first (reward 1 toxin)` and
+  `reward granted: +1 toxin -> 6`. The next cold boots loaded
+  `state loaded: cooked=1 recipes=1 ... ach=15 pending-claims=0` - the
+  count, the ZcrId key, the unlock and the claim latch all survived the
+  process restart with no double-claim.
+* Export edge found + fixed: the export copy can lag one write behind
+  (SaveGuard's Java-side 10s throttle silently drops a copy in the same
+  window); the host now mirrors the throttle and retries the export from
+  the render tick. The internal file stayed authoritative throughout.
+* No regressions: `emu_errors=0` over 490k+ draws across the session,
+  sheets load, save writes (`BACKUP2.*`, `ServerData.dat`) normal, no
+  dex verify errors.
+
+### 8.3 Anti-exploit design
+
+* Counters are monotonic; achievement unlock flags latch (each id returns
+  exactly once from evaluation); claims are latched in the companion save
+  BEFORE the reward is granted (a crash between the two loses the reward
+  instead of allowing a re-claim).
+* Toxin rewards are bounded (max 5 per achievement, ~31 total across the
+  current set), non-repeatable, and respect the monthly-award cap design
+  (`docs/GAMEPLAY_BALANCE.md` §3).
+* Purchased toxin (`GiveBoughtToxin` -> `addToxin` flag=1) is not counted
+  as gameplay earnings.
+
+### 8.4 Save-state incident (2026-11-02, forensics)
+
+While driving the game for cook-hook verification, the device showed a
+fresh-game tutorial (Level 1) instead of the previous test save. Decisive
+checks (file timestamps, `filetrace`, export-folder forensics with
+`tool/file_types`):
+
+* The previous session's save-survival testing (§7) ran **multiple
+  `adb uninstall` cycles** by design; each wiped the app's internal
+  storage. The last internal state was already the post-reinstall state;
+  `playerCafe.caf` was a 2-byte stub at 00:06.
+* **No save data was lost this session** - the pre-session internal state
+  was already the fresh-game state (PLAY went to chef-select before any
+  UI action). The old save data remains in the uninstall-surviving
+  exports: `Download/ZombieCafeRevival/` and the app media dir
+  (`Android/media/<pkg>/ZombieCafeRevival/saves/`), e.g. `BACKUP1.caf`
+  (19851 B, 00:06) + `ServerData (1)-(5).dat` (22:44-00:06).
+* Recovery of those exports into internal storage on Android 15 remains
+  the known blocked item (§7 / SAF or manual restore button). On this
+  device the app-media-dir copy is still present and readable by the app
+  (no uninstall happened this session), so `SaveGuard.restoreInternal`
+  can serve it once the internal files are missing (e.g. via the planned
+  manual-restore flow).
+* The new game created during testing writes the normal save set
+  (`BACKUP2.dat/.caf`, `ServerData.dat`) and is itself export-verified.
+
+### 8.5 Outstanding
+
+* None for the core pipeline (cook hook, spend hook, achievements,
+  persistence, export all device-verified; the `cooked:` log line was
+  recovered from the host diag file after vivo suppressed app logcat
+  following a package replacement - `zcr-log.txt` is the reliable
+  evidence channel on this device).
+* Forced GL context loss, multi-hour soak (carried over from §4).

@@ -17,6 +17,8 @@ set_target_properties(unicorn PROPERTIES
 add_library(zcr_host SHARED
   zcr_host.cpp
   zcr_sheets.cpp
+  zcr_companion.cpp
+  companion_state.cpp
   engine_loader.cpp
   stub_dispatch.cpp
   jni_bridge.cpp

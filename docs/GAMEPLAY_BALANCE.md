@@ -31,9 +31,13 @@ balance remains the default.
   rare characters may exceed common ones modestly, never universally.
 * New furniture: keep `MAX_RATING_BONUS`/earning contributions within
   existing item tiers.
-* Mastery/achievement rewards (future): small currency/XP bonuses and
-  limited toxins; nothing that permanently trivializes the economy; no
-  infinitely farmable toxin source.
+* Mastery/achievement rewards (implemented 2026-11-02, host companion
+  layer): mastery tiers at 10/50/200 cooks per recipe (levels 1/2/3,
+  cosmetic progression); achievement toxin rewards bounded at 1/2/3/5
+  per achievement, ~31 toxin across the full 15-achievement set,
+  non-repeatable. Nothing that permanently trivializes the economy; no
+  infinitely farmable toxin source. Definitions live in
+  `src/assets/data/zcr_achievements.json` (data-driven, tune in place).
 
 ## 3. Toxin economy
 

@@ -24,7 +24,7 @@ statically tested, device test pending), **prototype**, **planned**,
 | One-tap repeat cooking | planned |
 | Improved zombie management / staff overview | planned (candidate vehicle: host overlay or mod-menu extension) |
 | Recipe sorting | planned |
-| Toxin-spending confirmation | planned (engine dialog hook) |
+| Toxin-spending confirmation | planned (engine dialog hook; note: the game already confirms cook instant-finish spends - device-observed) |
 | Raid info / history | planned |
 | Multi-stove cooking | planned (investigate stove state machine first) |
 | Cooking queue / food expiration options | planned (compatibility layer only if stable) |
@@ -41,9 +41,9 @@ engine-side interaction points are RE-verified like the sheet work was.
 | New recipe (`recipe.brain_burger`) | dev-tested (data + art pack verified at load; cookbook/cooking walkthrough pending manual test) |
 | New zombie (real, original art) | planned (pipeline proven by test fixtures; original artwork is the missing dependency) |
 | New furniture item | planned (same pipeline, furniture packs capped at 3) |
-| New enemy café | planned (raid data format to be RE-mapped first) |
-| Recipe mastery prototype | planned (needs cooking-completion event hook) |
-| Initial achievement system | planned (host-side companion save; see Part 11) |
+| New enemy cafAc | planned (raid data format to be RE-mapped first) |
+| Recipe mastery prototype | prototype (host companion save + cook-count hook on the engine's own cook accounting; unit-tested, hooks device-verified, see test report A8) |
+| Initial achievement system | prototype (15 data-driven achievements, reward claim latches; live progress + persistence + first reward device-verified; see test report A8) |
 
 ## Stage D — expand content (blocked on Stage C sign-off)
 

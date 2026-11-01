@@ -86,6 +86,8 @@ func GetCopyFiles() []string {
 		"assets/data/help_google.html",
 		"assets/data/strings_amazon.bin.mid",
 		"assets/data/strings_google.bin.mid",
+		"assets/data/zcr_achievements.json",
+		"assets/data/zcr_registry.lock.json",
 		"assets/fonts/ALoveofThunder.ttf.mid",
 		"assets/fonts/thunder_12pt.fnt.mid",
 		"assets/fonts/thunder_12pt_0.png",

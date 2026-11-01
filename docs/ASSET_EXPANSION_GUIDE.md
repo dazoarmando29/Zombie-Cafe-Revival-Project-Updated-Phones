@@ -173,6 +173,63 @@ the superseded `PackedImage` heap objects are not freed (bounded, small).
 
 From measured steady state (see `docs/ENGINE_MEMORY_AUDIT.md`): the guest
 heap peaks at ~27 MB of 1536 MB and GPU textures at ~53 MB. Adding tens
-of new characters/sheets is comfortably within budget; hundreds of new
-2048² atlases would add ~16 MB GPU each and should be checked against the
+of new characters/ sheets is comfortably within budget; hundreds of new
+2048A� atlases would add ~16 MB GPU each and should be checked against the
 `[texstat]` report after loading.
+
+## 9. Verified engine gameplay transitions (companion layer hooks)
+
+Ground truth for `host/zcr_companion.cpp` (recipe mastery + achievements).
+All findings verified by Thumb disassembly of the shipped
+`libZombieCafeAndroid.so` (2026-11-02, capstone) and cross-checked against
+runtime behavior; do not re-derive, and re-verify before changing.
+
+### 9.1 "A dish was cooked" - `DishToCounterTask::completeObjective` (RVA 0x82048)
+
+* The engine's own "you cooked this" accounting lives here: the function
+  calls `ObjectiveSystem::cookFood(recipeRow)` (`ldrb r1, [r3]` passes the
+  recipe row byte) from exactly this spot, then grants recipe XP.
+* `DishToCounterTask+0x3c` = the carried `FoodStack*`; `FoodStack+0` =
+  recipe row (byte), `FoodStack+8` = variant (byte), `FoodStack+4` =
+  servings. Verified from `FoodStack::FoodStack(uchar,uchar)` (0x8a33c).
+* Both delivery paths flow through this task: staff carry
+  (`GameStateCafe::onCookCommandBarServe` 0xa5dc4 creates the task after
+  `findStaffForCookEndTask`) and player-tap serve. `CookCommandBar::finishDish`
+  (toxin instant-finish) and `CookingOrder` (friend orders) converge on the
+  same dish state.
+* Call sites: tick branches 0x82c8a / 0x82d7e and stop-immediately branches
+  0x83056 / 0x830f4 - matching the engine's own `cookFood` semantics (burned
+  unclaimed dishes are not counted, aborted carries are).
+
+### 9.2 Stove / dish state (verified fields)
+
+| Field | Meaning |
+|---|---|
+| `Stove+0x2e` (byte) | cooking-active flag (set by `startCooking`) |
+| `Stove+0x60` | `FoodStack*` of the dish being cooked |
+| `Stove+0x64` | accumulated wall-clock ms (advanced by `Stove::exist`) |
+| `Stove+0x68` | ready marker: 0 while cooking, cook-time ms once `autoFinishCooking` ran |
+| `Stove+0x3c` | `Furniture*` back-pointer (task routing) |
+
+* `Stove::startCooking(uchar row, uchar variant, Furniture*)` (0x113c58)
+  builds the `FoodStack` (0x24 bytes) at +0x60.
+* `Stove::isDoneCooking` (0x77ecc): `[0x68] >= cookTimeMs`.
+* `Stove::autoFinishCooking` (0x113bb0) is the ready transition (sound +
+  notification); called from `CookCommandBar::finishDish` (0x7eace) and
+  `CookingOrder::finish` (0xf2a54) only - the timer path transitions
+  lazily via `isDoneCooking`.
+
+### 9.3 Toxin
+
+* `ZombieCafe+0xb8` (int32) = toxin balance. `spendToxin(int)` (0x11fc94)
+  is a 4-instruction subtract; `getToxin` (0x11fca0) loads the same field;
+  `addToxin(int,bool)` (0x122134) adds it and, when `flag != 0` (purchase
+  flow - `GiveBoughtToxin` passes 1), reports through a side channel.
+  The mod-menu natives (`DebugSetToxin` etc.) write the same field.
+* Hook points used by the companion layer: `spendToxin` entry (r1=amount)
+  and `addToxin` entry (r1=amount, r2=flag; gameplay earnings = flag 0).
+
+### 9.4 Game instance lookup
+
+* `CapcomApp**` global at RVA 0x1daf80; `*(app+4)` = `ZombieCafe*`
+  (same verified indirection as the mod-menu natives in `zcr_host.cpp`).
