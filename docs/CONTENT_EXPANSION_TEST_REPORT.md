@@ -296,3 +296,47 @@ checks (file timestamps, `filetrace`, export-folder forensics with
   following a package replacement - `zcr-log.txt` is the reliable
   evidence channel on this device).
 * Forced GL context loss, multi-hour soak (carried over from §4).
+
+## 9. Recipe favorites persistence (2026-11-02, Stage B QoL)
+
+The original game's cookbook already has a favorite-star system (star
+toggle per recipe, favorites tab, 14-favorite slot list) - but its state
+round-trips through the engine save with save-timing staleness: toggles
+made after the last engine save resurrect on reload (device-observed).
+This milestone makes favorites write-through reliable via the companion
+save.
+
+### 9.1 Implemented
+
+| Component | Status |
+|---|---|
+| `set_favorite` in companion state (ZcrId-keyed, JSON `"favorites"` map) | implemented + unit-tested (15 checks in the 131-check suite) |
+| `RecipeBook::updateFavorite` hook (records toggles instantly) | implemented + device-verified (`favorite: row=0 key=recipe.mystery_meat -> 0` etc.) |
+| `RecipeBook::loadCookBook` reconcile (companion-wins with 1/0 writes; adopt engine-restored favorites when companion is empty) | implemented + device-verified |
+| Favorites slot list rebuild (14-cap, grow via engine primitive 0xfb7c0) | implemented + device-verified (`list=1`) |
+| UI verification (tile stars persist across force-stop + relaunch) | implemented + device-verified (screenshots) |
+
+### 9.2 Device evidence
+
+* Toggle on/off captured in the companion file instantly:
+  `favorite: row=4 key=recipe.green_eggs_sam -> 1`,
+  `favorite: row=0 key=recipe.mystery_meat -> 0`.
+* After force-stop + relaunch + cookbook open:
+  `favorites reconcile: adopted=0 set=0 cleared=1 list=1` - the stale
+  engine flag (un-favorite made after the last engine save) was cleared
+  per the companion, the surviving favorite (row 4) kept its star, and
+  the engine's favorites slot list was rebuilt. Re-opening the book is
+  idempotent (`cleared=0 list=1`).
+* RE findings recorded in `docs/ASSET_EXPANSION_GUIDE.md` §9.5
+  (Recipe+0x1e flag, updateFavorite/loadCookBook entry points, the
+  favorites widget layout, grow primitive).
+
+### 9.3 Known quirks (engine-side, cosmetic)
+
+* The detail panel's ADD/REMOVE-star button can show the engine's stale
+  default label on the auto-selected recipe immediately after opening the
+  book; it refreshes on any recipe selection (tile stars - the actual
+  favorite markers - are always correct after the reconcile).
+* Adopt-from-engine path (companion empty + engine restored favorites)
+  is implemented but not yet exercised on device (the test companion was
+  non-empty by then).

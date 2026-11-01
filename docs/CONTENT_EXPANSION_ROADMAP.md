@@ -20,7 +20,7 @@ statically tested, device test pending), **prototype**, **planned**,
 
 | Item | Status |
 |---|---|
-| Recipe favorites | planned (needs engine UI work or host overlay) |
+| Recipe favorites | done (engine star UI + companion write-through persistence + reconcile; device-tested, test report A9) |
 | One-tap repeat cooking | planned |
 | Improved zombie management / staff overview | planned (candidate vehicle: host overlay or mod-menu extension) |
 | Recipe sorting | planned |

@@ -70,6 +70,9 @@ struct State {
     int64_t toxin_earned = 0;
     /* key = zcrId when known else "row:N" */
     std::map<std::string, RecipeStat> recipes;
+    /* favorite recipes: key -> foodData row (presence = favorite; the
+     * original game's star flag resets every launch - Recipe+0x1e) */
+    std::map<std::string, int32_t> favorites;
     /* key = achievement id */
     std::map<std::string, AchState> achievements;
 };
@@ -91,6 +94,11 @@ std::vector<std::string> on_toxin_spent(State &s, const Defs &d, int64_t amount,
                                         int64_t now);
 std::vector<std::string> on_toxin_earned(State &s, const Defs &d,
                                          int64_t amount, int64_t now);
+
+/* Recipe favorites (the engine's star flag, Recipe+0x1e, resets every
+ * launch - this persists it). Presence in State::favorites = starred. */
+void set_favorite(State &s, const std::string &key, int32_t row, bool fav,
+                  int64_t now);
 
 /* Recompute achievement progress from the aggregate state (idempotent).
  * Unlocked flags latch: an unlocked achievement never re-triggers. */

@@ -346,6 +346,52 @@ static void test_json_escapes() {
     CHECK(u.recipes["row:1"].zcr_id == "aA\tb");
 }
 
+static void test_favorites() {
+    State s;
+    set_favorite(s, "recipe.mystery_meat", 0, true, 100);
+    set_favorite(s, "recipe.brain_burger", 217, true, 101);
+    CHECK_EQ(s.favorites.size(), 2);
+    CHECK_EQ(s.favorites["recipe.mystery_meat"], 0);
+    CHECK_EQ(s.favorites["recipe.brain_burger"], 217);
+    /* un-favorite erases */
+    set_favorite(s, "recipe.mystery_meat", 0, false, 102);
+    CHECK_EQ(s.favorites.size(), 1);
+    CHECK(s.favorites.find("recipe.mystery_meat") == s.favorites.end());
+    /* idempotent */
+    set_favorite(s, "recipe.brain_burger", 217, true, 103);
+    CHECK_EQ(s.favorites.size(), 1);
+
+    /* round-trip */
+    std::string json = serialize(s);
+    CHECK(json.find("\"favorites\":{\"recipe.brain_burger\":217}") !=
+          std::string::npos);
+    State back;
+    std::string err;
+    CHECK(parse_state(json, &back, &err));
+    CHECK_EQ(back.favorites.size(), 1);
+    CHECK_EQ(back.favorites["recipe.brain_burger"], 217);
+    CHECK(serialize(back) == json);
+
+    /* parse hardening: non-int / out-of-range rows dropped */
+    State u;
+    CHECK(parse_state("{\"version\":1,\"favorites\":{"
+                      "\"recipe.a\":5,\"recipe.b\":999,\"recipe.c\":-1,"
+                      "\"recipe.d\":\"x\"}}",
+                      &u, &err));
+    CHECK_EQ(u.favorites.size(), 1);
+    CHECK_EQ(u.favorites["recipe.a"], 5);
+
+    /* engine cap respected by callers; state itself stores what it is given */
+    State c;
+    for (int i = 0; i < 20; i++) {
+        char key[32];
+        snprintf(key, sizeof(key), "recipe.r%d", i);
+        set_favorite(c, key, i, true, 200 + i);
+    }
+    CHECK_EQ(c.favorites.size(), 20); /* storage is unlimited; the engine
+                                       * list rebuild caps at 14 */
+}
+
 int main() {
     test_mastery();
     test_recipe_key();
@@ -358,6 +404,7 @@ int main() {
     test_defs_parse();
     test_registry_rows();
     test_json_escapes();
+    test_favorites();
 
     printf("companion tests: %d checks, %d failures\n", g_checks, g_failures);
     return g_failures == 0 ? 0 : 1;

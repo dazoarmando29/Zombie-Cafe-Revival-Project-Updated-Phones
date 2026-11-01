@@ -233,3 +233,25 @@ runtime behavior; do not re-derive, and re-verify before changing.
 
 * `CapcomApp**` global at RVA 0x1daf80; `*(app+4)` = `ZombieCafe*`
   (same verified indirection as the mod-menu natives in `zcr_host.cpp`).
+
+### 9.5 Recipe favorites (cookbook stars)
+
+* `Recipe+0x1e` (byte) = favorite flag; `Recipe+0x1f` = companion "seen"
+  byte. Toggle paths in `RecipeBook::tick` write the flag and call
+  `RecipeBook::updateFavorite(bool)` (0xfb8e8) with the selected row at
+  `RecipeBook+0x214`; `RecipeBook::manageAllRecipe` re-applies the star
+  icons from `+0x1e` on every view build.
+* Favorites slot list widget at `RecipeBook+0x64`: capacity at +0x38,
+  count at +0x3c, `int*` rows at +0x40 (entries at 1..count), engine cap
+  14 entries. Grow primitive at RVA 0xfb7c0: `grow(list+0x38, newCap)`.
+* The flag DOES round-trip through the engine save (observed on device),
+  but with engine-save timing: toggles made after the last engine save
+  resurrect on reload. The companion layer
+  (`host/zcr_companion.cpp`) therefore treats its own write-through state
+  as truth: `updateFavorite` hook records toggles instantly and
+  `RecipeBook::loadCookBook` (0xffa1c) reconciles before the UI builds
+  (adopting engine-restored favorites when the companion has no records,
+  writing both 1s and 0s otherwise).
+* Note: the detail panel's ADD/REMOVE-star button label can show the
+  engine's stale default on the auto-selected recipe right after opening
+  the book; it refreshes on any recipe selection (self-correcting).

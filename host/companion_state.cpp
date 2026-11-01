@@ -396,6 +396,16 @@ std::vector<std::string> on_toxin_earned(State &s, const Defs &d,
     return evaluate(s, d, now);
 }
 
+void set_favorite(State &s, const std::string &key, int32_t row, bool fav,
+                  int64_t now) {
+    if (fav) {
+        s.favorites[key] = row;
+    } else {
+        s.favorites.erase(key);
+    }
+    s.updated_ts = now;
+}
+
 void mark_claimed(State &s, const std::string &id, int64_t now) {
     AchState &st = s.achievements[id];
     st.claimed = true;
@@ -441,6 +451,19 @@ std::string serialize(const State &s) {
         write_int("first", kv.second.first_ts, &out, &ef);
         write_int("last", kv.second.last_ts, &out, &ef);
         out += "}";
+    }
+    out += "}";
+    /* favorites (key -> foodData row; presence = starred) */
+    out += ",\"favorites\":{";
+    bool ff = true;
+    for (const auto &kv : s.favorites) {
+        if (!ff) out += ",";
+        ff = false;
+        json_escape(kv.first, &out);
+        out += ":";
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%d", (int)kv.second);
+        out += buf;
     }
     out += "}";
     /* achievements */
@@ -494,6 +517,13 @@ bool parse_state(const std::string &json, State *out, std::string *err) {
             rs.last_ts = kv.second.int_or("last", 0);
             if (rs.cooked < 0) rs.cooked = 0; /* monotonic guard */
             st.recipes[kv.first] = rs;
+        }
+    }
+    if (const JsonVal *fv = root.find("favorites")) {
+        for (const auto &kv : fv->o) {
+            if (kv.second.type != JsonVal::Int) continue;
+            if (kv.second.i < 0 || kv.second.i > 255) continue;
+            st.favorites[kv.first] = (int32_t)kv.second.i;
         }
     }
     if (const JsonVal *a = root.find("achievements")) {

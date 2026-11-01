@@ -8,7 +8,7 @@ for evidence and `docs/CONTENT_EXPANSION_ROADMAP.md` Stage B for order.
 
 | Feature | Design notes | Status |
 |---|---|---|
-| Recipe favorites | Persist per-recipe favorite flags in a host-side companion file; surface as a filter/bookmark in the cookbook or stove picker. | planned |
+| Recipe favorites | The engine already ships the star UI (toggle, favorites tab, 14-slot list) but state round-trips through the engine save with save-timing staleness. Companion save now records toggles write-through and reconciles at book-open (adopt-on-empty / companion-wins). | implemented + device-tested (2026-11-02, test report §9) |
 | One-tap repeat cooking | Remember last recipe per stove (companion file); re-issue the cook command after affordability checks. Must not spend currency before confirmation. | planned |
 | Multi-stove cooking | Extend repeat-cooking to apply to selected idle stoves; validate each stove independently; never touch active cook slots. | planned (investigate stove state machine first) |
 | Recipe sorting | Sort options (time/profit/XP/servings/mastery/favorites) with data-order as default. | planned |
@@ -64,3 +64,4 @@ for evidence and `docs/CONTENT_EXPANSION_ROADMAP.md` Stage B for order.
 | Achievements (15 data-driven defs, progress + bounded toxin rewards, claim latches) | `docs/CONTENT_EXPANSION_TEST_REPORT.md` §8 |
 | Toxin-spend/earn tracking (foundation for spend confirmation + economy telemetry) | `docs/CONTENT_EXPANSION_TEST_REPORT.md` §8 (spend hook device-verified) |
 | Companion save export/restore via SaveGuard | `docs/CONTENT_EXPANSION_TEST_REPORT.md` §8 |
+| Recipe favorites persistence (write-through + book-open reconcile) | `docs/CONTENT_EXPANSION_TEST_REPORT.md` §9 |
