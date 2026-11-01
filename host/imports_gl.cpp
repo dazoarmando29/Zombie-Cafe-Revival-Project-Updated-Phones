@@ -8,7 +8,9 @@
  * directly, anything else is copied into scratch buffers at draw time. */
 #include "imports_gl.h"
 
+#include <algorithm>
 #include <cstring>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -68,6 +70,75 @@ ClientArray g_va, g_tc, g_co, g_no;
 int g_tex_env_mode = 0x2100; /* GL_MODULATE */
 
 std::vector<uint8_t> g_tmp_va, g_tmp_tc, g_tmp_co, g_tmp_no, g_tmp_idx, g_tmp_misc;
+
+/* ---- texture allocation tracking (Phase 5 diagnostics) ---- */
+struct TexRec {
+    GLsizei w = 0, h = 0;
+    GLenum format = 0, type = 0;
+    size_t bytes = 0;
+    uint64_t hash = 0;
+    uint32_t uploads = 0;
+};
+std::map<GLuint, TexRec> g_tex;
+std::map<uint64_t, GLuint> g_tex_by_hash; /* content hash -> first live id */
+uint64_t g_tex_live_bytes = 0;
+uint64_t g_tex_peak_bytes = 0;
+uint64_t g_tex_created = 0, g_tex_deleted = 0;
+uint64_t g_tex_dupes = 0;
+uint64_t g_tex_upload_bytes = 0; /* cumulative decoded bytes pushed to GL */
+
+uint64_t fnv1a(const uint8_t *p, size_t n) {
+    uint64_t h = 1469598103934665603ull;
+    for (size_t i = 0; i < n; i++) {
+        h ^= p[i];
+        h *= 1099511628211ull;
+    }
+    return h ? h : 1;
+}
+
+size_t tex_bytes_for(GLsizei w, GLsizei h, GLenum format, GLenum type) {
+    size_t bpp = 4;
+    if (type == GL_UNSIGNED_SHORT_5_6_5 || type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+        type == GL_UNSIGNED_SHORT_5_5_5_1)
+        bpp = 2;
+    else if (format == GL_RGB) bpp = 3;
+    else if (format == GL_ALPHA || format == GL_LUMINANCE) bpp = 1;
+    return (size_t)w * (size_t)h * bpp;
+}
+
+void tex_track_upload(GLuint id, GLsizei w, GLsizei h, GLenum format,
+                      GLenum type, size_t bytes, const void *pixels) {
+    TexRec &r = g_tex[id];
+    if (r.bytes) g_tex_live_bytes -= r.bytes;
+    /* drop stale hash entry pointing at this id */
+    if (r.hash) {
+        auto it = g_tex_by_hash.find(r.hash);
+        if (it != g_tex_by_hash.end() && it->second == id) g_tex_by_hash.erase(it);
+    }
+    r.w = w;
+    r.h = h;
+    r.format = format;
+    r.type = type;
+    r.bytes = bytes;
+    r.uploads++;
+    g_tex_live_bytes += bytes;
+    g_tex_upload_bytes += bytes;
+    if (g_tex_live_bytes > g_tex_peak_bytes) g_tex_peak_bytes = g_tex_live_bytes;
+    if (pixels && bytes && bytes <= (64u << 20)) {
+        r.hash = fnv1a((const uint8_t *)pixels, bytes) ^
+                 ((uint64_t)w << 32) ^ ((uint64_t)h << 8) ^ format;
+        auto it = g_tex_by_hash.find(r.hash);
+        if (it != g_tex_by_hash.end() && it->second != id) {
+            g_tex_dupes++;
+            if (g_tex_dupes <= 8)
+                diag_log("[texdupe] id=%u duplicates id=%u %ux%u fmt=0x%x %uKB",
+                         id, it->second, (int)w, (int)h, format,
+                         (unsigned)(bytes / 1024));
+        } else {
+            g_tex_by_hash[r.hash] = id;
+        }
+    }
+}
 
 void apply_arrays(uc_engine *uc, uint32_t first, uint32_t elems) {
     /* zero-filled fallback so a bad pointer never feeds garbage to the GPU */
@@ -387,11 +458,23 @@ static void h_glGenTextures(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     GLuint t = 0;
     glGenTextures(1, &t);
     emu::write(uc, a.r[1], &t, 4);
+    g_tex.try_emplace(t);
+    g_tex_created++;
     *rv = 0;
 }
 static void h_glDeleteTextures(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     GLuint t = (GLuint)a.r[1];
     glDeleteTextures(1, &t);
+    auto it = g_tex.find(t);
+    if (it != g_tex.end()) {
+        g_tex_live_bytes -= it->second.bytes;
+        if (it->second.hash) {
+            auto h = g_tex_by_hash.find(it->second.hash);
+            if (h != g_tex_by_hash.end() && h->second == t) g_tex_by_hash.erase(h);
+        }
+        g_tex.erase(it);
+        g_tex_deleted++;
+    }
     *rv = 0;
 }
 
@@ -400,18 +483,18 @@ static void h_glTexImage2D(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     GLsizei w = (GLsizei)a.r[3], h = (GLsizei)a.arg(4);
     GLenum format = (GLenum)a.arg(6), type = (GLenum)a.arg(7);
     const GLvoid *p = nullptr;
+    size_t n = tex_bytes_for(w, h, format, type);
     if (pixels) {
-        size_t bpp = 4;
-        if (type == GL_UNSIGNED_SHORT_5_6_5 || type == GL_UNSIGNED_SHORT_4_4_4_4 ||
-            type == GL_UNSIGNED_SHORT_5_5_5_1)
-            bpp = 2;
-        else if (format == GL_RGB) bpp = 3;
-        else if (format == GL_ALPHA || format == GL_LUMINANCE) bpp = 1;
-        size_t n = (size_t)w * h * bpp + 32;
-        p = gl_ptr(uc, pixels, n, &g_tmp_misc);
+        p = gl_ptr(uc, pixels, n + 32, &g_tmp_misc);
     }
     glTexImage2D((GLenum)a.r[0], (GLint)a.r[1], (GLint)a.r[2], w, h,
                  (GLint)a.arg(5), format, type, p);
+    /* track on the 2D base level only (mip uploads replace the estimate) */
+    if ((GLenum)a.r[0] == GL_TEXTURE_2D && (GLint)a.r[1] == 0) {
+        GLuint bound = 0;
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&bound);
+        if (bound) tex_track_upload(bound, w, h, format, type, n, p);
+    }
     *rv = 0;
 }
 static void h_glCompressedTexImage2D(uc_engine *uc, const emu::Args &a,
@@ -423,6 +506,13 @@ static void h_glCompressedTexImage2D(uc_engine *uc, const emu::Args &a,
     glCompressedTexImage2D((GLenum)a.r[0], (GLint)a.r[1], (GLenum)a.r[2],
                            (GLsizei)a.r[3], (GLsizei)a.arg(4), (GLint)a.arg(5),
                            size, p);
+    if ((GLenum)a.r[0] == GL_TEXTURE_2D && (GLint)a.r[1] == 0) {
+        GLuint bound = 0;
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&bound);
+        if (bound)
+            tex_track_upload(bound, (GLsizei)a.r[3], (GLsizei)a.arg(4),
+                             (GLenum)a.r[2], 0, (size_t)size, p);
+    }
     *rv = 0;
 }
 static void h_glReadPixels(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
@@ -533,4 +623,24 @@ void register_gl_imports() {
         {"glVertexAttrib4f", h_shader_fail},
     };
     for (auto &e : kTab) stubs_register(e.n, e.f);
+}
+
+void gl_dump_tex_stats() {
+    diag_log("[texstat] live=%u peakKB=%llu liveKB=%llu created=%llu deleted=%llu dupes=%llu uploadedKB=%llu",
+             (unsigned)g_tex.size(),
+             (unsigned long long)(g_tex_peak_bytes / 1024),
+             (unsigned long long)(g_tex_live_bytes / 1024),
+             (unsigned long long)g_tex_created,
+             (unsigned long long)g_tex_deleted,
+             (unsigned long long)g_tex_dupes,
+             (unsigned long long)(g_tex_upload_bytes / 1024));
+    std::vector<std::pair<GLuint, TexRec>> top(g_tex.begin(), g_tex.end());
+    std::sort(top.begin(), top.end(),
+              [](const auto &x, const auto &y) { return x.second.bytes > y.second.bytes; });
+    for (size_t i = 0; i < top.size() && i < 10; i++) {
+        const TexRec &r = top[i].second;
+        diag_log("[texstat] id=%u %dx%d fmt=0x%x type=0x%x %uKB uploads=%u",
+                 top[i].first, (int)r.w, (int)r.h, r.format, r.type,
+                 (unsigned)(r.bytes / 1024), r.uploads);
+    }
 }

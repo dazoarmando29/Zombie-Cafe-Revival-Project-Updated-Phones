@@ -19,3 +19,7 @@ struct uc_struct;
 typedef struct uc_struct uc_engine;
 
 void register_gl_imports();
+
+/* Texture allocation report ([texstat]): live/peak count & bytes, duplicate
+ * uploads, largest textures. Implemented in imports_gl.cpp. */
+void gl_dump_tex_stats();
