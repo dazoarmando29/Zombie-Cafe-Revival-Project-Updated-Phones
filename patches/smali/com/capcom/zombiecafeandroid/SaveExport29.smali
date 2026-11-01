@@ -220,37 +220,7 @@
 
     invoke-static {v4, v3}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 
-    const/4 v3, 0x0
 
-    const/4 v4, 0x0
-
-    const/4 v5, 0x0
-
-    invoke-virtual/range {v1 .. v6}, Landroid/content/ContentResolver;->query(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
-
-    move-result-object v3
-
-    if-eqz v3, :probe_end
-
-    invoke-interface {v3}, Landroid/database/Cursor;->getCount()I
-
-    move-result v4
-
-    invoke-static {v4}, Ljava/lang/Integer;->toString(I)Ljava/lang/String;
-
-    move-result-object v4
-
-    const-string v5, "zcr-save"
-
-    const-string v6, "restore29: allrows"
-
-    invoke-static {v5, v6}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
-
-    invoke-static {v5, v4}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
-
-    invoke-interface {v3}, Landroid/database/Cursor;->close()V
-
-    :probe_end
 
     invoke-interface {v2}, Landroid/database/Cursor;->moveToFirst()Z
 
