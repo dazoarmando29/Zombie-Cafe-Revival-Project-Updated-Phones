@@ -41,7 +41,9 @@ bool Heap::init(void *buf, uint32_t guest_base, size_t size) {
     mem = (uint8_t *)buf;
     base = guest_base;
     arena = size;
-    memset(mem, 0, size);
+    /* NOTE: do not memset the arena - it is calloc'd by the caller and
+     * touching 1.5GB here would balloon the process RSS. Only the block
+     * headers we set up below are written. */
 
     end_sentinel = guest_base + (uint32_t)size - kMinSpan;
     /* sentinel: permanently-live 16-byte block capping the walk */
