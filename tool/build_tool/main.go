@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"asset_validator/validator"
+	"content_registry/registry"
 	"tool/build_tool/copylist"
 	"tool/resource_manager/serialization"
 )
@@ -41,6 +42,20 @@ func main() {
 		}
 		if res.Errors() > 0 {
 			log.Fatalf("asset validation failed with %d error(s)", res.Errors())
+		}
+	}
+
+	// content registry gate: stable ids must exist, be unique and keep their
+	// pinned rows (append-only) - see docs/CONTENT_REGISTRY.md
+	{
+		dataDir := filepath.Join(in_directory, "assets", "data")
+		lockPath := filepath.Join(dataDir, "zcr_registry.lock.json")
+		res := registry.Validate(dataDir, lockPath)
+		for _, is := range res.Issues {
+			log.Println(is)
+		}
+		if res.Errors() > 0 {
+			log.Fatalf("content registry validation failed with %d error(s)", res.Errors())
 		}
 	}
 

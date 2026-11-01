@@ -1,5 +1,6 @@
 [
     {
+        "ZcrId": "recipe.mystery_meat",
         "Name": "Mystery Meat",
         "Price": 8,
         "UnlockLevel": 1,
@@ -16,6 +17,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.hobo_delight",
         "Name": "Hobo Delight",
         "Price": 30,
         "UnlockLevel": 1,
@@ -32,6 +34,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.dishwater_soup",
         "Name": "Dishwater Soup",
         "Price": 125,
         "UnlockLevel": 2,
@@ -48,6 +51,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.leftunders",
         "Name": "Leftunders",
         "Price": 400,
         "UnlockLevel": 3,
@@ -64,6 +68,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.green_eggs_sam",
         "Name": "Green Eggs \u0026 Sam",
         "Price": 280,
         "UnlockLevel": 3,
@@ -80,6 +85,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.finger_sandwiches",
         "Name": "Finger Sandwiches",
         "Price": 1100,
         "UnlockLevel": 3,
@@ -96,6 +102,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.gello_mold",
         "Name": "Gello Mold",
         "Price": 475,
         "UnlockLevel": 4,
@@ -112,6 +119,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.toe_jam_sandwiches",
         "Name": "Toe Jam Sandwiches",
         "Price": 190,
         "UnlockLevel": 4,
@@ -128,6 +136,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.dough_nots",
         "Name": "Dough-Nots",
         "Price": 235,
         "UnlockLevel": 4,
@@ -144,6 +153,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.handburgers_flies",
         "Name": "Handburgers \u0026 Flies",
         "Price": 310,
         "UnlockLevel": 5,
@@ -160,6 +170,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.green_plate_special",
         "Name": "Green-plate Special",
         "Price": 300,
         "UnlockLevel": 5,
@@ -176,6 +187,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.onion_wrongs",
         "Name": "Onion Wrongs",
         "Price": 100,
         "UnlockLevel": 5,
@@ -192,6 +204,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.sloppy_joe",
         "Name": "Sloppy \"Joe\"",
         "Price": 1500,
         "UnlockLevel": 6,
@@ -208,6 +221,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.tumor_melts",
         "Name": "Tumor Melts",
         "Price": 2600,
         "UnlockLevel": 6,
@@ -224,6 +238,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.zomelets",
         "Name": "Zomelets",
         "Price": 300,
         "UnlockLevel": 6,
@@ -240,6 +255,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.meat_lover_pizza",
         "Name": "Meat Lover Pizza",
         "Price": 460,
         "UnlockLevel": 7,
@@ -256,6 +272,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.pork_n_brains",
         "Name": "Pork 'n' Brains",
         "Price": 650,
         "UnlockLevel": 7,
@@ -272,6 +289,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.fetidccine",
         "Name": "Fetidccine",
         "Price": 3200,
         "UnlockLevel": 7,
@@ -288,6 +306,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.mac_fleas",
         "Name": "Mac \u0026 Fleas",
         "Price": 380,
         "UnlockLevel": 8,
@@ -304,6 +323,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.wormicelli",
         "Name": "Wormicelli",
         "Price": 1800,
         "UnlockLevel": 8,
@@ -320,6 +340,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.gnasty_gnocchi",
         "Name": "Gnasty Gnocchi",
         "Price": 475,
         "UnlockLevel": 9,
@@ -336,6 +357,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.tiramiseeeww",
         "Name": "Tiramiseeeww",
         "Price": 250,
         "UnlockLevel": 9,
@@ -352,6 +374,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.flied_lice",
         "Name": "Flied Lice",
         "Price": 200,
         "UnlockLevel": 9,
@@ -368,6 +391,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.wonton_goop",
         "Name": "Wonton Goop",
         "Price": 320,
         "UnlockLevel": 10,
@@ -384,6 +408,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.curry_slurry",
         "Name": "Curry Slurry",
         "Price": 1100,
         "UnlockLevel": 10,
@@ -400,6 +425,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.bul_goo_gi",
         "Name": "Bul-goo-gi",
         "Price": 3000,
         "UnlockLevel": 10,
@@ -416,6 +442,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.misfortune_cookies",
         "Name": "Misfortune Cookies",
         "Price": 100,
         "UnlockLevel": 11,
@@ -432,6 +459,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.faux_noodles",
         "Name": "Faux Noodles",
         "Price": 475,
         "UnlockLevel": 11,
@@ -448,6 +476,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.ground_chuck",
         "Name": "Ground Chuck",
         "Price": 440,
         "UnlockLevel": 12,
@@ -464,6 +493,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.burro_itos",
         "Name": "Burro-itos",
         "Price": 650,
         "UnlockLevel": 12,
@@ -480,6 +510,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.chili_con_carney",
         "Name": "Chili con Carney",
         "Price": 30,
         "UnlockLevel": 13,
@@ -496,6 +527,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.loco_tacos",
         "Name": "Loco Tacos",
         "Price": 265,
         "UnlockLevel": 13,
@@ -512,6 +544,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.entrail_ladas",
         "Name": "Entrail-ladas",
         "Price": 125,
         "UnlockLevel": 14,
@@ -528,6 +561,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.guck_a_mole",
         "Name": "Guck-a-mole",
         "Price": 300,
         "UnlockLevel": 14,
@@ -544,6 +578,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.blood_pudding",
         "Name": "Blood Pudding",
         "Price": 1900,
         "UnlockLevel": 15,
@@ -560,6 +595,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.hag_gus",
         "Name": "Hag-Gus",
         "Price": 220,
         "UnlockLevel": 15,
@@ -576,6 +612,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.stake_kidney_pies",
         "Name": "Stake \u0026 Kidney Pies",
         "Price": 415,
         "UnlockLevel": 16,
@@ -592,6 +629,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.fishy_chips",
         "Name": "Fishy Chips",
         "Price": 300,
         "UnlockLevel": 16,
@@ -608,6 +646,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.head_cheesesteak",
         "Name": "Head Cheesesteak",
         "Price": 385,
         "UnlockLevel": 17,
@@ -624,6 +663,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.bangers_mush",
         "Name": "Bangers \u0026 Mush",
         "Price": 1400,
         "UnlockLevel": 17,
@@ -640,6 +680,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.lady_fingers",
         "Name": "Lady Fingers",
         "Price": 210,
         "UnlockLevel": 18,
@@ -656,6 +697,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.foie_gross",
         "Name": "Foie Gross",
         "Price": 1250,
         "UnlockLevel": 18,
@@ -672,6 +714,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.escargut",
         "Name": "Escargut",
         "Price": 5500,
         "UnlockLevel": 19,
@@ -688,6 +731,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.stake_tar_tar",
         "Name": "Stake Tar-Tar",
         "Price": 1040,
         "UnlockLevel": 19,
@@ -704,6 +748,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.fileted_minion",
         "Name": "Fileted Minion",
         "Price": 1850,
         "UnlockLevel": 20,
@@ -720,6 +765,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.muscles_sprouts",
         "Name": "Muscles Sprouts",
         "Price": 750,
         "UnlockLevel": 20,
@@ -736,6 +782,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.anti_hero_sandwich",
         "Name": "Anti Hero Sandwich",
         "Price": 2500,
         "UnlockLevel": 21,
@@ -752,6 +799,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.brine_shrimp_cocktail",
         "Name": "Brine Shrimp Cocktail",
         "Price": 600,
         "UnlockLevel": 22,
@@ -768,6 +816,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.tofu_brain",
         "Name": "Tofu Brain",
         "Price": 650,
         "UnlockLevel": 7,
@@ -784,6 +833,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.army_rations",
         "Name": "Army Rations",
         "Price": 290,
         "UnlockLevel": 8,
@@ -800,6 +850,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.rot_dogs",
         "Name": "Rot Dogs",
         "Price": 250,
         "UnlockLevel": 6,
@@ -816,6 +867,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.keblobs",
         "Name": "Keblobs",
         "Price": 400,
         "UnlockLevel": 9,
@@ -832,6 +884,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.street_pizza",
         "Name": "Street Pizza",
         "Price": 340,
         "UnlockLevel": 8,
@@ -848,6 +901,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.jam_on_toes",
         "Name": "Jam on Toes",
         "Price": 260,
         "UnlockLevel": 5,
@@ -864,6 +918,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.net_prawn",
         "Name": "Net Prawn",
         "Price": 1100,
         "UnlockLevel": 24,
@@ -880,6 +935,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.haggis",
         "Name": "Haggis",
         "Price": 250,
         "UnlockLevel": 5,
@@ -896,6 +952,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.mice_pudding",
         "Name": "Mice Pudding",
         "Price": 220,
         "UnlockLevel": 25,
@@ -912,6 +969,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.sandwitch",
         "Name": "Sandwitch",
         "Price": 420,
         "UnlockLevel": 26,
@@ -928,6 +986,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.caramel_adam_s_apple",
         "Name": "Caramel Adam's Apple",
         "Price": 275,
         "UnlockLevel": 5,
@@ -944,6 +1003,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.roast_turk_key",
         "Name": "Roast Turk-key",
         "Price": 410,
         "UnlockLevel": 12,
@@ -960,6 +1020,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.cremated_brulee",
         "Name": "Cremated Brulee",
         "Price": 500,
         "UnlockLevel": 15,
@@ -976,6 +1037,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.snot_cross_buns",
         "Name": "Snot Cross Buns",
         "Price": 2800,
         "UnlockLevel": 17,
@@ -992,6 +1054,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.blood_shake",
         "Name": "Blood Shake",
         "Price": 325,
         "UnlockLevel": 19,
@@ -1008,6 +1071,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.fish_fingers",
         "Name": "Fish Fingers",
         "Price": 1600,
         "UnlockLevel": 27,
@@ -1024,6 +1088,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.cuss_turd_tart",
         "Name": "Cuss-Turd Tart",
         "Price": 750,
         "UnlockLevel": 28,
@@ -1040,6 +1105,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.fruit_cake",
         "Name": "Fruit Cake",
         "Price": 4500,
         "UnlockLevel": 29,
@@ -1056,6 +1122,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.puking_duck",
         "Name": "Puking Duck",
         "Price": 1500,
         "UnlockLevel": 16,
@@ -1072,6 +1139,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.leg_rolls",
         "Name": "Leg Rolls",
         "Price": 400,
         "UnlockLevel": 18,
@@ -1088,6 +1156,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.lion_s_head_meatballs",
         "Name": "Lion's Head Meatballs",
         "Price": 1260,
         "UnlockLevel": 30,
@@ -1104,6 +1173,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.torn_up_cake",
         "Name": "Torn-Up-Cake",
         "Price": 315,
         "UnlockLevel": 31,
@@ -1120,6 +1190,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.bleeding_hearts",
         "Name": "Bleeding Hearts",
         "Price": 3250,
         "UnlockLevel": 32,
@@ -1136,6 +1207,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.ape_a_teaser",
         "Name": "Ape-a-Teaser",
         "Price": 500,
         "UnlockLevel": 19,
@@ -1152,6 +1224,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.festering_hot_chocolate",
         "Name": "Festering Hot Chocolate",
         "Price": 800,
         "UnlockLevel": 20,
@@ -1168,6 +1241,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.hunch_back_roast",
         "Name": "Hunch-Back Roast",
         "Price": 650,
         "UnlockLevel": 22,
@@ -1184,6 +1258,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.rotten_apple_pie",
         "Name": "Rotten-Apple Pie",
         "Price": 1500,
         "UnlockLevel": 33,
@@ -1200,6 +1275,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.tweet_loaf",
         "Name": "Tweet Loaf",
         "Price": 350,
         "UnlockLevel": 34,
@@ -1216,6 +1292,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.putrefied_clam_chowder",
         "Name": "Putrefied Clam Chowder",
         "Price": 1200,
         "UnlockLevel": 35,
@@ -1232,6 +1309,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.ham_and_sneeze_sandwich",
         "Name": "Ham and Sneeze Sandwich",
         "Price": 450,
         "UnlockLevel": 36,
@@ -1248,6 +1326,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.chicken_fried_snake",
         "Name": "Chicken Fried Snake",
         "Price": 850,
         "UnlockLevel": 37,
@@ -1264,6 +1343,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.pigs_in_a_blanket",
         "Name": "Pigs in a Blanket",
         "Price": 3000,
         "UnlockLevel": 38,
@@ -1280,6 +1360,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.shamrock_shake",
         "Name": "Shamrock Shake",
         "Price": 2500,
         "UnlockLevel": 11,
@@ -1296,6 +1377,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.mourned_beef_and_cabbage",
         "Name": "Mourned Beef and Cabbage",
         "Price": 3300,
         "UnlockLevel": 14,
@@ -1312,6 +1394,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.entropy_cassoulet",
         "Name": "Entropy Cassoulet",
         "Price": 800,
         "UnlockLevel": 17,
@@ -1328,6 +1411,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.quasar_coffee",
         "Name": "Quasar Coffee",
         "Price": 1500,
         "UnlockLevel": 21,
@@ -1344,6 +1428,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.string_theory_cheese",
         "Name": "String (Theory) Cheese",
         "Price": 2500,
         "UnlockLevel": 24,
@@ -1360,6 +1445,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.dark_matter_loaf",
         "Name": "Dark Matter Loaf",
         "Price": 800,
         "UnlockLevel": 25,
@@ -1376,6 +1462,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.frozen_t_oort_cloud",
         "Name": "Frozen T-Oort Cloud",
         "Price": 1000,
         "UnlockLevel": 13,
@@ -1392,6 +1479,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.khyber_belt_kebabs",
         "Name": "Khyber-Belt Kebabs",
         "Price": 500,
         "UnlockLevel": 10,
@@ -1408,6 +1496,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.plutonian_cider",
         "Name": "Plutonian Cider",
         "Price": 500,
         "UnlockLevel": 39,
@@ -1424,6 +1513,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.europan_sea_slugs",
         "Name": "Europan Sea Slugs",
         "Price": 1500,
         "UnlockLevel": 40,
@@ -1440,6 +1530,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.spaghettified_meat_balls",
         "Name": "Spaghettified Meat Balls",
         "Price": 2200,
         "UnlockLevel": 41,
@@ -1456,6 +1547,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.beeline_honey_glazed_ham",
         "Name": "Beeline Honey Glazed \"Ham\"",
         "Price": 550,
         "UnlockLevel": 7,
@@ -1472,6 +1564,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.buffalo_wings",
         "Name": "Buffalo Wings",
         "Price": 325,
         "UnlockLevel": 27,
@@ -1488,6 +1581,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.cockroach_calzone",
         "Name": "Cockroach Calzone",
         "Price": 1945,
         "UnlockLevel": 28,
@@ -1504,6 +1598,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.deep_fried_bacon_wrapped_pizza",
         "Name": "Deep Fried Bacon Wrapped Pizza",
         "Price": 2730,
         "UnlockLevel": 29,
@@ -1520,6 +1615,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.english_breakfast_pizza",
         "Name": "English Breakfast Pizza",
         "Price": 865,
         "UnlockLevel": 30,
@@ -1536,6 +1632,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.head_cheese_pizza",
         "Name": "Head Cheese Pizza",
         "Price": 1430,
         "UnlockLevel": 31,
@@ -1552,6 +1649,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.meatzza",
         "Name": "Meatzza",
         "Price": 525,
         "UnlockLevel": 32,
@@ -1568,6 +1666,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.peanut_butter_jelly_pizza",
         "Name": "Peanut Butter \u0026 Jelly Pizza",
         "Price": 610,
         "UnlockLevel": 42,
@@ -1584,6 +1683,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.spoiled_sea_food_pizza",
         "Name": "Spoiled Sea Food Pizza",
         "Price": 1230,
         "UnlockLevel": 43,
@@ -1600,6 +1700,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.vegan_pizza",
         "Name": "Vegan Pizza",
         "Price": 2050,
         "UnlockLevel": 44,
@@ -1616,6 +1717,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.thorn_bread",
         "Name": "Thorn Bread",
         "Price": 2000,
         "UnlockLevel": 33,
@@ -1632,6 +1734,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.ox_tail",
         "Name": "Ox Tail",
         "Price": 736,
         "UnlockLevel": 34,
@@ -1648,6 +1751,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.boiled_mystery_meat",
         "Name": "Boiled Mystery Meat",
         "Price": 235,
         "UnlockLevel": 35,
@@ -1664,6 +1768,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.toe_cooked_baked_beans",
         "Name": "Toe-Cooked Baked Beans",
         "Price": 1875,
         "UnlockLevel": 36,
@@ -1680,6 +1785,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.coal_slaw",
         "Name": "Coal-Slaw",
         "Price": 532,
         "UnlockLevel": 37,
@@ -1696,6 +1802,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.rotisserie_chicken",
         "Name": "Rotisserie Chicken",
         "Price": 1366,
         "UnlockLevel": 10,
@@ -1712,6 +1819,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.grief_brisket",
         "Name": "Grief Brisket",
         "Price": 3850,
         "UnlockLevel": 45,
@@ -1728,6 +1836,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.rancid_pulled_pork",
         "Name": "Rancid Pulled Pork",
         "Price": 723,
         "UnlockLevel": 46,
@@ -1744,6 +1853,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.cracked_ribs",
         "Name": "Cracked Ribs",
         "Price": 1492,
         "UnlockLevel": 47,
@@ -1760,6 +1870,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.gruesome_gruel",
         "Name": "Gruesome Gruel",
         "Price": 2450,
         "UnlockLevel": 23,
@@ -1776,6 +1887,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.thumb_pudding",
         "Name": "Thumb Pudding",
         "Price": 3340,
         "UnlockLevel": 26,
@@ -1792,6 +1904,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.vile_veal",
         "Name": "Vile Veal",
         "Price": 425,
         "UnlockLevel": 34,
@@ -1808,6 +1921,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.rabid_rabbit",
         "Name": "Rabid Rabbit",
         "Price": 1350,
         "UnlockLevel": 17,
@@ -1824,6 +1938,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.tainted_sparkling_water",
         "Name": "Tainted Sparkling Water",
         "Price": 285,
         "UnlockLevel": 23,
@@ -1840,6 +1955,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.toxic_trifle",
         "Name": "Toxic Trifle",
         "Price": 1050,
         "UnlockLevel": 21,
@@ -1856,6 +1972,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.stewed_ox_cheek",
         "Name": "Stewed Ox Cheek",
         "Price": 265,
         "UnlockLevel": 48,
@@ -1872,6 +1989,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.torn_tripe",
         "Name": "Torn Tripe",
         "Price": 650,
         "UnlockLevel": 49,
@@ -1888,6 +2006,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.broxy",
         "Name": "Broxy",
         "Price": 2010,
         "UnlockLevel": 50,
@@ -1904,6 +2023,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.ew_nagi",
         "Name": "Ew-Nagi",
         "Price": 723,
         "UnlockLevel": 51,
@@ -1920,6 +2040,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.bento_brain_box",
         "Name": "Bento Brain Box",
         "Price": 525,
         "UnlockLevel": 52,
@@ -1936,6 +2057,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.roe_boat",
         "Name": "Roe Boat",
         "Price": 1500,
         "UnlockLevel": 53,
@@ -1952,6 +2074,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.ghoul_cheese_pizza",
         "Name": "Ghoul Cheese Pizza",
         "Price": 500,
         "UnlockLevel": 15,
@@ -1968,6 +2091,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.crunchy_crow_pizza",
         "Name": "Crunchy Crow Pizza",
         "Price": 300,
         "UnlockLevel": 15,
@@ -1984,6 +2108,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.red_eye_gratin",
         "Name": "Red Eye Gratin",
         "Price": 2800,
         "UnlockLevel": 15,
@@ -2000,6 +2125,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.brain_rattail_pizza",
         "Name": "Brain Rattail Pizza",
         "Price": 415,
         "UnlockLevel": 15,
@@ -2016,6 +2142,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.leech_ball_pizza",
         "Name": "Leech Ball Pizza",
         "Price": 300,
         "UnlockLevel": 15,
@@ -2032,6 +2159,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.cheesey_bake_tongue",
         "Name": "Cheesey Bake Tongue",
         "Price": 385,
         "UnlockLevel": 15,
@@ -2048,6 +2176,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.brain_grease_pizza",
         "Name": "Brain \u0026 Grease Pizza",
         "Price": 1400,
         "UnlockLevel": 15,
@@ -2064,6 +2193,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.lavaian_maggot_pizza",
         "Name": "Lavaian Maggot Pizza",
         "Price": 210,
         "UnlockLevel": 15,
@@ -2080,6 +2210,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.slug_lime_pizza",
         "Name": "Slug Lime Pizza",
         "Price": 1250,
         "UnlockLevel": 15,
@@ -2096,6 +2227,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.kidney_pie",
         "Name": "Kidney Pie",
         "Price": 1500,
         "UnlockLevel": 54,
@@ -2112,6 +2244,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.piranha_stew",
         "Name": "Piranha Stew",
         "Price": 2900,
         "UnlockLevel": 55,
@@ -2128,6 +2261,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.roasted_scorpion_king",
         "Name": "Roasted Scorpion King",
         "Price": 700,
         "UnlockLevel": 56,
@@ -2144,6 +2278,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.alfred_and_pesto",
         "Name": "Alfred and Pesto",
         "Price": 300,
         "UnlockLevel": 16,
@@ -2160,6 +2295,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.sneeze_disease_pizza",
         "Name": "Sneeze Disease Pizza",
         "Price": 450,
         "UnlockLevel": 16,
@@ -2176,6 +2312,7 @@
         "U12": 3
     },
     {
+        "ZcrId": "recipe.reformed_burger",
         "Name": "Reformed Burger",
         "Price": 800,
         "UnlockLevel": 16,
@@ -2192,6 +2329,7 @@
         "U12": 4
     },
     {
+        "ZcrId": "recipe.donkey_dog",
         "Name": "Donkey Dog",
         "Price": 500,
         "UnlockLevel": 16,
@@ -2208,6 +2346,7 @@
         "U12": 4
     },
     {
+        "ZcrId": "recipe.grilled_foot_n_mouth",
         "Name": "Grilled Foot n' Mouth",
         "Price": 220,
         "UnlockLevel": 16,
@@ -2224,6 +2363,7 @@
         "U12": 4
     },
     {
+        "ZcrId": "recipe.jerk_elephant_skewers",
         "Name": "Jerk Elephant Skewers",
         "Price": 415,
         "UnlockLevel": 16,
@@ -2240,6 +2380,7 @@
         "U12": 4
     },
     {
+        "ZcrId": "recipe.smoked_choppa",
         "Name": "Smoked Choppa",
         "Price": 300,
         "UnlockLevel": 16,
@@ -2256,6 +2397,7 @@
         "U12": 4
     },
     {
+        "ZcrId": "recipe.body_builder_burger",
         "Name": "Body Builder Burger",
         "Price": 385,
         "UnlockLevel": 16,
@@ -2272,6 +2414,7 @@
         "U12": 4
     },
     {
+        "ZcrId": "recipe.toads_tofu",
         "Name": "Toads \u0026 Tofu",
         "Price": 1500,
         "UnlockLevel": 57,
@@ -2288,6 +2431,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.vamp_burger",
         "Name": "Vamp Burger",
         "Price": 2900,
         "UnlockLevel": 58,
@@ -2304,6 +2448,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.scissors_salad",
         "Name": "Scissors Salad",
         "Price": 700,
         "UnlockLevel": 59,
@@ -2320,6 +2465,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.guts_n_guacamole",
         "Name": "Guts N' Guacamole",
         "Price": 150,
         "UnlockLevel": 5,
@@ -2336,6 +2482,7 @@
         "U12": 5
     },
     {
+        "ZcrId": "recipe.batty_burritos",
         "Name": "Batty Burritos",
         "Price": 200,
         "UnlockLevel": 5,
@@ -2352,6 +2499,7 @@
         "U12": 5
     },
     {
+        "ZcrId": "recipe.bread_of_the_dead",
         "Name": "Bread Of The Dead",
         "Price": 250,
         "UnlockLevel": 5,
@@ -2368,6 +2516,7 @@
         "U12": 5
     },
     {
+        "ZcrId": "recipe.time_bomb_tamales",
         "Name": "Time Bomb Tamales",
         "Price": 300,
         "UnlockLevel": 5,
@@ -2384,6 +2533,7 @@
         "U12": 5
     },
     {
+        "ZcrId": "recipe.sugar_skulls",
         "Name": "Sugar Skulls",
         "Price": 225,
         "UnlockLevel": 5,
@@ -2400,6 +2550,7 @@
         "U12": 5
     },
     {
+        "ZcrId": "recipe.fried_finger_fajitas",
         "Name": "Fried Finger Fajitas",
         "Price": 550,
         "UnlockLevel": 5,
@@ -2416,6 +2567,7 @@
         "U12": 5
     },
     {
+        "ZcrId": "recipe.leperoni_pizza",
         "Name": "Leperoni Pizza",
         "Price": 1220,
         "UnlockLevel": 60,
@@ -2432,6 +2584,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.meatish_sweetballs",
         "Name": "Meatish Sweetballs",
         "Price": 950,
         "UnlockLevel": 61,
@@ -2448,6 +2601,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.riga_tony",
         "Name": "Riga Tony",
         "Price": 2075,
         "UnlockLevel": 62,
@@ -2464,6 +2618,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.swampish_mousse",
         "Name": "Swampish Mousse",
         "Price": 2250,
         "UnlockLevel": 63,
@@ -2480,6 +2635,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.sluggish_eclair",
         "Name": "Sluggish Eclair",
         "Price": 1530,
         "UnlockLevel": 64,
@@ -2496,6 +2652,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.hash_clown",
         "Name": "Hash Clown",
         "Price": 1875,
         "UnlockLevel": 65,
@@ -2512,6 +2669,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.quick_stir_fly",
         "Name": "Quick Stir-fly",
         "Price": 580,
         "UnlockLevel": 8,
@@ -2528,6 +2686,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.bread_brains_spread",
         "Name": "Bread \u0026 Brains Spread",
         "Price": 360,
         "UnlockLevel": 11,
@@ -2544,6 +2703,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.beetle_in_beetroot_sauce",
         "Name": "Beetle in Beetroot Sauce",
         "Price": 670,
         "UnlockLevel": 14,
@@ -2560,6 +2720,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.spiderello",
         "Name": "Spiderello",
         "Price": 850,
         "UnlockLevel": 18,
@@ -2576,6 +2737,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.fried_snakeroll",
         "Name": "Fried Snakeroll",
         "Price": 1000,
         "UnlockLevel": 20,
@@ -2592,6 +2754,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.jumble_eye_ah",
         "Name": "Jumble Eye-ah",
         "Price": 1230,
         "UnlockLevel": 24,
@@ -2608,6 +2771,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.garden_gnome_salad",
         "Name": "Garden Gnome Salad",
         "Price": 1340,
         "UnlockLevel": 66,
@@ -2624,6 +2788,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.fetid_djinni",
         "Name": "Fetid Djinni",
         "Price": 1670,
         "UnlockLevel": 67,
@@ -2640,6 +2805,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.verminestroni",
         "Name": "Verminestroni",
         "Price": 1915,
         "UnlockLevel": 68,
@@ -2656,6 +2822,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.wiccan_nuggets",
         "Name": "Wiccan Nuggets",
         "Price": 1420,
         "UnlockLevel": 69,
@@ -2672,6 +2839,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.voodoo_fondue",
         "Name": "Voodoo Fondue",
         "Price": 1815,
         "UnlockLevel": 70,
@@ -2688,6 +2856,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.eyestir_sauce_noodles",
         "Name": "Eyestir Sauce Noodles",
         "Price": 2170,
         "UnlockLevel": 71,
@@ -2704,6 +2873,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.leech_melba",
         "Name": "Leech Melba",
         "Price": 650,
         "UnlockLevel": 26,
@@ -2720,6 +2890,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.nukes_n_puke",
         "Name": "Nukes'n Puke",
         "Price": 840,
         "UnlockLevel": 27,
@@ -2736,6 +2907,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.knuckle_sandwich",
         "Name": "Knuckle Sandwich",
         "Price": 915,
         "UnlockLevel": 28,
@@ -2752,6 +2924,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.druid_s_juice",
         "Name": "Druid's Juice",
         "Price": 220,
         "UnlockLevel": 8,
@@ -2768,6 +2941,7 @@
         "U12": 6
     },
     {
+        "ZcrId": "recipe.hydrapanic_salad",
         "Name": "Hydrapanic Salad",
         "Price": 315,
         "UnlockLevel": 8,
@@ -2784,6 +2958,7 @@
         "U12": 6
     },
     {
+        "ZcrId": "recipe.helm_cheese",
         "Name": "Helm \u0026 Cheese",
         "Price": 445,
         "UnlockLevel": 8,
@@ -2800,6 +2975,7 @@
         "U12": 6
     },
     {
+        "ZcrId": "recipe.unicorn_chowder",
         "Name": "Unicorn Chowder",
         "Price": 540,
         "UnlockLevel": 8,
@@ -2816,6 +2992,7 @@
         "U12": 6
     },
     {
+        "ZcrId": "recipe.dragon_soup",
         "Name": "Dragon Soup",
         "Price": 615,
         "UnlockLevel": 8,
@@ -2832,6 +3009,7 @@
         "U12": 6
     },
     {
+        "ZcrId": "recipe.holy_gauntlet_pottage",
         "Name": "Holy Gauntlet Pottage",
         "Price": 680,
         "UnlockLevel": 8,
@@ -2848,6 +3026,7 @@
         "U12": 6
     },
     {
+        "ZcrId": "recipe.crimonade_can",
         "Name": "Crimonade Can",
         "Price": 1755,
         "UnlockLevel": 72,
@@ -2864,6 +3043,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.orc_steak",
         "Name": "Orc Steak",
         "Price": 1580,
         "UnlockLevel": 73,
@@ -2880,6 +3060,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.mandragora_dip",
         "Name": "Mandragora Dip",
         "Price": 2375,
         "UnlockLevel": 74,
@@ -2896,6 +3077,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.eyeberry_jelly",
         "Name": "Eyeberry Jelly",
         "Price": 580,
         "UnlockLevel": 11,
@@ -2912,6 +3094,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.red_dragon",
         "Name": "Red Dragon",
         "Price": 2250,
         "UnlockLevel": 11,
@@ -2928,6 +3111,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.plundered_blowfish",
         "Name": "Plundered Blowfish",
         "Price": 740,
         "UnlockLevel": 11,
@@ -2944,6 +3128,7 @@
         "U12": 7
     },
     {
+        "ZcrId": "recipe.oyster_pearls",
         "Name": "Oyster Pearls",
         "Price": 635,
         "UnlockLevel": 11,
@@ -2960,6 +3145,7 @@
         "U12": 7
     },
     {
+        "ZcrId": "recipe.jelly_roger_custard",
         "Name": "Jelly Roger Custard",
         "Price": 410,
         "UnlockLevel": 11,
@@ -2976,6 +3162,7 @@
         "U12": 7
     },
     {
+        "ZcrId": "recipe.molar_breakers",
         "Name": "Molar Breakers",
         "Price": 860,
         "UnlockLevel": 11,
@@ -2992,6 +3179,7 @@
         "U12": 7
     },
     {
+        "ZcrId": "recipe.shark_tooth_dullers",
         "Name": "Shark Tooth Dullers",
         "Price": 935,
         "UnlockLevel": 11,
@@ -3008,6 +3196,7 @@
         "U12": 7
     },
     {
+        "ZcrId": "recipe.killer_squid",
         "Name": "Killer Squid",
         "Price": 1005,
         "UnlockLevel": 11,
@@ -3024,6 +3213,7 @@
         "U12": 7
     },
     {
+        "ZcrId": "recipe.snake_snacks",
         "Name": "Snake-Snacks",
         "Price": 1840,
         "UnlockLevel": 75,
@@ -3040,6 +3230,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.greasy_grizzly",
         "Name": "Greasy Grizzly",
         "Price": 2215,
         "UnlockLevel": 76,
@@ -3056,6 +3247,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.elephant_toe_jam",
         "Name": "Elephant Toe Jam",
         "Price": 3055,
         "UnlockLevel": 77,
@@ -3072,6 +3264,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.vampire_ash_browns",
         "Name": "Vampire Ash Browns",
         "Price": 140,
         "UnlockLevel": 13,
@@ -3088,6 +3281,7 @@
         "U12": 8
     },
     {
+        "ZcrId": "recipe.staked_steak",
         "Name": "Staked Steak",
         "Price": 200,
         "UnlockLevel": 13,
@@ -3104,6 +3298,7 @@
         "U12": 8
     },
     {
+        "ZcrId": "recipe.nosfera_stew",
         "Name": "Nosfera-Stew",
         "Price": 200,
         "UnlockLevel": 13,
@@ -3120,6 +3315,7 @@
         "U12": 8
     },
     {
+        "ZcrId": "recipe.bat_bq",
         "Name": "Bat BQ",
         "Price": 210,
         "UnlockLevel": 13,
@@ -3136,6 +3332,7 @@
         "U12": 8
     },
     {
+        "ZcrId": "recipe.heart_dog_on_a_stake",
         "Name": "Heart Dog on a Stake",
         "Price": 225,
         "UnlockLevel": 13,
@@ -3152,6 +3349,7 @@
         "U12": 8
     },
     {
+        "ZcrId": "recipe.garlic_choke",
         "Name": "Garlic Choke",
         "Price": 500,
         "UnlockLevel": 13,
@@ -3168,6 +3366,7 @@
         "U12": 8
     },
     {
+        "ZcrId": "recipe.crucy_fries",
         "Name": "Crucy Fries",
         "Price": 835,
         "UnlockLevel": 78,
@@ -3184,6 +3383,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.eye_pop_candy",
         "Name": "Eye Pop Candy",
         "Price": 600,
         "UnlockLevel": 79,
@@ -3200,6 +3400,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.crypt_cake",
         "Name": "Crypt Cake",
         "Price": 780,
         "UnlockLevel": 80,
@@ -3216,6 +3417,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.fish_bones_gold_chips",
         "Name": "Fish Bones \u0026 Gold Chips",
         "Price": 925,
         "UnlockLevel": 12,
@@ -3232,6 +3434,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.chili_chili_bang_bang",
         "Name": "Chili Chili Bang Bang",
         "Price": 1425,
         "UnlockLevel": 12,
@@ -3248,6 +3451,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.blueberry_fangcake",
         "Name": "Blueberry Fangcake",
         "Price": 2600,
         "UnlockLevel": 13,
@@ -3264,6 +3468,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.dracooler",
         "Name": "Dracooler",
         "Price": 1350,
         "UnlockLevel": 13,
@@ -3280,6 +3485,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.fireball_spaghetti",
         "Name": "Fireball Spaghetti",
         "Price": 250,
         "UnlockLevel": 14,
@@ -3296,6 +3502,7 @@
         "U12": 9
     },
     {
+        "ZcrId": "recipe.zap_bar",
         "Name": "Zap Bar",
         "Price": 150,
         "UnlockLevel": 14,
@@ -3312,6 +3519,7 @@
         "U12": 9
     },
     {
+        "ZcrId": "recipe.super_fruit_punch",
         "Name": "Super Fruit Punch",
         "Price": 405,
         "UnlockLevel": 14,
@@ -3328,6 +3536,7 @@
         "U12": 9
     },
     {
+        "ZcrId": "recipe.orion_soup",
         "Name": "Orion Soup",
         "Price": 400,
         "UnlockLevel": 14,
@@ -3344,6 +3553,7 @@
         "U12": 9
     },
     {
+        "ZcrId": "recipe.green_belt_peppers",
         "Name": "Green Belt Peppers",
         "Price": 430,
         "UnlockLevel": 14,
@@ -3360,6 +3570,7 @@
         "U12": 9
     },
     {
+        "ZcrId": "recipe.reactor_burger",
         "Name": "Reactor Burger",
         "Price": 700,
         "UnlockLevel": 14,
@@ -3376,6 +3587,7 @@
         "U12": 9
     },
     {
+        "ZcrId": "recipe.tropical_coco_brain",
         "Name": "Tropical Coco Brain",
         "Price": 2820,
         "UnlockLevel": 81,
@@ -3392,6 +3604,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.cali_snail_rolls",
         "Name": "Cali Snail Rolls",
         "Price": 3295,
         "UnlockLevel": 82,
@@ -3408,6 +3621,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.croccoli_soup",
         "Name": "Croccoli Soup",
         "Price": 3640,
         "UnlockLevel": 83,
@@ -3424,6 +3638,7 @@
         "U12": 1
     },
     {
+        "ZcrId": "recipe.brain_washer_soup",
         "Name": "Brain Washer Soup",
         "Price": 600,
         "UnlockLevel": 14,
@@ -3440,6 +3655,7 @@
         "U12": 2
     },
     {
+        "ZcrId": "recipe.nuke_fondue",
         "Name": "Nuke Fondue",
         "Price": 1800,
         "UnlockLevel": 14,

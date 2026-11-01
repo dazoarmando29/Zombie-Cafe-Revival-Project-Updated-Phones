@@ -7,4 +7,5 @@ use (
 	./tool/file_types
 	./tool/server
 	./tool/cctpacker
+	./tool/content_registry
 )

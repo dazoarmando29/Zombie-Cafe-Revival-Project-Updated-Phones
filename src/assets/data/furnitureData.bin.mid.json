@@ -1,5 +1,6 @@
 [
     {
+        "ZcrId": "furniture.dirty_fridge",
         "UnlockLevel": 0,
         "Name": "Dirty fridge",
         "Price": 50,
@@ -32,6 +33,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.dirty_stove",
         "UnlockLevel": 0,
         "Name": "Dirty stove",
         "Price": 50,
@@ -64,6 +66,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.dirty_sink",
         "UnlockLevel": 0,
         "Name": "Dirty Sink",
         "Price": 50,
@@ -96,6 +99,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_table",
         "UnlockLevel": 0,
         "Name": "Plain table",
         "Price": 150,
@@ -128,6 +132,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_chair",
         "UnlockLevel": 0,
         "Name": "Plain chair",
         "Price": 75,
@@ -160,6 +165,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.boarded_window",
         "UnlockLevel": 1,
         "Name": "Boarded window",
         "Price": 50,
@@ -192,6 +198,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.dead_plant",
         "UnlockLevel": 0,
         "Name": "Dead plant",
         "Price": 5,
@@ -224,6 +231,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.toxic_barrel",
         "UnlockLevel": 1,
         "Name": "Toxic barrel",
         "Price": 50,
@@ -256,6 +264,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.vending_machine",
         "UnlockLevel": 1,
         "Name": "Vending machine",
         "Price": 16000,
@@ -288,6 +297,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.vending_machine_2",
         "UnlockLevel": 1,
         "Name": "Vending machine",
         "Price": 8,
@@ -320,6 +330,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.flatscreen_tv",
         "UnlockLevel": 1,
         "Name": "Flatscreen TV",
         "Price": 16000,
@@ -352,6 +363,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.flatscreen_tv_2",
         "UnlockLevel": 1,
         "Name": "Flatscreen TV",
         "Price": 8,
@@ -384,6 +396,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.arcade_cabnet",
         "UnlockLevel": 1,
         "Name": "Arcade cabnet",
         "Price": 50000,
@@ -416,6 +429,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.arcade_cabnet_2",
         "UnlockLevel": 1,
         "Name": "Arcade cabnet 2",
         "Price": 25,
@@ -448,6 +462,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.atm",
         "UnlockLevel": 1,
         "Name": "ATM",
         "Price": 60,
@@ -480,6 +495,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_stove",
         "UnlockLevel": 1,
         "Name": "Plain stove",
         "Price": 500,
@@ -512,6 +528,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_serving_counter",
         "UnlockLevel": 1,
         "Name": "Plain serving counter",
         "Price": 500,
@@ -544,6 +561,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_sink",
         "UnlockLevel": 1,
         "Name": "Plain sink",
         "Price": 500,
@@ -576,6 +594,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_fridge",
         "UnlockLevel": 1,
         "Name": "Plain fridge",
         "Price": 500,
@@ -608,6 +627,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_table_2",
         "UnlockLevel": 1,
         "Name": "Plain table",
         "Price": 200,
@@ -640,6 +660,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_table_3",
         "UnlockLevel": 1,
         "Name": "Plain table",
         "Price": 200,
@@ -672,6 +693,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_table_4",
         "UnlockLevel": 1,
         "Name": "Plain table",
         "Price": 200,
@@ -704,6 +726,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_table_5",
         "UnlockLevel": 1,
         "Name": "Plain table",
         "Price": 200,
@@ -736,6 +759,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_chair_2",
         "UnlockLevel": 1,
         "Name": "Plain chair",
         "Price": 100,
@@ -768,6 +792,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_chair_3",
         "UnlockLevel": 1,
         "Name": "Plain chair",
         "Price": 100,
@@ -800,6 +825,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_chair_4",
         "UnlockLevel": 1,
         "Name": "Plain chair",
         "Price": 100,
@@ -832,6 +858,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_chair_5",
         "UnlockLevel": 1,
         "Name": "Plain chair",
         "Price": 100,
@@ -864,6 +891,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_wall",
         "UnlockLevel": 1,
         "Name": "Plain wall",
         "Price": 30,
@@ -896,6 +924,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_wall_2",
         "UnlockLevel": 1,
         "Name": "Plain wall",
         "Price": 40,
@@ -928,6 +957,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_wall_3",
         "UnlockLevel": 1,
         "Name": "Plain wall",
         "Price": 40,
@@ -960,6 +990,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_wall_4",
         "UnlockLevel": 1,
         "Name": "Plain wall",
         "Price": 40,
@@ -992,6 +1023,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_wall_5",
         "UnlockLevel": 1,
         "Name": "Plain wall",
         "Price": 40,
@@ -1024,6 +1056,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_wall_6",
         "UnlockLevel": 1,
         "Name": "Plain wall",
         "Price": 75,
@@ -1056,6 +1089,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.small_window",
         "UnlockLevel": 1,
         "Name": "Small window",
         "Price": 200,
@@ -1088,6 +1122,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_tiled_floor",
         "UnlockLevel": 1,
         "Name": "Plain tiled floor",
         "Price": 10,
@@ -1120,6 +1155,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_tiled_floor_2",
         "UnlockLevel": 1,
         "Name": "Plain tiled floor",
         "Price": 15,
@@ -1152,6 +1188,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_tiled_floor_3",
         "UnlockLevel": 1,
         "Name": "Plain tiled floor",
         "Price": 15,
@@ -1184,6 +1221,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_tiled_floor_4",
         "UnlockLevel": 1,
         "Name": "Plain tiled floor",
         "Price": 15,
@@ -1216,6 +1254,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_tiled_floor_5",
         "UnlockLevel": 1,
         "Name": "Plain tiled floor",
         "Price": 15,
@@ -1248,6 +1287,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_tiled_floor_6",
         "UnlockLevel": 1,
         "Name": "Plain tiled floor",
         "Price": 25,
@@ -1280,6 +1320,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.small_potted_plant",
         "UnlockLevel": 1,
         "Name": "Small potted plant",
         "Price": 100,
@@ -1312,6 +1353,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_table_6",
         "UnlockLevel": 1,
         "Name": "Plain table",
         "Price": 1,
@@ -1344,6 +1386,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_chair_6",
         "UnlockLevel": 1,
         "Name": "Plain chair",
         "Price": 1,
@@ -1376,6 +1419,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_round_table",
         "UnlockLevel": 2,
         "Name": "Plain round table",
         "Price": 225,
@@ -1408,6 +1452,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_round_table_2",
         "UnlockLevel": 2,
         "Name": "Plain round table",
         "Price": 225,
@@ -1440,6 +1485,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_round_table_3",
         "UnlockLevel": 2,
         "Name": "Plain round table",
         "Price": 225,
@@ -1472,6 +1518,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_round_table_4",
         "UnlockLevel": 2,
         "Name": "Plain round table",
         "Price": 225,
@@ -1504,6 +1551,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_round_table_5",
         "UnlockLevel": 3,
         "Name": "Plain round table",
         "Price": 1,
@@ -1536,6 +1584,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.small_window_w_plain_curtains",
         "UnlockLevel": 2,
         "Name": "Small window w/plain curtains",
         "Price": 200,
@@ -1568,6 +1617,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.small_potted_plant_2",
         "UnlockLevel": 2,
         "Name": "Small potted plant 2",
         "Price": 100,
@@ -1600,6 +1650,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.standing_lamp",
         "UnlockLevel": 2,
         "Name": "Standing lamp",
         "Price": 300,
@@ -1632,6 +1683,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.standing_lamp_2",
         "UnlockLevel": 3,
         "Name": "Standing lamp",
         "Price": 350,
@@ -1664,6 +1716,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.standing_lamp_3",
         "UnlockLevel": 4,
         "Name": "Standing lamp",
         "Price": 350,
@@ -1696,6 +1749,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.standing_lamp_4",
         "UnlockLevel": 5,
         "Name": "Standing lamp",
         "Price": 1,
@@ -1728,6 +1782,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.diner_chair",
         "UnlockLevel": 3,
         "Name": "Diner chair",
         "Price": 150,
@@ -1760,6 +1815,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.diner_stool",
         "UnlockLevel": 3,
         "Name": "Diner stool",
         "Price": 130,
@@ -1792,6 +1848,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.diner_table",
         "UnlockLevel": 3,
         "Name": "Diner table",
         "Price": 350,
@@ -1824,6 +1881,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.large_potted_plant_tree",
         "UnlockLevel": 4,
         "Name": "Large potted plant/tree",
         "Price": 500,
@@ -1856,6 +1914,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_divider",
         "UnlockLevel": 4,
         "Name": "Plain divider",
         "Price": 200,
@@ -1888,6 +1947,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_divider_2",
         "UnlockLevel": 5,
         "Name": "Plain divider",
         "Price": 250,
@@ -1920,6 +1980,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_divider_3",
         "UnlockLevel": 5,
         "Name": "Plain divider",
         "Price": 250,
@@ -1952,6 +2013,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_divider_4",
         "UnlockLevel": 5,
         "Name": "Plain divider",
         "Price": 250,
@@ -1984,6 +2046,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_divider_5",
         "UnlockLevel": 5,
         "Name": "Plain divider",
         "Price": 250,
@@ -2016,6 +2079,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plain_divider_6",
         "UnlockLevel": 6,
         "Name": "Plain divider",
         "Price": 1,
@@ -2048,6 +2112,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.diner_chair_2",
         "UnlockLevel": 4,
         "Name": "Diner chair 2",
         "Price": 200,
@@ -2080,6 +2145,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.diner_stool_2",
         "UnlockLevel": 4,
         "Name": "Diner stool 2",
         "Price": 175,
@@ -2112,6 +2178,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.diner_table_2",
         "UnlockLevel": 4,
         "Name": "Diner table 2",
         "Price": 400,
@@ -2144,6 +2211,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.rounded_corner_steel_window",
         "UnlockLevel": 4,
         "Name": "Rounded-corner/steel window",
         "Price": 750,
@@ -2176,6 +2244,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.hat_coat_rack",
         "UnlockLevel": 4,
         "Name": "Hat/coat rack",
         "Price": 200,
@@ -2208,6 +2277,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.checkered_tile",
         "UnlockLevel": 4,
         "Name": "checkered tile",
         "Price": 40,
@@ -2240,6 +2310,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.checkered_tile_2",
         "UnlockLevel": 5,
         "Name": "checkered tile",
         "Price": 50,
@@ -2272,6 +2343,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.checkered_tile_3",
         "UnlockLevel": 5,
         "Name": "checkered tile",
         "Price": 50,
@@ -2304,6 +2376,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.checkered_tile_4",
         "UnlockLevel": 6,
         "Name": "checkered tile",
         "Price": 50,
@@ -2336,6 +2409,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.checkered_tile_5",
         "UnlockLevel": 6,
         "Name": "checkered tile",
         "Price": 50,
@@ -2368,6 +2442,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.stainless_steel_stove",
         "UnlockLevel": 5,
         "Name": "Stainless steel stove",
         "Price": 25000,
@@ -2400,6 +2475,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.stainless_steel_serving_counter",
         "UnlockLevel": 5,
         "Name": "Stainless steel serving counter",
         "Price": 15000,
@@ -2432,6 +2508,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.stainless_steel_sink",
         "UnlockLevel": 5,
         "Name": "Stainless steel sink",
         "Price": 25000,
@@ -2464,6 +2541,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.stainless_steel_fridge",
         "UnlockLevel": 5,
         "Name": "Stainless steel fridge",
         "Price": 25000,
@@ -2496,6 +2574,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.neon_sign",
         "UnlockLevel": 5,
         "Name": "Neon sign",
         "Price": 20000,
@@ -2528,6 +2607,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.neon_sign_2",
         "UnlockLevel": 5,
         "Name": "Neon sign",
         "Price": 10,
@@ -2560,6 +2640,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.diner_wall_lamp",
         "UnlockLevel": 5,
         "Name": "Diner wall lamp",
         "Price": 250,
@@ -2592,6 +2673,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.jukebox",
         "UnlockLevel": 5,
         "Name": "Jukebox",
         "Price": 40000,
@@ -2624,6 +2706,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.jukebox_2",
         "UnlockLevel": 5,
         "Name": "Jukebox 2",
         "Price": 20,
@@ -2656,6 +2739,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.checkered_tile_6",
         "UnlockLevel": 5,
         "Name": "checkered tile",
         "Price": 60,
@@ -2688,6 +2772,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.large_window_w_plain_curtains",
         "UnlockLevel": 6,
         "Name": "Large window w/plain curtains",
         "Price": 1000,
@@ -2720,6 +2805,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.large_window_w_blinds",
         "UnlockLevel": 6,
         "Name": "Large window w/blinds",
         "Price": 1100,
@@ -2752,6 +2838,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.classic_wooden_chair",
         "UnlockLevel": 6,
         "Name": "Classic wooden chair",
         "Price": 500,
@@ -2784,6 +2871,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.table_red_checked_table_cloth",
         "UnlockLevel": 6,
         "Name": "Table (red checked table cloth)",
         "Price": 1000,
@@ -2816,6 +2904,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.grape_divider",
         "UnlockLevel": 6,
         "Name": "Grape divider",
         "Price": 1500,
@@ -2848,6 +2937,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wine_rack",
         "UnlockLevel": 6,
         "Name": "Wine rack",
         "Price": 2500,
@@ -2880,6 +2970,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wall_lamp",
         "UnlockLevel": 6,
         "Name": "Wall lamp",
         "Price": 500,
@@ -2912,6 +3003,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.hardwood_floor",
         "UnlockLevel": 6,
         "Name": "Hardwood floor",
         "Price": 125,
@@ -2944,6 +3036,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.hardwood_floor_2",
         "UnlockLevel": 7,
         "Name": "Hardwood floor",
         "Price": 150,
@@ -2976,6 +3069,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.hardwood_floor_3",
         "UnlockLevel": 7,
         "Name": "Hardwood floor",
         "Price": 150,
@@ -3008,6 +3102,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.large_potted_plant_tree_2",
         "UnlockLevel": 7,
         "Name": "Large potted plant/tree",
         "Price": 500,
@@ -3040,6 +3135,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.classic_wooden_chair_2",
         "UnlockLevel": 7,
         "Name": "Classic wooden chair",
         "Price": 600,
@@ -3072,6 +3168,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.classic_wooden_chair_3",
         "UnlockLevel": 8,
         "Name": "Classic wooden chair",
         "Price": 600,
@@ -3104,6 +3201,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.classic_wooden_chair_4",
         "UnlockLevel": 8,
         "Name": "Classic wooden chair",
         "Price": 600,
@@ -3136,6 +3234,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.classic_wooden_chair_5",
         "UnlockLevel": 8,
         "Name": "Classic wooden chair",
         "Price": 600,
@@ -3168,6 +3267,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.classic_wooden_chair_6",
         "UnlockLevel": 8,
         "Name": "Classic wooden chair",
         "Price": 600,
@@ -3200,6 +3300,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.classic_wooden_chair_7",
         "UnlockLevel": 9,
         "Name": "Classic wooden chair",
         "Price": 1,
@@ -3232,6 +3333,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.brick_wall",
         "UnlockLevel": 7,
         "Name": "Brick wall",
         "Price": 250,
@@ -3264,6 +3366,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.brick_wall_2",
         "UnlockLevel": 7,
         "Name": "Brick wall",
         "Price": 300,
@@ -3296,6 +3399,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.brick_wall_3",
         "UnlockLevel": 7,
         "Name": "Brick wall",
         "Price": 300,
@@ -3328,6 +3432,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.brick_wall_4",
         "UnlockLevel": 8,
         "Name": "Brick wall",
         "Price": 300,
@@ -3360,6 +3465,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.brick_wall_5",
         "UnlockLevel": 8,
         "Name": "Brick wall",
         "Price": 300,
@@ -3392,6 +3498,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.brick_lined_window",
         "UnlockLevel": 7,
         "Name": "Brick-lined window",
         "Price": 1500,
@@ -3424,6 +3531,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.hardwood_floor_4",
         "UnlockLevel": 7,
         "Name": "Hardwood floor",
         "Price": 175,
@@ -3456,6 +3564,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.brick_wall_6",
         "UnlockLevel": 9,
         "Name": "Brick wall",
         "Price": 500,
@@ -3488,6 +3597,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_table",
         "UnlockLevel": 9,
         "Name": "Sleek table",
         "Price": 1200,
@@ -3520,6 +3630,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_table_2",
         "UnlockLevel": 9,
         "Name": "Sleek table",
         "Price": 1400,
@@ -3552,6 +3663,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_table_3",
         "UnlockLevel": 9,
         "Name": "Sleek table",
         "Price": 1400,
@@ -3584,6 +3696,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_table_4",
         "UnlockLevel": 9,
         "Name": "Sleek table",
         "Price": 1400,
@@ -3616,6 +3729,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_table_5",
         "UnlockLevel": 9,
         "Name": "Sleek table",
         "Price": 1400,
@@ -3648,6 +3762,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_chair",
         "UnlockLevel": 9,
         "Name": "Sleek chair",
         "Price": 1000,
@@ -3680,6 +3795,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_chair_2",
         "UnlockLevel": 9,
         "Name": "Sleek chair",
         "Price": 1200,
@@ -3712,6 +3828,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_chair_3",
         "UnlockLevel": 9,
         "Name": "Sleek chair",
         "Price": 1200,
@@ -3744,6 +3861,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_chair_4",
         "UnlockLevel": 9,
         "Name": "Sleek chair",
         "Price": 1200,
@@ -3776,6 +3894,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_chair_5",
         "UnlockLevel": 9,
         "Name": "Sleek chair",
         "Price": 1200,
@@ -3808,6 +3927,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.paper_lamp",
         "UnlockLevel": 9,
         "Name": "Paper lamp",
         "Price": 750,
@@ -3840,6 +3960,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.fish_tank",
         "UnlockLevel": 9,
         "Name": "Fish tank",
         "Price": 8000,
@@ -3872,6 +3993,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_table_6",
         "UnlockLevel": 9,
         "Name": "Sleek table",
         "Price": 2,
@@ -3904,6 +4026,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sleek_chair_6",
         "UnlockLevel": 9,
         "Name": "Sleek chair",
         "Price": 2,
@@ -3936,6 +4059,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.potted_bamboo",
         "UnlockLevel": 10,
         "Name": "Potted bamboo",
         "Price": 1000,
@@ -3968,6 +4092,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.exotic_fish_tank",
         "UnlockLevel": 10,
         "Name": "Exotic fish tank",
         "Price": 15,
@@ -4000,6 +4125,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.chopstick_poster",
         "UnlockLevel": 10,
         "Name": "Chopstick poster",
         "Price": 30000,
@@ -4032,6 +4158,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.chopstick_poster_2",
         "UnlockLevel": 9,
         "Name": "Chopstick poster",
         "Price": 15,
@@ -4064,6 +4191,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.banzai_tree_on_stand",
         "UnlockLevel": 10,
         "Name": "Banzai tree (on stand)",
         "Price": 1500,
@@ -4096,6 +4224,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.table_generic_classic_country",
         "UnlockLevel": 12,
         "Name": "Table (generic/classic/country)",
         "Price": 1500,
@@ -4128,6 +4257,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.table_generic_classic_country_2",
         "UnlockLevel": 13,
         "Name": "Table (generic/classic/country)",
         "Price": 1800,
@@ -4160,6 +4290,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.table_generic_classic_country_3",
         "UnlockLevel": 13,
         "Name": "Table (generic/classic/country)",
         "Price": 1800,
@@ -4192,6 +4323,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.table_generic_classic_country_4",
         "UnlockLevel": 13,
         "Name": "Table (generic/classic/country)",
         "Price": 1800,
@@ -4224,6 +4356,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.chair_generic_classic_country",
         "UnlockLevel": 12,
         "Name": "Chair (generic/classic/country)",
         "Price": 1200,
@@ -4256,6 +4389,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.chair_generic_classic_country_2",
         "UnlockLevel": 13,
         "Name": "Chair (generic/classic/country)",
         "Price": 1500,
@@ -4288,6 +4422,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.chair_generic_classic_country_3",
         "UnlockLevel": 13,
         "Name": "Chair (generic/classic/country)",
         "Price": 1500,
@@ -4320,6 +4455,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.chair_generic_classic_country_4",
         "UnlockLevel": 13,
         "Name": "Chair (generic/classic/country)",
         "Price": 1500,
@@ -4352,6 +4488,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.chair_generic_classic_country_5",
         "UnlockLevel": 13,
         "Name": "Chair (generic/classic/country)",
         "Price": 1500,
@@ -4384,6 +4521,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wood_panel_wall",
         "UnlockLevel": 12,
         "Name": "Wood panel wall",
         "Price": 500,
@@ -4416,6 +4554,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.slot_machine",
         "UnlockLevel": 12,
         "Name": "Slot machine",
         "Price": 100000,
@@ -4448,6 +4587,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.slot_machine_2",
         "UnlockLevel": 11,
         "Name": "Slot machine",
         "Price": 50,
@@ -4480,6 +4620,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.table_generic_classic_country_5",
         "UnlockLevel": 13,
         "Name": "Table (generic/classic/country)",
         "Price": 2,
@@ -4512,6 +4653,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.chair_generic_classic_country_6",
         "UnlockLevel": 13,
         "Name": "Chair (generic/classic/country)",
         "Price": 2,
@@ -4544,6 +4686,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wagon_wheel",
         "UnlockLevel": 13,
         "Name": "Wagon wheel",
         "Price": 1000,
@@ -4576,6 +4719,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.large_window_with_red_green_white_curtains",
         "UnlockLevel": 13,
         "Name": "Large window with red/green/white curtains",
         "Price": 2000,
@@ -4608,6 +4752,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.potted_cactus",
         "UnlockLevel": 13,
         "Name": "Potted cactus",
         "Price": 2500,
@@ -4640,6 +4785,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.two_tone_brown_tile",
         "UnlockLevel": 13,
         "Name": "Two-tone brown tile",
         "Price": 200,
@@ -4672,6 +4818,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wood_panel_wall_2",
         "UnlockLevel": 14,
         "Name": "Wood panel wall",
         "Price": 600,
@@ -4704,6 +4851,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.steer_skull",
         "UnlockLevel": 14,
         "Name": "Steer skull",
         "Price": 1500,
@@ -4736,6 +4884,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.dartboard",
         "UnlockLevel": 15,
         "Name": "dartboard",
         "Price": 2000,
@@ -4768,6 +4917,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.bar_serving_counter",
         "UnlockLevel": 15,
         "Name": "Bar serving counter",
         "Price": 2000,
@@ -4800,6 +4950,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.foosball_table",
         "UnlockLevel": 15,
         "Name": "Foosball table",
         "Price": 60000,
@@ -4832,6 +4983,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.foosball_table_2",
         "UnlockLevel": 15,
         "Name": "Foosball table",
         "Price": 30,
@@ -4864,6 +5016,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.carpet",
         "UnlockLevel": 15,
         "Name": "carpet",
         "Price": 500,
@@ -4896,6 +5049,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.carpet_2",
         "UnlockLevel": 16,
         "Name": "carpet",
         "Price": 600,
@@ -4928,6 +5082,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.carpet_3",
         "UnlockLevel": 16,
         "Name": "carpet",
         "Price": 600,
@@ -4960,6 +5115,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.carpet_4",
         "UnlockLevel": 16,
         "Name": "carpet",
         "Price": 600,
@@ -4992,6 +5148,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.carpet_5",
         "UnlockLevel": 16,
         "Name": "carpet",
         "Price": 600,
@@ -5024,6 +5181,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.booze_rack_shelf",
         "UnlockLevel": 16,
         "Name": "Booze rack/shelf",
         "Price": 12000,
@@ -5056,6 +5214,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.carpet_6",
         "UnlockLevel": 16,
         "Name": "carpet",
         "Price": 800,
@@ -5088,6 +5247,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zombeer_ad_poster",
         "UnlockLevel": 17,
         "Name": "Zombeer ad/poster",
         "Price": 30,
@@ -5120,6 +5280,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.white_tablecloth",
         "UnlockLevel": 18,
         "Name": "White tablecloth",
         "Price": 3000,
@@ -5152,6 +5313,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.maitre_d_stand_podium",
         "UnlockLevel": 18,
         "Name": "Maitre'd stand/podium",
         "Price": 12000,
@@ -5184,6 +5346,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.marble_tile",
         "UnlockLevel": 18,
         "Name": "Marble tile",
         "Price": 700,
@@ -5216,6 +5379,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.marble_tile_2",
         "UnlockLevel": 18,
         "Name": "Marble tile",
         "Price": 850,
@@ -5248,6 +5412,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.marble_tile_3",
         "UnlockLevel": 19,
         "Name": "Marble tile",
         "Price": 850,
@@ -5280,6 +5445,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.marble_tile_4",
         "UnlockLevel": 19,
         "Name": "Marble tile",
         "Price": 850,
@@ -5312,6 +5478,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.marble_tile_5",
         "UnlockLevel": 19,
         "Name": "Marble tile",
         "Price": 850,
@@ -5344,6 +5511,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wallpaper_wall",
         "UnlockLevel": 19,
         "Name": "Wallpaper wall",
         "Price": 1000,
@@ -5376,6 +5544,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wallpaper_wall_2",
         "UnlockLevel": 20,
         "Name": "Wallpaper wall",
         "Price": 1200,
@@ -5408,6 +5577,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wallpaper_wall_3",
         "UnlockLevel": 20,
         "Name": "Wallpaper wall",
         "Price": 1200,
@@ -5440,6 +5610,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wallpaper_wall_4",
         "UnlockLevel": 20,
         "Name": "Wallpaper wall",
         "Price": 1200,
@@ -5472,6 +5643,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wallpaper_wall_5",
         "UnlockLevel": 20,
         "Name": "Wallpaper wall",
         "Price": 1200,
@@ -5504,6 +5676,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wallpaper_wall_6",
         "UnlockLevel": 20,
         "Name": "Wallpaper wall",
         "Price": 1200,
@@ -5536,6 +5709,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.candelabra",
         "UnlockLevel": 19,
         "Name": "Candelabra",
         "Price": 3000,
@@ -5568,6 +5742,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.fountain",
         "UnlockLevel": 19,
         "Name": "Fountain",
         "Price": 50000,
@@ -5600,6 +5775,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.velvet_rope_divider",
         "UnlockLevel": 19,
         "Name": "Velvet rope divider",
         "Price": 3000,
@@ -5632,6 +5808,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.van_gogh_s_self_portrait_as_zombie",
         "UnlockLevel": 20,
         "Name": "Van Gogh's self portrait as zombie",
         "Price": 610100,
@@ -5664,6 +5841,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.van_gogh_s_self_portrait_as_zombie_2",
         "UnlockLevel": 20,
         "Name": "Van Gogh's self portrait as zombie",
         "Price": 75,
@@ -5696,6 +5874,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.marble_tile_6",
         "UnlockLevel": 20,
         "Name": "Marble tile",
         "Price": 1000,
@@ -5728,6 +5907,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wall_crack",
         "UnlockLevel": 255,
         "Name": "Wall crack",
         "Price": 50,
@@ -5760,6 +5940,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.floor_stain",
         "UnlockLevel": 255,
         "Name": "Floor stain",
         "Price": 5,
@@ -5792,6 +5973,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.loose_tile",
         "UnlockLevel": 255,
         "Name": "Loose tile",
         "Price": 5,
@@ -5824,6 +6006,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.10_toxin",
         "UnlockLevel": 0,
         "Name": "10 Toxin",
         "Price": 20000,
@@ -5856,6 +6039,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.30_toxin",
         "UnlockLevel": 0,
         "Name": "30 Toxin",
         "Price": 50000,
@@ -5888,6 +6072,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.175_toxin",
         "UnlockLevel": 0,
         "Name": "175 Toxin",
         "Price": 250000,
@@ -5920,6 +6105,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.750_toxin",
         "UnlockLevel": 0,
         "Name": "750 Toxin",
         "Price": 1000000,
@@ -5952,6 +6138,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pot",
         "UnlockLevel": 255,
         "Name": "Pot",
         "Price": 0,
@@ -5984,6 +6171,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.plate",
         "UnlockLevel": 255,
         "Name": "Plate",
         "Price": 0,
@@ -6016,6 +6204,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.grass_tile_1",
         "UnlockLevel": 255,
         "Name": "Grass tile 1",
         "Price": 0,
@@ -6048,6 +6237,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.grass_tile_2",
         "UnlockLevel": 255,
         "Name": "Grass tile 2",
         "Price": 0,
@@ -6080,6 +6270,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sidewalk_tile",
         "UnlockLevel": 255,
         "Name": "Sidewalk tile",
         "Price": 0,
@@ -6112,6 +6303,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.road_tile",
         "UnlockLevel": 255,
         "Name": "Road tile",
         "Price": 0,
@@ -6144,6 +6336,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.road_stripe_tile",
         "UnlockLevel": 255,
         "Name": "Road stripe tile",
         "Price": 0,
@@ -6176,6 +6369,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.dirty_plate",
         "UnlockLevel": 255,
         "Name": "Dirty plate",
         "Price": 0,
@@ -6208,6 +6402,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.tile_cover",
         "UnlockLevel": 255,
         "Name": "Tile cover",
         "Price": 0,
@@ -6240,6 +6435,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.closed_door",
         "UnlockLevel": 255,
         "Name": "Closed Door",
         "Price": 0,
@@ -6272,6 +6468,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.open_door",
         "UnlockLevel": 255,
         "Name": "Open Door",
         "Price": 0,
@@ -6304,6 +6501,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.burnt_pot",
         "UnlockLevel": 255,
         "Name": "Burnt Pot",
         "Price": 0,
@@ -6336,6 +6534,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_8x7",
         "UnlockLevel": 0,
         "Name": "Expand to 8x7",
         "Price": 3500,
@@ -6368,6 +6567,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_9x8",
         "UnlockLevel": 0,
         "Name": "Expand to 9x8",
         "Price": 25000,
@@ -6400,6 +6600,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_9x8_2",
         "UnlockLevel": 0,
         "Name": "Expand to 9x8",
         "Price": 10,
@@ -6432,6 +6633,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_10x9",
         "UnlockLevel": 0,
         "Name": "Expand to 10x9",
         "Price": 75000,
@@ -6464,6 +6666,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_10x9_2",
         "UnlockLevel": 0,
         "Name": "Expand to 10x9",
         "Price": 30,
@@ -6496,6 +6699,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_11x10",
         "UnlockLevel": 0,
         "Name": "Expand to 11x10",
         "Price": 100000,
@@ -6528,6 +6732,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_11x10_2",
         "UnlockLevel": 0,
         "Name": "Expand to 11x10",
         "Price": 40,
@@ -6560,6 +6765,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.red_trash_can",
         "UnlockLevel": 1,
         "Name": "Red trash can",
         "Price": 1500,
@@ -6592,6 +6798,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.diner_clock",
         "UnlockLevel": 5,
         "Name": "Diner clock",
         "Price": 1500,
@@ -6624,6 +6831,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.specials_board",
         "UnlockLevel": 6,
         "Name": "Specials Board",
         "Price": 12000,
@@ -6656,6 +6864,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.specials_board_2",
         "UnlockLevel": 6,
         "Name": "Specials Board",
         "Price": 6,
@@ -6688,6 +6897,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.diner_wall",
         "UnlockLevel": 6,
         "Name": "Diner wall",
         "Price": 250,
@@ -6720,6 +6930,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.marble_serving_counter",
         "UnlockLevel": 18,
         "Name": "Marble Serving Counter",
         "Price": 50000,
@@ -6752,6 +6963,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_scientist_control_panel_1",
         "UnlockLevel": 10,
         "Name": "Mad Scientist Control Panel 1",
         "Price": 1000,
@@ -6784,6 +6996,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_scientist_control_panel_3",
         "UnlockLevel": 10,
         "Name": "Mad Scientist Control Panel 3",
         "Price": 1000,
@@ -6816,6 +7029,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_scientist_control_panel_2",
         "UnlockLevel": 10,
         "Name": "Mad Scientist Control Panel 2",
         "Price": 5,
@@ -6848,6 +7062,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_scientist_floor",
         "UnlockLevel": 10,
         "Name": "Mad Scientist Floor",
         "Price": 185,
@@ -6880,6 +7095,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_scientist_cabinet_1",
         "UnlockLevel": 11,
         "Name": "Mad Scientist Cabinet 1",
         "Price": 4500,
@@ -6912,6 +7128,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_scientist_cabinet_2",
         "UnlockLevel": 11,
         "Name": "Mad Scientist Cabinet 2",
         "Price": 4500,
@@ -6944,6 +7161,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_scientist_chair",
         "UnlockLevel": 10,
         "Name": "Mad Scientist Chair",
         "Price": 1000,
@@ -6976,6 +7194,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_scientist_serving_counter",
         "UnlockLevel": 10,
         "Name": "Mad Scientist Serving Counter",
         "Price": 7000,
@@ -7008,6 +7227,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_scientist_table",
         "UnlockLevel": 10,
         "Name": "Mad Scientist Table",
         "Price": 1700,
@@ -7040,6 +7260,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_scientist_wall",
         "UnlockLevel": 10,
         "Name": "Mad Scientist Wall",
         "Price": 600,
@@ -7072,6 +7293,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.spindle_chair",
         "UnlockLevel": 15,
         "Name": "Spindle Chair",
         "Price": 2000,
@@ -7104,6 +7326,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.booth",
         "UnlockLevel": 15,
         "Name": "Booth",
         "Price": 2,
@@ -7136,6 +7359,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.bookshelf",
         "UnlockLevel": 15,
         "Name": "Bookshelf",
         "Price": 3000,
@@ -7168,6 +7392,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wood_pub_floor",
         "UnlockLevel": 15,
         "Name": "Wood Pub Floor",
         "Price": 500,
@@ -7200,6 +7425,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pool_table",
         "UnlockLevel": 15,
         "Name": "Pool Table",
         "Price": 40,
@@ -7232,6 +7458,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pub_serving_counter",
         "UnlockLevel": 15,
         "Name": "Pub Serving Counter",
         "Price": 2,
@@ -7264,6 +7491,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pub_table",
         "UnlockLevel": 15,
         "Name": "Pub Table",
         "Price": 3000,
@@ -7296,6 +7524,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pub_window",
         "UnlockLevel": 15,
         "Name": "Pub Window",
         "Price": 5000,
@@ -7328,6 +7557,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.stone_window",
         "UnlockLevel": 15,
         "Name": "Stone Window",
         "Price": 4000,
@@ -7360,6 +7590,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.tiffany_lamp_1",
         "UnlockLevel": 15,
         "Name": "Tiffany Lamp 1",
         "Price": 10000,
@@ -7392,6 +7623,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.tiffany_lamp_2",
         "UnlockLevel": 15,
         "Name": "Tiffany Lamp 2",
         "Price": 10000,
@@ -7424,6 +7656,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.tiffany_lamp_3",
         "UnlockLevel": 15,
         "Name": "Tiffany Lamp 3",
         "Price": 10000,
@@ -7456,6 +7689,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.green_trash_bin",
         "UnlockLevel": 15,
         "Name": "Green Trash Bin",
         "Price": 3000,
@@ -7488,6 +7722,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pub_wall",
         "UnlockLevel": 15,
         "Name": "Pub Wall",
         "Price": 600,
@@ -7520,6 +7755,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.stone_wall",
         "UnlockLevel": 15,
         "Name": "Stone Wall",
         "Price": 600,
@@ -7552,6 +7788,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_12x11",
         "UnlockLevel": 0,
         "Name": "Expand to 12x11",
         "Price": 120000,
@@ -7584,6 +7821,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_12x11_2",
         "UnlockLevel": 0,
         "Name": "Expand to 12x11",
         "Price": 50,
@@ -7616,6 +7854,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.hippie_poster_1",
         "UnlockLevel": 6,
         "Name": "Hippie Poster 1",
         "Price": 500,
@@ -7648,6 +7887,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.hippie_poster_2",
         "UnlockLevel": 8,
         "Name": "Hippie Poster 2",
         "Price": 1000,
@@ -7680,6 +7920,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.guitar",
         "UnlockLevel": 6,
         "Name": "Guitar",
         "Price": 1200,
@@ -7712,6 +7953,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.hanging_plant",
         "UnlockLevel": 6,
         "Name": "Hanging Plant",
         "Price": 500,
@@ -7744,6 +7986,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.planter",
         "UnlockLevel": 6,
         "Name": "Planter",
         "Price": 500,
@@ -7776,6 +8019,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.barbed_wire",
         "UnlockLevel": 6,
         "Name": "Barbed Wire",
         "Price": 250,
@@ -7808,6 +8052,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sand_bags_1",
         "UnlockLevel": 6,
         "Name": "Sand Bags 1",
         "Price": 250,
@@ -7840,6 +8085,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sand_bags_2",
         "UnlockLevel": 6,
         "Name": "Sand Bags 2",
         "Price": 250,
@@ -7872,6 +8118,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wall_sconce",
         "UnlockLevel": 6,
         "Name": "Wall Sconce",
         "Price": 500,
@@ -7904,6 +8151,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.fancy_window",
         "UnlockLevel": 6,
         "Name": "Fancy Window",
         "Price": 1000,
@@ -7936,6 +8184,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.magic_fridge",
         "UnlockLevel": 1,
         "Name": "Magic Fridge",
         "Price": 30,
@@ -7968,6 +8217,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.suped_up_fridge",
         "UnlockLevel": 7,
         "Name": "Suped Up Fridge",
         "Price": 25000,
@@ -8000,6 +8250,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.hippie_table",
         "UnlockLevel": 6,
         "Name": "Hippie Table",
         "Price": 1000,
@@ -8032,6 +8283,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.fancy_table",
         "UnlockLevel": 6,
         "Name": "Fancy Table",
         "Price": 2,
@@ -8064,6 +8316,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.suped_up_stove",
         "UnlockLevel": 7,
         "Name": "Suped Up Stove",
         "Price": 20,
@@ -8096,6 +8349,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.fancy_chair",
         "UnlockLevel": 6,
         "Name": "Fancy Chair",
         "Price": 2,
@@ -8128,6 +8382,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.bbq_stove",
         "UnlockLevel": 8,
         "Name": "BBQ Stove",
         "Price": 2,
@@ -8160,6 +8415,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.beach_ball",
         "UnlockLevel": 7,
         "Name": "Beach Ball",
         "Price": 500,
@@ -8192,6 +8448,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.beach_blanket",
         "UnlockLevel": 7,
         "Name": "Beach Blanket",
         "Price": 500,
@@ -8224,6 +8481,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.folding_chair",
         "UnlockLevel": 7,
         "Name": "Folding Chair",
         "Price": 600,
@@ -8256,6 +8514,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.folding_table",
         "UnlockLevel": 7,
         "Name": "Folding Table",
         "Price": 1400,
@@ -8288,6 +8547,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.surfboard",
         "UnlockLevel": 8,
         "Name": "Surfboard",
         "Price": 1400,
@@ -8320,6 +8580,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.ice_fridge",
         "UnlockLevel": 7,
         "Name": "Ice Fridge",
         "Price": 10,
@@ -8352,6 +8613,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.ice_cream_machine",
         "UnlockLevel": 7,
         "Name": "Ice Cream Machine",
         "Price": 20,
@@ -8384,6 +8646,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.slushy_machine",
         "UnlockLevel": 8,
         "Name": "Slushy Machine",
         "Price": 20,
@@ -8416,6 +8679,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_13x12",
         "UnlockLevel": 0,
         "Name": "Expand to 13x12",
         "Price": 150000,
@@ -8448,6 +8712,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.persistance_of_brains",
         "UnlockLevel": 21,
         "Name": "Persistance of brains",
         "Price": 10000,
@@ -8480,6 +8745,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.ghoul_with_the_pearl_earring",
         "UnlockLevel": 21,
         "Name": "Ghoul with the Pearl Earring",
         "Price": 5,
@@ -8512,6 +8778,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.van_gogh_starry_night",
         "UnlockLevel": 21,
         "Name": "Van Gogh Starry night",
         "Price": 75,
@@ -8544,6 +8811,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.jack_o_lantern",
         "UnlockLevel": 10,
         "Name": "Jack-o-Lantern",
         "Price": 5,
@@ -8576,6 +8844,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.orange_and_black_tile",
         "UnlockLevel": 1,
         "Name": "Orange and Black Tile",
         "Price": 30,
@@ -8608,6 +8877,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.spider_web_wall",
         "UnlockLevel": 10,
         "Name": "Spider Web Wall",
         "Price": 2500,
@@ -8640,6 +8910,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.orange_table",
         "UnlockLevel": 10,
         "Name": "Orange Table",
         "Price": 2000,
@@ -8672,6 +8943,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.orange_chair",
         "UnlockLevel": 10,
         "Name": "Orange Chair",
         "Price": 1000,
@@ -8704,6 +8976,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.orange_serving_counter",
         "UnlockLevel": 10,
         "Name": "Orange Serving Counter",
         "Price": 6000,
@@ -8736,6 +9009,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wooden_table_with_autumn_leaves",
         "UnlockLevel": 9,
         "Name": "Wooden Table With Autumn Leaves",
         "Price": 2500,
@@ -8768,6 +9042,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.thanksgiving_wreath",
         "UnlockLevel": 10,
         "Name": "Thanksgiving Wreath",
         "Price": 4000,
@@ -8800,6 +9075,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.big_pumpkin",
         "UnlockLevel": 10,
         "Name": "Big Pumpkin",
         "Price": 1500,
@@ -8832,6 +9108,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.small_pumpkin",
         "UnlockLevel": 10,
         "Name": "Small Pumpkin",
         "Price": 1500,
@@ -8864,6 +9141,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.leaves_tile",
         "UnlockLevel": 5,
         "Name": "Leaves Tile",
         "Price": 40,
@@ -8896,6 +9174,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.small_wagon",
         "UnlockLevel": 11,
         "Name": "Small Wagon",
         "Price": 5,
@@ -8928,6 +9207,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.home_sweet_home_sign",
         "UnlockLevel": 22,
         "Name": "Home Sweet Home sign",
         "Price": 50,
@@ -8960,6 +9240,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wall_candle",
         "UnlockLevel": 12,
         "Name": "Wall Candle",
         "Price": 700,
@@ -8992,6 +9273,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_13x12_2",
         "UnlockLevel": 0,
         "Name": "Expand to 13x12",
         "Price": 50,
@@ -9024,6 +9306,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_14x13",
         "UnlockLevel": 0,
         "Name": "Expand to 14x13",
         "Price": 150000,
@@ -9056,6 +9339,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_14x13_2",
         "UnlockLevel": 0,
         "Name": "Expand to 14x13",
         "Price": 50,
@@ -9088,6 +9372,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.cauldron",
         "UnlockLevel": 22,
         "Name": "Cauldron",
         "Price": 50,
@@ -9120,6 +9405,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.strength_tombstone",
         "UnlockLevel": 5,
         "Name": "Strength Tombstone",
         "Price": 50,
@@ -9152,6 +9438,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.health_tombstone",
         "UnlockLevel": 5,
         "Name": "Health Tombstone",
         "Price": 50,
@@ -9184,6 +9471,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.christmas_wreath",
         "UnlockLevel": 12,
         "Name": "Christmas Wreath",
         "Price": 50,
@@ -9216,6 +9504,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.christmas_table",
         "UnlockLevel": 11,
         "Name": "Christmas Table",
         "Price": 2500,
@@ -9248,6 +9537,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.christmas_chair",
         "UnlockLevel": 11,
         "Name": "Christmas Chair",
         "Price": 1500,
@@ -9280,6 +9570,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.christmas_tree",
         "UnlockLevel": 12,
         "Name": "Christmas Tree",
         "Price": 50,
@@ -9312,6 +9603,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.christmas_arcade_cabinet",
         "UnlockLevel": 10,
         "Name": "Christmas Arcade Cabinet",
         "Price": 30,
@@ -9344,6 +9636,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.lanterns",
         "UnlockLevel": 13,
         "Name": "Lanterns",
         "Price": 888,
@@ -9376,6 +9669,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.fire_crackers",
         "UnlockLevel": 13,
         "Name": "Fire Crackers",
         "Price": 10,
@@ -9408,6 +9702,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.foo_dog",
         "UnlockLevel": 22,
         "Name": "Foo Dog",
         "Price": 35,
@@ -9440,6 +9735,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.dragon_painting",
         "UnlockLevel": 5,
         "Name": "Dragon Painting",
         "Price": 80,
@@ -9472,6 +9768,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.eastern_table",
         "UnlockLevel": 15,
         "Name": "Eastern Table",
         "Price": 2450,
@@ -9504,6 +9801,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.eastern_chair",
         "UnlockLevel": 15,
         "Name": "Eastern Chair",
         "Price": 1450,
@@ -9536,6 +9834,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.smiling_buddha",
         "UnlockLevel": 22,
         "Name": "Smiling Buddha",
         "Price": 40,
@@ -9568,6 +9867,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.heart_table",
         "UnlockLevel": 8,
         "Name": "Heart Table",
         "Price": 5,
@@ -9600,6 +9900,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.heart_chair",
         "UnlockLevel": 8,
         "Name": "Heart Chair",
         "Price": 2,
@@ -9632,6 +9933,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.heart_wall_hangars",
         "UnlockLevel": 10,
         "Name": "Heart Wall Hangars",
         "Price": 3000,
@@ -9664,6 +9966,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.heart_shaped_lights",
         "UnlockLevel": 10,
         "Name": "Heart Shaped Lights",
         "Price": 800,
@@ -9696,6 +9999,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.strength_tombstone_level_2",
         "UnlockLevel": 5,
         "Name": "Strength Tombstone - Level 2",
         "Price": 55,
@@ -9728,6 +10032,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.health_tombstone_level_2",
         "UnlockLevel": 5,
         "Name": "Health Tombstone - Level 2",
         "Price": 55,
@@ -9760,6 +10065,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.decorative_tombstone_1",
         "UnlockLevel": 5,
         "Name": "Decorative Tombstone 1",
         "Price": 1500,
@@ -9792,6 +10098,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.decorative_tombstone_2",
         "UnlockLevel": 5,
         "Name": "Decorative Tombstone 2",
         "Price": 10,
@@ -9824,6 +10131,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.decorative_tombstone_3",
         "UnlockLevel": 5,
         "Name": "Decorative Tombstone 3",
         "Price": 15,
@@ -9856,6 +10164,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.decorative_tombstone_4",
         "UnlockLevel": 5,
         "Name": "Decorative Tombstone 4",
         "Price": 20,
@@ -9888,6 +10197,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.green_pub_counter",
         "UnlockLevel": 8,
         "Name": "Green Pub Counter",
         "Price": 1500,
@@ -9920,6 +10230,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.green_pub_stool",
         "UnlockLevel": 8,
         "Name": "Green Pub Stool",
         "Price": 1000,
@@ -9952,6 +10263,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pot_of_gold",
         "UnlockLevel": 10,
         "Name": "Pot Of Gold",
         "Price": 35,
@@ -9984,6 +10296,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.green_pub_divider",
         "UnlockLevel": 10,
         "Name": "Green Pub Divider",
         "Price": 3000,
@@ -10016,6 +10329,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.green_pub_table",
         "UnlockLevel": 8,
         "Name": "Green Pub Table",
         "Price": 2000,
@@ -10048,6 +10362,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.coat_of_arms",
         "UnlockLevel": 11,
         "Name": "Coat of Arms",
         "Price": 40,
@@ -10080,6 +10395,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.horse_shoe",
         "UnlockLevel": 11,
         "Name": "Horse Shoe",
         "Price": 10,
@@ -10112,6 +10428,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pub_poster",
         "UnlockLevel": 0,
         "Name": "Pub Poster",
         "Price": 15,
@@ -10144,6 +10461,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pub_sign",
         "UnlockLevel": 12,
         "Name": "Pub Sign",
         "Price": 20,
@@ -10176,6 +10494,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pub_bar_cabinet",
         "UnlockLevel": 8,
         "Name": "Pub Bar Cabinet",
         "Price": 6000,
@@ -10208,6 +10527,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.space_divider_grey",
         "UnlockLevel": 7,
         "Name": "Space Divider _ Grey",
         "Price": 4000,
@@ -10240,6 +10560,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.space_divider_white",
         "UnlockLevel": 8,
         "Name": "Space Divider _ White",
         "Price": 4500,
@@ -10272,6 +10593,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.freeze_dried_fridge",
         "UnlockLevel": 7,
         "Name": "Freeze Dried Fridge",
         "Price": 10,
@@ -10304,6 +10626,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.holographic_table",
         "UnlockLevel": 14,
         "Name": "Holographic Table",
         "Price": 3,
@@ -10336,6 +10659,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.round_holographic_table",
         "UnlockLevel": 8,
         "Name": "Round Holographic Table",
         "Price": 6000,
@@ -10368,6 +10692,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.laser_oven",
         "UnlockLevel": 7,
         "Name": "Laser Oven",
         "Price": 25,
@@ -10400,6 +10725,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.nebula_painting",
         "UnlockLevel": 7,
         "Name": "Nebula Painting",
         "Price": 10,
@@ -10432,6 +10758,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.port_window_1",
         "UnlockLevel": 7,
         "Name": "Port Window 1",
         "Price": 2500,
@@ -10464,6 +10791,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.port_window_2",
         "UnlockLevel": 8,
         "Name": "Port Window 2",
         "Price": 2500,
@@ -10496,6 +10824,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.space_counter",
         "UnlockLevel": 14,
         "Name": "Space Counter",
         "Price": 3,
@@ -10528,6 +10857,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.space_sink",
         "UnlockLevel": 7,
         "Name": "Space Sink",
         "Price": 4500,
@@ -10560,6 +10890,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.led_light",
         "UnlockLevel": 7,
         "Name": "LED Light",
         "Price": 1000,
@@ -10592,6 +10923,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.led_lights",
         "UnlockLevel": 8,
         "Name": "LED Lights",
         "Price": 2000,
@@ -10624,6 +10956,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.glass_tile_black_white",
         "UnlockLevel": 7,
         "Name": "Glass Tile (Black \u0026 White)",
         "Price": 500,
@@ -10656,6 +10989,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.glass_tile_metal",
         "UnlockLevel": 8,
         "Name": "Glass Tile (Metal)",
         "Price": 600,
@@ -10688,6 +11022,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.glass_tile_white",
         "UnlockLevel": 8,
         "Name": "Glass Tile (White)",
         "Price": 700,
@@ -10720,6 +11055,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.space_fighter_arcade_machine",
         "UnlockLevel": 14,
         "Name": "Space Fighter Arcade Machine",
         "Price": 45,
@@ -10752,6 +11088,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.captain_s_chair",
         "UnlockLevel": 7,
         "Name": "Captain's Chair",
         "Price": 3,
@@ -10784,6 +11121,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.air_hockey_table",
         "UnlockLevel": 12,
         "Name": "Air Hockey Table",
         "Price": 30,
@@ -10816,6 +11154,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.deep_fryer",
         "UnlockLevel": 8,
         "Name": "Deep Fryer",
         "Price": 20,
@@ -10848,6 +11187,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pinball_machine",
         "UnlockLevel": 13,
         "Name": "Pinball Machine",
         "Price": 25,
@@ -10880,6 +11220,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pizza_display_warmer",
         "UnlockLevel": 9,
         "Name": "Pizza Display Warmer",
         "Price": 50000,
@@ -10912,6 +11253,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pool_table_blue",
         "UnlockLevel": 17,
         "Name": "Pool Table (Blue)",
         "Price": 40,
@@ -10944,6 +11286,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wall_menu",
         "UnlockLevel": 8,
         "Name": "Wall Menu",
         "Price": 12000,
@@ -10976,6 +11319,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.graffiti_poster",
         "UnlockLevel": 9,
         "Name": "Graffiti Poster",
         "Price": 25000,
@@ -11008,6 +11352,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zombie_arcade_sign",
         "UnlockLevel": 9,
         "Name": "Zombie Arcade Sign",
         "Price": 10,
@@ -11040,6 +11385,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wood_fire_pizza_oven",
         "UnlockLevel": 9,
         "Name": "Wood Fire Pizza Oven",
         "Price": 20,
@@ -11072,6 +11418,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zombie_fighter_arcade_machine",
         "UnlockLevel": 8,
         "Name": "Zombie Fighter Arcade Machine",
         "Price": 45,
@@ -11104,6 +11451,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.max_level",
         "UnlockLevel": 0,
         "Name": "MAX LEVEL",
         "Price": 1,
@@ -11136,6 +11484,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.apache_blanket",
         "UnlockLevel": 10,
         "Name": "Apache Blanket",
         "Price": 11000,
@@ -11168,6 +11517,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.banjo",
         "UnlockLevel": 11,
         "Name": "Banjo",
         "Price": 7000,
@@ -11200,6 +11550,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.gas_lamp",
         "UnlockLevel": 10,
         "Name": "Gas Lamp",
         "Price": 1000,
@@ -11232,6 +11583,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.grill",
         "UnlockLevel": 11,
         "Name": "Grill",
         "Price": 25,
@@ -11264,6 +11616,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.gun_rack",
         "UnlockLevel": 14,
         "Name": "Gun Rack",
         "Price": 10,
@@ -11296,6 +11649,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.meat_smoker",
         "UnlockLevel": 14,
         "Name": "Meat Smoker",
         "Price": 15,
@@ -11328,6 +11682,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.moonshine_shelf",
         "UnlockLevel": 10,
         "Name": "Moonshine Shelf",
         "Price": 12000,
@@ -11360,6 +11715,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.road_worn_guitar",
         "UnlockLevel": 10,
         "Name": "Road Worn Guitar",
         "Price": 5000,
@@ -11392,6 +11748,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.rotisserie",
         "UnlockLevel": 10,
         "Name": "Rotisserie",
         "Price": 20,
@@ -11424,6 +11781,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zombie_cowboy_painting",
         "UnlockLevel": 14,
         "Name": "Zombie Cowboy Painting",
         "Price": 20,
@@ -11456,6 +11814,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.steam_powered_arcade_cabinet",
         "UnlockLevel": 16,
         "Name": "Steam Powered Arcade Cabinet",
         "Price": 45,
@@ -11488,6 +11847,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.steam_powered_chair",
         "UnlockLevel": 12,
         "Name": "Steam Powered Chair",
         "Price": 1000,
@@ -11520,6 +11880,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.cuthulhu_painting",
         "UnlockLevel": 16,
         "Name": "Cuthulhu Painting",
         "Price": 20,
@@ -11552,6 +11913,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.steam_powered_fridge",
         "UnlockLevel": 12,
         "Name": "Steam Powered Fridge",
         "Price": 10,
@@ -11584,6 +11946,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.clock_work_table",
         "UnlockLevel": 12,
         "Name": "Clock Work Table",
         "Price": 8000,
@@ -11616,6 +11979,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.phono_box",
         "UnlockLevel": 16,
         "Name": "Phono-Box",
         "Price": 20,
@@ -11648,6 +12012,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.steam_powered_stove",
         "UnlockLevel": 12,
         "Name": "Steam Powered Stove",
         "Price": 25,
@@ -11680,6 +12045,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.tesla_tv",
         "UnlockLevel": 12,
         "Name": "Tesla TV",
         "Price": 16000,
@@ -11712,6 +12078,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.victorian_counter",
         "UnlockLevel": 12,
         "Name": "Victorian Counter",
         "Price": 1500,
@@ -11744,6 +12111,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.victorian_sink",
         "UnlockLevel": 12,
         "Name": "Victorian Sink",
         "Price": 4250,
@@ -11776,6 +12144,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.victorian_window",
         "UnlockLevel": 12,
         "Name": "Victorian Window",
         "Price": 2500,
@@ -11808,6 +12177,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zen_wall",
         "UnlockLevel": 15,
         "Name": "Zen Wall",
         "Price": 1200,
@@ -11840,6 +12210,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zen_wall_2",
         "UnlockLevel": 15,
         "Name": "Zen Wall",
         "Price": 1200,
@@ -11872,6 +12243,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zen_wall_3",
         "UnlockLevel": 15,
         "Name": "Zen Wall",
         "Price": 1200,
@@ -11904,6 +12276,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zen_wall_4",
         "UnlockLevel": 15,
         "Name": "Zen Wall",
         "Price": 1200,
@@ -11936,6 +12309,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zen_wall_5",
         "UnlockLevel": 15,
         "Name": "Zen Wall",
         "Price": 1200,
@@ -11968,6 +12342,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zen_wall_6",
         "UnlockLevel": 15,
         "Name": "Zen Wall",
         "Price": 1200,
@@ -12000,6 +12375,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.babmoo_floor",
         "UnlockLevel": 15,
         "Name": "Babmoo Floor",
         "Price": 150,
@@ -12032,6 +12408,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.babmoo_floor_2",
         "UnlockLevel": 15,
         "Name": "Babmoo Floor",
         "Price": 150,
@@ -12064,6 +12441,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.babmoo_floor_3",
         "UnlockLevel": 15,
         "Name": "Babmoo Floor",
         "Price": 150,
@@ -12096,6 +12474,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.eastern_chair_2",
         "UnlockLevel": 15,
         "Name": "Eastern Chair 2",
         "Price": 1450,
@@ -12128,6 +12507,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.eastern_chair_3",
         "UnlockLevel": 9,
         "Name": "Eastern Chair 3",
         "Price": 5,
@@ -12160,6 +12540,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.dojo_counter",
         "UnlockLevel": 15,
         "Name": "Dojo Counter",
         "Price": 1500,
@@ -12192,6 +12573,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.dojo_sink",
         "UnlockLevel": 15,
         "Name": "Dojo Sink",
         "Price": 5500,
@@ -12224,6 +12606,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.cherry_blossom_lantern",
         "UnlockLevel": 18,
         "Name": "Cherry Blossom Lantern",
         "Price": 10,
@@ -12256,6 +12639,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.blue_lantern",
         "UnlockLevel": 15,
         "Name": "Blue Lantern",
         "Price": 888,
@@ -12288,6 +12672,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.eastern_table_2",
         "UnlockLevel": 15,
         "Name": "Eastern Table 2",
         "Price": 2450,
@@ -12320,6 +12705,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.eastern_table_3",
         "UnlockLevel": 9,
         "Name": "Eastern Table 3",
         "Price": 5,
@@ -12352,6 +12738,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wall_fan",
         "UnlockLevel": 15,
         "Name": "Wall Fan",
         "Price": 10,
@@ -12384,6 +12771,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.ninja_scroll",
         "UnlockLevel": 15,
         "Name": "Ninja Scroll",
         "Price": 15,
@@ -12416,6 +12804,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.ninja_weapons",
         "UnlockLevel": 18,
         "Name": "Ninja Weapons",
         "Price": 25,
@@ -12448,6 +12837,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.bling_table",
         "UnlockLevel": 15,
         "Name": "Bling Table",
         "Price": 10000,
@@ -12480,6 +12870,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.bling_chair",
         "UnlockLevel": 15,
         "Name": "Bling Chair",
         "Price": 6000,
@@ -12512,6 +12903,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.standard_pizza_oven",
         "UnlockLevel": 15,
         "Name": "Standard Pizza Oven",
         "Price": 5000,
@@ -12544,6 +12936,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.brick_oven_pizza",
         "UnlockLevel": 15,
         "Name": "Brick Oven Pizza",
         "Price": 11000,
@@ -12576,6 +12969,7 @@
         "U23": 391
     },
     {
+        "ZcrId": "furniture.deep_dish_oven",
         "UnlockLevel": 15,
         "Name": "Deep Dish Oven",
         "Price": 15,
@@ -12608,6 +13002,7 @@
         "U23": 392
     },
     {
+        "ZcrId": "furniture.italian_stallion_pizza_oven",
         "UnlockLevel": 15,
         "Name": "Italian Stallion Pizza Oven",
         "Price": 20,
@@ -12640,6 +13035,7 @@
         "U23": 393
     },
     {
+        "ZcrId": "furniture.pizza",
         "UnlockLevel": 255,
         "Name": "Pizza",
         "Price": 0,
@@ -12672,6 +13068,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.burnt_pizza",
         "UnlockLevel": 255,
         "Name": "Burnt Pizza",
         "Price": 0,
@@ -12704,6 +13101,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.economic_grill",
         "UnlockLevel": 16,
         "Name": "Economic Grill",
         "Price": 12000,
@@ -12736,6 +13134,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.corporate_grill",
         "UnlockLevel": 16,
         "Name": "Corporate Grill",
         "Price": 15,
@@ -12768,6 +13167,7 @@
         "U23": 397
     },
     {
+        "ZcrId": "furniture.t_8000_grill",
         "UnlockLevel": 16,
         "Name": "T-8000 Grill",
         "Price": 20,
@@ -12800,6 +13200,7 @@
         "U23": 398
     },
     {
+        "ZcrId": "furniture.bbq",
         "UnlockLevel": 255,
         "Name": "BBQ",
         "Price": 0,
@@ -12832,6 +13233,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.burnt_bbq",
         "UnlockLevel": 255,
         "Name": "Burnt BBQ",
         "Price": 0,
@@ -12864,6 +13266,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.donkey_donation_box",
         "UnlockLevel": 16,
         "Name": "Donkey Donation Box",
         "Price": 50,
@@ -12896,6 +13299,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.elephant_donation_box",
         "UnlockLevel": 16,
         "Name": "Elephant Donation Box",
         "Price": 50,
@@ -12928,6 +13332,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.elephant_wall_poster",
         "UnlockLevel": 16,
         "Name": "Elephant Wall Poster",
         "Price": 3000,
@@ -12960,6 +13365,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.donkey_wall_poster",
         "UnlockLevel": 16,
         "Name": "Donkey Wall Poster",
         "Price": 3000,
@@ -12992,6 +13398,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.campaign_decoration",
         "UnlockLevel": 16,
         "Name": "Campaign Decoration",
         "Price": 1200,
@@ -13024,6 +13431,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.campaign_banner",
         "UnlockLevel": 16,
         "Name": "Campaign Banner",
         "Price": 1200,
@@ -13056,6 +13464,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.vote_now_poster",
         "UnlockLevel": 16,
         "Name": "Vote Now Poster",
         "Price": 25,
@@ -13088,6 +13497,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zombie_vote_now_poster",
         "UnlockLevel": 16,
         "Name": "Zombie Vote Now Poster",
         "Price": 25,
@@ -13120,6 +13530,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.traditional_estufa",
         "UnlockLevel": 5,
         "Name": "Traditional Estufa",
         "Price": 6000,
@@ -13152,6 +13563,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.chiminea_estufa",
         "UnlockLevel": 5,
         "Name": "Chiminea Estufa",
         "Price": 15,
@@ -13184,6 +13596,7 @@
         "U23": 410
     },
     {
+        "ZcrId": "furniture.estufa_del_jefe",
         "UnlockLevel": 5,
         "Name": "Estufa Del Jefe",
         "Price": 20,
@@ -13216,6 +13629,7 @@
         "U23": 411
     },
     {
+        "ZcrId": "furniture.mexican_food",
         "UnlockLevel": 255,
         "Name": "Mexican Food",
         "Price": 0,
@@ -13248,6 +13662,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.burnt_mexican_food",
         "UnlockLevel": 255,
         "Name": "Burnt Mexican Food",
         "Price": 0,
@@ -13280,6 +13695,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.aztec_calendar",
         "UnlockLevel": 5,
         "Name": "Aztec Calendar",
         "Price": 2400,
@@ -13312,6 +13728,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pinata",
         "UnlockLevel": 5,
         "Name": "Pinata",
         "Price": 20,
@@ -13344,6 +13761,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.skeleton_chair",
         "UnlockLevel": 5,
         "Name": "Skeleton Chair",
         "Price": 2,
@@ -13376,6 +13794,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.skeleton_table",
         "UnlockLevel": 5,
         "Name": "Skeleton Table",
         "Price": 2400,
@@ -13408,6 +13827,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.aztec_stone_wall",
         "UnlockLevel": 5,
         "Name": "Aztec Stone Wall",
         "Price": 2400,
@@ -13440,6 +13860,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.day_of_the_dead_altar",
         "UnlockLevel": 5,
         "Name": "Day of the Dead Altar",
         "Price": 20,
@@ -13472,6 +13893,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.wall_mounted_candles",
         "UnlockLevel": 5,
         "Name": "Wall Mounted Candles",
         "Price": 1000,
@@ -13504,6 +13926,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.skull_ptural_lamp",
         "UnlockLevel": 5,
         "Name": "Skull-ptural Lamp",
         "Price": 15,
@@ -13536,6 +13959,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.monster_movie_poster",
         "UnlockLevel": 12,
         "Name": "Monster Movie Poster",
         "Price": 20,
@@ -13568,6 +13992,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.star_walk_tiles",
         "UnlockLevel": 10,
         "Name": "Star Walk Tiles",
         "Price": 400,
@@ -13600,6 +14025,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zombie_golden_award",
         "UnlockLevel": 12,
         "Name": "Zombie Golden Award",
         "Price": 30,
@@ -13632,6 +14058,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.director_chair",
         "UnlockLevel": 11,
         "Name": "Director Chair",
         "Price": 2,
@@ -13664,6 +14091,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.clapper_table",
         "UnlockLevel": 11,
         "Name": "Clapper Table",
         "Price": 2500,
@@ -13696,6 +14124,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.film_reel",
         "UnlockLevel": 11,
         "Name": "Film Reel",
         "Price": 2,
@@ -13728,6 +14157,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.film_set_light",
         "UnlockLevel": 10,
         "Name": "Film Set Light",
         "Price": 5,
@@ -13760,6 +14190,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.witch_potion_stove",
         "UnlockLevel": 8,
         "Name": "Witch potion Stove",
         "Price": 8000,
@@ -13792,6 +14223,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.lava_stove",
         "UnlockLevel": 8,
         "Name": "Lava Stove",
         "Price": 15,
@@ -13824,6 +14256,7 @@
         "U23": 430
     },
     {
+        "ZcrId": "furniture.fiery_dragon_stove",
         "UnlockLevel": 8,
         "Name": "Fiery Dragon Stove",
         "Price": 20,
@@ -13856,6 +14289,7 @@
         "U23": 431
     },
     {
+        "ZcrId": "furniture.legendary_sword",
         "UnlockLevel": 9,
         "Name": "Legendary Sword",
         "Price": 20,
@@ -13888,6 +14322,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.king_s_table",
         "UnlockLevel": 9,
         "Name": "King's Table",
         "Price": 5,
@@ -13920,6 +14355,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.king_s_throne",
         "UnlockLevel": 9,
         "Name": "King's Throne",
         "Price": 5,
@@ -13952,6 +14388,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.tavern_table",
         "UnlockLevel": 8,
         "Name": "Tavern Table",
         "Price": 1200,
@@ -13984,6 +14421,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.tavern_chair",
         "UnlockLevel": 8,
         "Name": "Tavern Chair",
         "Price": 1200,
@@ -14016,6 +14454,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.big_stones_wallpaper",
         "UnlockLevel": 8,
         "Name": "Big Stones Wallpaper",
         "Price": 300,
@@ -14048,6 +14487,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.stained_glass_window",
         "UnlockLevel": 9,
         "Name": "Stained Glass Window",
         "Price": 3,
@@ -14080,6 +14520,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.sword_shield",
         "UnlockLevel": 8,
         "Name": "Sword \u0026 Shield",
         "Price": 2,
@@ -14112,6 +14553,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.the_zombie_book",
         "UnlockLevel": 8,
         "Name": "The Zombie Book",
         "Price": 15,
@@ -14144,6 +14586,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.medieval_tile",
         "UnlockLevel": 8,
         "Name": "Medieval Tile",
         "Price": 600,
@@ -14176,6 +14619,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.medieval_pod",
         "UnlockLevel": 255,
         "Name": "Medieval Pod",
         "Price": 0,
@@ -14208,6 +14652,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.burnt_medieval_pod",
         "UnlockLevel": 255,
         "Name": "Burnt Medieval Pod",
         "Price": 0,
@@ -14240,6 +14685,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_15x14",
         "UnlockLevel": 0,
         "Name": "Expand to 15x14",
         "Price": 150000,
@@ -14272,6 +14718,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.expand_to_15x14_2",
         "UnlockLevel": 0,
         "Name": "Expand to 15x14",
         "Price": 50,
@@ -14304,6 +14751,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.ship_steering_wheel",
         "UnlockLevel": 12,
         "Name": "Ship Steering Wheel",
         "Price": 5000,
@@ -14336,6 +14784,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.salad_bar",
         "UnlockLevel": 12,
         "Name": "Salad Bar",
         "Price": 35,
@@ -14368,6 +14817,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.book_shelf",
         "UnlockLevel": 12,
         "Name": "Book shelf",
         "Price": 2000,
@@ -14400,6 +14850,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.parrot_on_stand",
         "UnlockLevel": 12,
         "Name": "Parrot on Stand",
         "Price": 5,
@@ -14432,6 +14883,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.standard_cannon",
         "UnlockLevel": 12,
         "Name": "Standard Cannon",
         "Price": 20000,
@@ -14464,6 +14916,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.gold_cannon",
         "UnlockLevel": 12,
         "Name": "Gold Cannon",
         "Price": 30,
@@ -14496,6 +14949,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.treasure_map",
         "UnlockLevel": 12,
         "Name": "Treasure Map",
         "Price": 20,
@@ -14528,6 +14982,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.antique_wall_lamp",
         "UnlockLevel": 12,
         "Name": "Antique wall lamp",
         "Price": 1500,
@@ -14560,6 +15015,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.ship_window",
         "UnlockLevel": 12,
         "Name": "Ship window",
         "Price": 2500,
@@ -14592,6 +15048,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.treasure_chest",
         "UnlockLevel": 12,
         "Name": "Treasure Chest",
         "Price": 30,
@@ -14624,6 +15081,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pirate_table",
         "UnlockLevel": 12,
         "Name": "Pirate table",
         "Price": 5,
@@ -14656,6 +15114,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.pirate_chair",
         "UnlockLevel": 12,
         "Name": "Pirate chair",
         "Price": 1750,
@@ -14688,6 +15147,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.holy_water_fountain",
         "UnlockLevel": 13,
         "Name": "Holy water fountain",
         "Price": 10,
@@ -14720,6 +15180,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.garlic_wreath",
         "UnlockLevel": 13,
         "Name": "Garlic Wreath",
         "Price": 3,
@@ -14752,6 +15213,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.classic_coffin",
         "UnlockLevel": 13,
         "Name": "Classic Coffin",
         "Price": 25,
@@ -14784,6 +15246,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.gothic_column",
         "UnlockLevel": 13,
         "Name": "Gothic Column",
         "Price": 4000,
@@ -14816,6 +15279,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.stone_wall_2",
         "UnlockLevel": 13,
         "Name": "Stone Wall",
         "Price": 2000,
@@ -14848,6 +15312,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.gothic_arched_window",
         "UnlockLevel": 13,
         "Name": "Gothic Arched Window",
         "Price": 3000,
@@ -14880,6 +15345,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.spooky_pipe_organ",
         "UnlockLevel": 13,
         "Name": "Spooky Pipe Organ",
         "Price": 30,
@@ -14912,6 +15378,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.portrait_of_vlad",
         "UnlockLevel": 13,
         "Name": "Portrait of Vlad",
         "Price": 666000,
@@ -14944,6 +15411,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.portrait_of_vlad_2",
         "UnlockLevel": 13,
         "Name": "Portrait of Vlad",
         "Price": 75,
@@ -14976,6 +15444,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.gargoyle",
         "UnlockLevel": 13,
         "Name": "Gargoyle",
         "Price": 15,
@@ -15008,6 +15477,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.zombie_man_poster",
         "UnlockLevel": 14,
         "Name": "Zombie Man Poster",
         "Price": 30,
@@ -15040,6 +15510,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.supper_girl_poster",
         "UnlockLevel": 6,
         "Name": "Supper Girl Poster",
         "Price": 10,
@@ -15072,6 +15543,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mad_griller_wanted_poster",
         "UnlockLevel": 14,
         "Name": "Mad Griller Wanted Poster",
         "Price": 35,
@@ -15104,6 +15576,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.comics_spinner_racks",
         "UnlockLevel": 6,
         "Name": "Comics Spinner Racks",
         "Price": 18000,
@@ -15136,6 +15609,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.meteorite",
         "UnlockLevel": 7,
         "Name": "Meteorite",
         "Price": 25,
@@ -15168,6 +15642,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.super_hero_power_armor",
         "UnlockLevel": 14,
         "Name": "Super Hero Power Armor",
         "Price": 55,
@@ -15200,6 +15675,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.phonebooth",
         "UnlockLevel": 9,
         "Name": "Phonebooth",
         "Price": 20,
@@ -15232,6 +15708,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.hero_research_center",
         "UnlockLevel": 14,
         "Name": "Hero Research Center",
         "Price": 50,
@@ -15264,6 +15741,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.comics_stand",
         "UnlockLevel": 14,
         "Name": "Comics Stand",
         "Price": 40,
@@ -15296,6 +15774,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.super_stove",
         "UnlockLevel": 14,
         "Name": "Super Stove",
         "Price": 10000,
@@ -15328,6 +15807,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.spectro_tastilizer",
         "UnlockLevel": 14,
         "Name": "Spectro-Tastilizer",
         "Price": 15,
@@ -15360,6 +15840,7 @@
         "U23": 478
     },
     {
+        "ZcrId": "furniture.the_flavor_matrix",
         "UnlockLevel": 14,
         "Name": "The Flavor Matrix",
         "Price": 20,
@@ -15392,6 +15873,7 @@
         "U23": 479
     },
     {
+        "ZcrId": "furniture.superhero_pod",
         "UnlockLevel": 255,
         "Name": "SuperHero Pod",
         "Price": 0,
@@ -15424,6 +15906,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.burnt_superhero_pod",
         "UnlockLevel": 255,
         "Name": "Burnt SuperHero Pod",
         "Price": 0,
@@ -15456,6 +15939,7 @@
         "U23": 0
     },
     {
+        "ZcrId": "furniture.mint_condition_comic",
         "UnlockLevel": 14,
         "Name": "Mint Condition Comic",
         "Price": 200000,

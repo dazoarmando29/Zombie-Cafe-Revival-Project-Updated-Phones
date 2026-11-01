@@ -1,5 +1,6 @@
 [
     {
+        "ZcrId": "char.man",
         "CafeLevelRequired": 0,
         "U2": 8,
         "U3": 0,
@@ -29,6 +30,7 @@
         "ZombieDescription": "Just your average, brain-hungry zombie."
     },
     {
+        "ZcrId": "char.senior",
         "CafeLevelRequired": 0,
         "U2": 4,
         "U3": 0,
@@ -58,6 +60,7 @@
         "ZombieDescription": "Just your average, brain-hungry zombie."
     },
     {
+        "ZcrId": "char.woman",
         "CafeLevelRequired": 0,
         "U2": 10,
         "U3": 0,
@@ -87,6 +90,7 @@
         "ZombieDescription": "Just  your average, brain-hungry zombie."
     },
     {
+        "ZcrId": "char.hipster",
         "CafeLevelRequired": 0,
         "U2": 8,
         "U3": 0,
@@ -116,6 +120,7 @@
         "ZombieDescription": "Just  your average, brain-hungry zombie."
     },
     {
+        "ZcrId": "char.cashier",
         "CafeLevelRequired": 0,
         "U2": 10,
         "U3": 0,
@@ -145,6 +150,7 @@
         "ZombieDescription": "Just  your average, brain-hungry zombie."
     },
     {
+        "ZcrId": "char.couch_potato",
         "CafeLevelRequired": 0,
         "U2": 3,
         "U3": 0,
@@ -174,6 +180,7 @@
         "ZombieDescription": "A somewhat mediocre zombie with no previous job experience."
     },
     {
+        "ZcrId": "char.couch_potato_2",
         "CafeLevelRequired": 0,
         "U2": 2,
         "U3": 0,
@@ -203,6 +210,7 @@
         "ZombieDescription": "A somewhat  mediocre zombie with no previous job experience."
     },
     {
+        "ZcrId": "char.telemarketer",
         "CafeLevelRequired": 0,
         "U2": 3,
         "U3": 102,
@@ -232,6 +240,7 @@
         "ZombieDescription": "In life, he was sapped of his will to live by brain-dead customers. In death, he's returning the favor."
     },
     {
+        "ZcrId": "char.telemarketer_2",
         "CafeLevelRequired": 0,
         "U2": 5,
         "U3": 0,
@@ -261,6 +270,7 @@
         "ZombieDescription": "In life, she was sapped of her will to live by brain-dead customers. In death, she's returning the favor."
     },
     {
+        "ZcrId": "char.teacher",
         "CafeLevelRequired": 0,
         "U2": 2,
         "U3": 0,
@@ -290,6 +300,7 @@
         "ZombieDescription": "If he can't  feed your brain, he'll eat it instead. Ah, who're we kidding? He'll eat it anyway."
     },
     {
+        "ZcrId": "char.teacher_2",
         "CafeLevelRequired": 0,
         "U2": 5,
         "U3": 0,
@@ -319,6 +330,7 @@
         "ZombieDescription": "If she can't  feed your brain, she'll eat it instead. Ah, who're we kidding? She'll eat it anyway."
     },
     {
+        "ZcrId": "char.accountant",
         "CafeLevelRequired": 0,
         "U2": 5,
         "U3": 0,
@@ -348,6 +360,7 @@
         "ZombieDescription": "Crunching numbers takes more concentration than nibbling flesh."
     },
     {
+        "ZcrId": "char.yoga_instructor",
         "CafeLevelRequired": 0,
         "U2": 3,
         "U3": 51,
@@ -377,6 +390,7 @@
         "ZombieDescription": "All that  physical contortion builds up a healthy appetite. For brains."
     },
     {
+        "ZcrId": "char.businessman",
         "CafeLevelRequired": 0,
         "U2": 5,
         "U3": 0,
@@ -406,6 +420,7 @@
         "ZombieDescription": "He's a former cubicle zombie who now has better working hours and a brain-inclusive benefit  package."
     },
     {
+        "ZcrId": "char.businessman_2",
         "CafeLevelRequired": 0,
         "U2": 5,
         "U3": 0,
@@ -435,6 +450,7 @@
         "ZombieDescription": "He's a former cubicle zombie who now has better working hours and a brain-inclusive benefit  package."
     },
     {
+        "ZcrId": "char.businesswoman",
         "CafeLevelRequired": 0,
         "U2": 10,
         "U3": 0,
@@ -464,6 +480,7 @@
         "ZombieDescription": "She's a former cubicle zombie who now has better working hours and a brain-inclusive benefit  package."
     },
     {
+        "ZcrId": "char.politician",
         "CafeLevelRequired": 6,
         "U2": 5,
         "U3": 102,
@@ -493,6 +510,7 @@
         "ZombieDescription": "He's gone from serving the public to serving your customers - just  don't  let  him kiss any babies."
     },
     {
+        "ZcrId": "char.politician_2",
         "CafeLevelRequired": 2,
         "U2": 5,
         "U3": 51,
@@ -522,6 +540,7 @@
         "ZombieDescription": "She's gone from serving the public to serving your customers with a brain-dead smile."
     },
     {
+        "ZcrId": "char.executive",
         "CafeLevelRequired": 9,
         "U2": 4,
         "U3": 153,
@@ -551,6 +570,7 @@
         "ZombieDescription": "He puts the \"dead\" in deadline and will only head-hunt competing clientele."
     },
     {
+        "ZcrId": "char.executive_2",
         "CafeLevelRequired": 9,
         "U2": 4,
         "U3": 153,
@@ -580,6 +600,7 @@
         "ZombieDescription": "She puts the \"dead\" in deadline and will only head-hunt competing clientele."
     },
     {
+        "ZcrId": "char.ceo",
         "CafeLevelRequired": 12,
         "U2": 3,
         "U3": 204,
@@ -609,6 +630,7 @@
         "ZombieDescription": "Knows how to be on the winning end of a business deal, even one that involves brains."
     },
     {
+        "ZcrId": "char.ceo_2",
         "CafeLevelRequired": 12,
         "U2": 3,
         "U3": 204,
@@ -638,6 +660,7 @@
         "ZombieDescription": "Knows how to be on the winning end of a business deal, even one that involves brains."
     },
     {
+        "ZcrId": "char.retiree",
         "CafeLevelRequired": 0,
         "U2": 4,
         "U3": 0,
@@ -667,6 +690,7 @@
         "ZombieDescription": "The best  part  of retirement  is not  having to watch what  you eat. Like brains."
     },
     {
+        "ZcrId": "char.retiree_2",
         "CafeLevelRequired": 0,
         "U2": 7,
         "U3": 0,
@@ -696,6 +720,7 @@
         "ZombieDescription": "The best  part  of retirement  is not  having to watch what  you eat. Like brains."
     },
     {
+        "ZcrId": "char.veteran",
         "CafeLevelRequired": 0,
         "U2": 4,
         "U3": 51,
@@ -725,6 +750,7 @@
         "ZombieDescription": "He's tough. He's fought  in wars, ya know. World Wars. Now he's serving your customers."
     },
     {
+        "ZcrId": "char.centenarian",
         "CafeLevelRequired": 6,
         "U2": 1,
         "U3": 102,
@@ -754,6 +780,7 @@
         "ZombieDescription": "He's 100 years old and can barely make it  across the room, let  alone eat  anybody."
     },
     {
+        "ZcrId": "char.teenager",
         "CafeLevelRequired": 0,
         "U2": 5,
         "U3": 0,
@@ -783,6 +810,7 @@
         "ZombieDescription": "He's full of youthful energy and he might impulsively pick off your customers while he saves up for a car."
     },
     {
+        "ZcrId": "char.punk",
         "CafeLevelRequired": 7,
         "U2": 2,
         "U3": 51,
@@ -812,6 +840,7 @@
         "ZombieDescription": "He sticks to the man by chasing him and eating his brains."
     },
     {
+        "ZcrId": "char.underachiever",
         "CafeLevelRequired": 0,
         "U2": 4,
         "U3": 51,
@@ -841,6 +870,7 @@
         "ZombieDescription": "He never did like homework. Now he eats any brains he can get  his hands on."
     },
     {
+        "ZcrId": "char.class_clown",
         "CafeLevelRequired": 11,
         "U2": 2,
         "U3": 102,
@@ -870,6 +900,7 @@
         "ZombieDescription": "You might  think he wants attention, but  really, he just  wants your brain."
     },
     {
+        "ZcrId": "char.nerd",
         "CafeLevelRequired": 2,
         "U2": 8,
         "U3": 0,
@@ -899,6 +930,7 @@
         "ZombieDescription": "He used to run for class President, now he just runs. Fast. And hunts down enemy clientele."
     },
     {
+        "ZcrId": "char.mathlete",
         "CafeLevelRequired": 2,
         "U2": 3,
         "U3": 51,
@@ -928,6 +960,7 @@
         "ZombieDescription": "He can eat  brains as fast as he can do calculus in his head."
     },
     {
+        "ZcrId": "char.cio",
         "CafeLevelRequired": 10,
         "U2": 1,
         "U3": 102,
@@ -957,6 +990,7 @@
         "ZombieDescription": "Ex-billionaire.  Does not declare his tips as taxable income."
     },
     {
+        "ZcrId": "char.construction_worker",
         "CafeLevelRequired": 3,
         "U2": 6,
         "U3": 0,
@@ -986,6 +1020,7 @@
         "ZombieDescription": "Fights with the strength of Samson and serves with all the charm of an old work boot."
     },
     {
+        "ZcrId": "char.engineer",
         "CafeLevelRequired": 4,
         "U2": 5,
         "U3": 102,
@@ -1015,6 +1050,7 @@
         "ZombieDescription": "He used to be a construction engineer. Now he engineers the PAIN."
     },
     {
+        "ZcrId": "char.foreman",
         "CafeLevelRequired": 7,
         "U2": 3,
         "U3": 153,
@@ -1044,6 +1080,7 @@
         "ZombieDescription": "Foremanned is forearmed. To the teeth."
     },
     {
+        "ZcrId": "char.cop",
         "CafeLevelRequired": 5,
         "U2": 7,
         "U3": 0,
@@ -1073,6 +1110,7 @@
         "ZombieDescription": "He's still on duty. You have the right  to remain silent... after he eats your brains."
     },
     {
+        "ZcrId": "char.traffic_cop",
         "CafeLevelRequired": 10,
         "U2": 2,
         "U3": 0,
@@ -1102,6 +1140,7 @@
         "ZombieDescription": "Knows how to handle customers, and keep a cool head.  Other heads he might eat."
     },
     {
+        "ZcrId": "char.sergeant",
         "CafeLevelRequired": 7,
         "U2": 3,
         "U3": 102,
@@ -1131,6 +1170,7 @@
         "ZombieDescription": "The former head of the police dept. This is one zombie that knows how to serve and protect."
     },
     {
+        "ZcrId": "char.local_hero",
         "CafeLevelRequired": 8,
         "U2": 1,
         "U3": 153,
@@ -1160,6 +1200,7 @@
         "ZombieDescription": "He both serves and protects YOUR customers, but not anybody else's..."
     },
     {
+        "ZcrId": "char.boxer",
         "CafeLevelRequired": 7,
         "U2": 6,
         "U3": 51,
@@ -1189,6 +1230,7 @@
         "ZombieDescription": "Floats like a butterfly, stings like a bee. Eats just about anybody."
     },
     {
+        "ZcrId": "char.has_been",
         "CafeLevelRequired": 15,
         "U2": 2,
         "U3": 0,
@@ -1218,6 +1260,7 @@
         "ZombieDescription": "This once proud fighter is regaining his former glory by taking down customers."
     },
     {
+        "ZcrId": "char.the_champ",
         "CafeLevelRequired": 7,
         "U2": 1,
         "U3": 153,
@@ -1247,6 +1290,7 @@
         "ZombieDescription": "(Self-proclaimed) greatest zombie of all time! Packs a punch and charms the customers."
     },
     {
+        "ZcrId": "char.football_player",
         "CafeLevelRequired": 3,
         "U2": 8,
         "U3": 51,
@@ -1276,6 +1320,7 @@
         "ZombieDescription": "He's got  a lot  of muscle and a lot of hustle. He'll tackle anything with brains."
     },
     {
+        "ZcrId": "char.benchwarmer",
         "CafeLevelRequired": 15,
         "U2": 2,
         "U3": 0,
@@ -1305,6 +1350,7 @@
         "ZombieDescription": "His helmet  protects his head.  Not that there's much in there worth protecting."
     },
     {
+        "ZcrId": "char.star_player",
         "CafeLevelRequired": 7,
         "U2": 2,
         "U3": 153,
@@ -1334,6 +1380,7 @@
         "ZombieDescription": "This football star's tried pigskin. Now he wants human flesh."
     },
     {
+        "ZcrId": "char.clown",
         "CafeLevelRequired": 8,
         "U2": 5,
         "U3": 51,
@@ -1363,6 +1410,7 @@
         "ZombieDescription": "He's hungry for brains and a good punch line."
     },
     {
+        "ZcrId": "char.stoogey_the_clown",
         "CafeLevelRequired": 8,
         "U2": 1,
         "U3": 0,
@@ -1392,6 +1440,7 @@
         "ZombieDescription": "Stoogey the clown knew how to make people laugh. Now it is Stoogey who will have the last  laugh."
     },
     {
+        "ZcrId": "char.fire_fighter",
         "CafeLevelRequired": 9,
         "U2": 7,
         "U3": 0,
@@ -1421,6 +1470,7 @@
         "ZombieDescription": "Only YOU can prevent  this Firefighter from going away hungry by getting him some brains."
     },
     {
+        "ZcrId": "char.fire_chief",
         "CafeLevelRequired": 10,
         "U2": 2,
         "U3": 153,
@@ -1450,6 +1500,7 @@
         "ZombieDescription": "Putting out  fires and inspecting buildings really works up an appetite...for BRAINS!!"
     },
     {
+        "ZcrId": "char.sumo_wrestler",
         "CafeLevelRequired": 8,
         "U2": 4,
         "U3": 102,
@@ -1479,6 +1530,7 @@
         "ZombieDescription": "He outweighs all his victims by at least  100lbs, but he's light on his feet."
     },
     {
+        "ZcrId": "char.celebrity",
         "CafeLevelRequired": 10,
         "U2": 7,
         "U3": 102,
@@ -1508,6 +1560,7 @@
         "ZombieDescription": "She used to have a problem with tabloid reporters, but ate them."
     },
     {
+        "ZcrId": "char.supermodel",
         "CafeLevelRequired": 12,
         "U2": 2,
         "U3": 153,
@@ -1537,6 +1590,7 @@
         "ZombieDescription": "She starved herself in life, now she's chowing down in death. She might mix the customers up with the entrees."
     },
     {
+        "ZcrId": "char.movie_star",
         "CafeLevelRequired": 12,
         "U2": 2,
         "U3": 204,
@@ -1566,6 +1620,7 @@
         "ZombieDescription": "Doesn't she look familiar? All she has to do is flash her toothless smile and the customers line up for brain removal."
     },
     {
+        "ZcrId": "char.enemy_chef",
         "CafeLevelRequired": 255,
         "U2": 255,
         "U3": 205,
@@ -1595,6 +1650,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.chef",
         "CafeLevelRequired": 0,
         "U2": 0,
         "U3": 0,
@@ -1624,6 +1680,7 @@
         "ZombieDescription": "The head chef of the cafe."
     },
     {
+        "ZcrId": "char.chef_2",
         "CafeLevelRequired": 0,
         "U2": 0,
         "U3": 0,
@@ -1653,6 +1710,7 @@
         "ZombieDescription": "The head chef of the cafe."
     },
     {
+        "ZcrId": "char.chef_3",
         "CafeLevelRequired": 0,
         "U2": 0,
         "U3": 0,
@@ -1682,6 +1740,7 @@
         "ZombieDescription": "The head chef of the cafe."
     },
     {
+        "ZcrId": "char.chef_4",
         "CafeLevelRequired": 0,
         "U2": 0,
         "U3": 0,
@@ -1711,6 +1770,7 @@
         "ZombieDescription": "The head chef of the cafe."
     },
     {
+        "ZcrId": "char.chef_5",
         "CafeLevelRequired": 0,
         "U2": 0,
         "U3": 0,
@@ -1740,6 +1800,7 @@
         "ZombieDescription": "The head chef of the cafe."
     },
     {
+        "ZcrId": "char.chef_6",
         "CafeLevelRequired": 0,
         "U2": 0,
         "U3": 0,
@@ -1769,6 +1830,7 @@
         "ZombieDescription": "The head chef of the cafe."
     },
     {
+        "ZcrId": "char.chef_7",
         "CafeLevelRequired": 0,
         "U2": 0,
         "U3": 0,
@@ -1798,6 +1860,7 @@
         "ZombieDescription": "The head chef of the cafe."
     },
     {
+        "ZcrId": "char.chef_8",
         "CafeLevelRequired": 0,
         "U2": 0,
         "U3": 0,
@@ -1827,6 +1890,7 @@
         "ZombieDescription": "The head chef of the cafe."
     },
     {
+        "ZcrId": "char.chef_9",
         "CafeLevelRequired": 0,
         "U2": 0,
         "U3": 0,
@@ -1856,6 +1920,7 @@
         "ZombieDescription": "The head chef of the cafe."
     },
     {
+        "ZcrId": "char.enemy_chef_2",
         "CafeLevelRequired": 255,
         "U2": 255,
         "U3": 205,
@@ -1885,6 +1950,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.enemy_chef_3",
         "CafeLevelRequired": 255,
         "U2": 255,
         "U3": 205,
@@ -1914,6 +1980,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.enemy_chef_4",
         "CafeLevelRequired": 255,
         "U2": 255,
         "U3": 205,
@@ -1943,6 +2010,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.enemy_chef_5",
         "CafeLevelRequired": 255,
         "U2": 255,
         "U3": 205,
@@ -1972,6 +2040,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.enemy_chef_6",
         "CafeLevelRequired": 255,
         "U2": 255,
         "U3": 205,
@@ -2001,6 +2070,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.enemy_chef_7",
         "CafeLevelRequired": 255,
         "U2": 255,
         "U3": 205,
@@ -2030,6 +2100,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.enemy_chef_8",
         "CafeLevelRequired": 255,
         "U2": 255,
         "U3": 205,
@@ -2059,6 +2130,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.mad_scientist_chef",
         "CafeLevelRequired": 255,
         "U2": 255,
         "U3": 205,
@@ -2088,6 +2160,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.chef_10",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2117,6 +2190,7 @@
         "ZombieDescription": "He's the head Zombie of this brain-devouring establishment."
     },
     {
+        "ZcrId": "char.chef_11",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2146,6 +2220,7 @@
         "ZombieDescription": "She's the head Zombie of this brain-devouring establishment."
     },
     {
+        "ZcrId": "char.chef_12",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2175,6 +2250,7 @@
         "ZombieDescription": "He's shifting his paradigm to a more brain-centric action plan."
     },
     {
+        "ZcrId": "char.chef_13",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2204,6 +2280,7 @@
         "ZombieDescription": "She's on the bleeding edge of brain management."
     },
     {
+        "ZcrId": "char.chef_14",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2233,6 +2310,7 @@
         "ZombieDescription": "She's broken through the glass ceiling of zombie restaurant management and devoured everyone on the other side."
     },
     {
+        "ZcrId": "char.chef_15",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2262,6 +2340,7 @@
         "ZombieDescription": "Now he's got that fast food job he's always wanted. How fast can YOU run?"
     },
     {
+        "ZcrId": "char.chef_16",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2291,6 +2370,7 @@
         "ZombieDescription": "It's funny how your menu can change when you don't have any taste buds."
     },
     {
+        "ZcrId": "char.chef_17",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2320,6 +2400,7 @@
         "ZombieDescription": "You gave him a wedgie, now he'll eat your brains."
     },
     {
+        "ZcrId": "char.reality_star",
         "CafeLevelRequired": 15,
         "U2": 4,
         "U3": 51,
@@ -2349,6 +2430,7 @@
         "ZombieDescription": "She's been voted out of the land of the living."
     },
     {
+        "ZcrId": "char.mikazuna",
         "CafeLevelRequired": 12,
         "U2": 2,
         "U3": 153,
@@ -2378,6 +2460,7 @@
         "ZombieDescription": "He weighs a quarter of a ton, and he's still hungry...for BRAINS!"
     },
     {
+        "ZcrId": "char.yokozuna",
         "CafeLevelRequired": 12,
         "U2": 2,
         "U3": 153,
@@ -2407,6 +2490,7 @@
         "ZombieDescription": "He weighs a quarter of a ton, and he's still hungry...for BRAINS!"
     },
     {
+        "ZcrId": "char.retro_boxer",
         "CafeLevelRequired": 15,
         "U2": 6,
         "U3": 51,
@@ -2436,6 +2520,7 @@
         "ZombieDescription": "Lucky for him, brains are above the belt."
     },
     {
+        "ZcrId": "char.middleweight",
         "CafeLevelRequired": 15,
         "U2": 6,
         "U3": 51,
@@ -2465,6 +2550,7 @@
         "ZombieDescription": "Lucky for him, brains are above the belt."
     },
     {
+        "ZcrId": "char.chef_18",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2494,6 +2580,7 @@
         "ZombieDescription": "His special today is brains with a side of brains."
     },
     {
+        "ZcrId": "char.veteran_cop",
         "CafeLevelRequired": 15,
         "U2": 7,
         "U3": 0,
@@ -2523,6 +2610,7 @@
         "ZombieDescription": "He's still taking a bite out of crime...and some customers."
     },
     {
+        "ZcrId": "char.football_player_2",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2552,6 +2640,7 @@
         "ZombieDescription": "He's got  a lot  of muscle and a lot of hustle. He'll tackle anything with brains."
     },
     {
+        "ZcrId": "char.engineer_2",
         "CafeLevelRequired": 4,
         "U2": 0,
         "U3": 0,
@@ -2581,6 +2670,7 @@
         "ZombieDescription": "He used to be a construction engineer. Now he engineers the PAIN."
     },
     {
+        "ZcrId": "char.retiree_3",
         "CafeLevelRequired": 5,
         "U2": 0,
         "U3": 0,
@@ -2610,6 +2700,7 @@
         "ZombieDescription": "Age is less of an issue when you're an ageless undead."
     },
     {
+        "ZcrId": "char.veteran_2",
         "CafeLevelRequired": 6,
         "U2": 0,
         "U3": 0,
@@ -2639,6 +2730,7 @@
         "ZombieDescription": "He's tough. He's fought  in wars, ya know. World Wars. Now he's serving your customers."
     },
     {
+        "ZcrId": "char.the_champ_2",
         "CafeLevelRequired": 7,
         "U2": 0,
         "U3": 0,
@@ -2668,6 +2760,7 @@
         "ZombieDescription": "(Self-proclaimed) greatest  zombie of all time! Packs a punch and charms the customers."
     },
     {
+        "ZcrId": "char.local_hero_2",
         "CafeLevelRequired": 8,
         "U2": 0,
         "U3": 0,
@@ -2697,6 +2790,7 @@
         "ZombieDescription": "He both serves and protects YOUR customers, but  not  anybody else's..."
     },
     {
+        "ZcrId": "char.stoogey_the_clown_2",
         "CafeLevelRequired": 9,
         "U2": 0,
         "U3": 0,
@@ -2726,6 +2820,7 @@
         "ZombieDescription": "Stoogey the clown knew how to make people laugh. Now it  is Stoogey who will have the last  laugh."
     },
     {
+        "ZcrId": "char.fire_chief_2",
         "CafeLevelRequired": 10,
         "U2": 0,
         "U3": 0,
@@ -2755,6 +2850,7 @@
         "ZombieDescription": "Putting out  fires and inspecting buildings really works up an appetite...for BRAINS!!"
     },
     {
+        "ZcrId": "char.yokozuna_2",
         "CafeLevelRequired": 12,
         "U2": 0,
         "U3": 0,
@@ -2784,6 +2880,7 @@
         "ZombieDescription": "He weighs a quarter of a ton, and he's still hungry...for BRAINS!"
     },
     {
+        "ZcrId": "char.movie_star_2",
         "CafeLevelRequired": 12,
         "U2": 0,
         "U3": 0,
@@ -2813,6 +2910,7 @@
         "ZombieDescription": "Doesn't  she look familiar? All she has to do is flash her toothless smile and the customers line up for brain removal."
     },
     {
+        "ZcrId": "char.football_player_3",
         "CafeLevelRequired": 3,
         "U2": 0,
         "U3": 0,
@@ -2842,6 +2940,7 @@
         "ZombieDescription": "He's got  a lot  of muscle and a lot  of hustle. He'll tackle anything with brains."
     },
     {
+        "ZcrId": "char.engineer_3",
         "CafeLevelRequired": 4,
         "U2": 0,
         "U3": 0,
@@ -2871,6 +2970,7 @@
         "ZombieDescription": "He used to be a construction engineer. Now he engineers the PAIN."
     },
     {
+        "ZcrId": "char.retiree_4",
         "CafeLevelRequired": 5,
         "U2": 0,
         "U3": 0,
@@ -2900,6 +3000,7 @@
         "ZombieDescription": "Age is less of an issue when you're an ageless undead."
     },
     {
+        "ZcrId": "char.veteran_3",
         "CafeLevelRequired": 6,
         "U2": 0,
         "U3": 0,
@@ -2929,6 +3030,7 @@
         "ZombieDescription": "He's tough. He's fought in wars, ya know. World Wars. Now he's serving your customers."
     },
     {
+        "ZcrId": "char.the_champ_3",
         "CafeLevelRequired": 7,
         "U2": 0,
         "U3": 0,
@@ -2958,6 +3060,7 @@
         "ZombieDescription": "(Self-proclaimed) greatest zombie of all time! Packs a punch and charms the customers."
     },
     {
+        "ZcrId": "char.local_hero_3",
         "CafeLevelRequired": 8,
         "U2": 0,
         "U3": 0,
@@ -2987,6 +3090,7 @@
         "ZombieDescription": "He both serves and protects YOUR customers, but not anybody else's..."
     },
     {
+        "ZcrId": "char.stoogey_the_clown_3",
         "CafeLevelRequired": 9,
         "U2": 0,
         "U3": 0,
@@ -3016,6 +3120,7 @@
         "ZombieDescription": "Stoogey the clown knew how to make people laugh. Now it  is Stoogey who will have the last  laugh."
     },
     {
+        "ZcrId": "char.fire_chief_3",
         "CafeLevelRequired": 10,
         "U2": 0,
         "U3": 0,
@@ -3045,6 +3150,7 @@
         "ZombieDescription": "Putting out  fires and inspecting buildings really works up an appetite...for BRAINS!!"
     },
     {
+        "ZcrId": "char.yokozuna_3",
         "CafeLevelRequired": 12,
         "U2": 0,
         "U3": 0,
@@ -3074,6 +3180,7 @@
         "ZombieDescription": "He weighs a quarter of a ton, and he's still hungry...for BRAINS!"
     },
     {
+        "ZcrId": "char.movie_star_3",
         "CafeLevelRequired": 12,
         "U2": 0,
         "U3": 0,
@@ -3103,6 +3210,7 @@
         "ZombieDescription": "Doesn't  she look familiar? All she has to do is flash her toothless smile and the customers line up for brain removal."
     },
     {
+        "ZcrId": "char.robo",
         "CafeLevelRequired": 8,
         "U2": 0,
         "U3": 0,
@@ -3132,6 +3240,7 @@
         "ZombieDescription": "Part Robot. Part Zombie. All AWESOME."
     },
     {
+        "ZcrId": "char.captain_jack",
         "CafeLevelRequired": 10,
         "U2": 0,
         "U3": 0,
@@ -3161,6 +3270,7 @@
         "ZombieDescription": "Straight from Davy Jones' locker, he be plunderin' brains and cookin' up a fine meal."
     },
     {
+        "ZcrId": "char.cafe_chef",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -3190,6 +3300,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.diner_chef",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -3219,6 +3330,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.italian_chef",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -3248,6 +3360,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.asian_chef",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -3277,6 +3390,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.tex_mex_chef",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -3306,6 +3420,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.pub_chef",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -3335,6 +3450,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.french_chef",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -3364,6 +3480,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.mad_scientist_chef_2",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -3393,6 +3510,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.private",
         "CafeLevelRequired": 0,
         "U2": 2,
         "U3": 51,
@@ -3422,6 +3540,7 @@
         "ZombieDescription": "He's the lowest rank of undead."
     },
     {
+        "ZcrId": "char.colonel",
         "CafeLevelRequired": 7,
         "U2": 3,
         "U3": 51,
@@ -3451,6 +3570,7 @@
         "ZombieDescription": "He goes AWOL if he doesn't get his daily ration of brains."
     },
     {
+        "ZcrId": "char.corporal",
         "CafeLevelRequired": 9,
         "U2": 4,
         "U3": 51,
@@ -3480,6 +3600,7 @@
         "ZombieDescription": "Zulu Oscar Mike Bravo India Echo!"
     },
     {
+        "ZcrId": "char.old_hippie",
         "CafeLevelRequired": 4,
         "U2": 2,
         "U3": 51,
@@ -3509,6 +3630,7 @@
         "ZombieDescription": "If you remember the 60s, he didn't eat you."
     },
     {
+        "ZcrId": "char.young_male_hippie",
         "CafeLevelRequired": 6,
         "U2": 3,
         "U3": 51,
@@ -3538,6 +3660,7 @@
         "ZombieDescription": "He's into a new type of \"head trip\" now."
     },
     {
+        "ZcrId": "char.young_female_hippie",
         "CafeLevelRequired": 8,
         "U2": 4,
         "U3": 51,
@@ -3567,6 +3690,7 @@
         "ZombieDescription": "She's hip to the brain movement."
     },
     {
+        "ZcrId": "char.corporal_chef",
         "CafeLevelRequired": 9,
         "U2": 0,
         "U3": 51,
@@ -3596,6 +3720,7 @@
         "ZombieDescription": "He loves the smell of brains in the morning."
     },
     {
+        "ZcrId": "char.hippie_chef",
         "CafeLevelRequired": 4,
         "U2": 0,
         "U3": 51,
@@ -3625,6 +3750,7 @@
         "ZombieDescription": "Her brains are organically grown and harvested."
     },
     {
+        "ZcrId": "char.corporal_chef_2",
         "CafeLevelRequired": 9,
         "U2": 0,
         "U3": 51,
@@ -3654,6 +3780,7 @@
         "ZombieDescription": "He loves the smell of brains in the morning."
     },
     {
+        "ZcrId": "char.hippie_chef_2",
         "CafeLevelRequired": 4,
         "U2": 0,
         "U3": 51,
@@ -3683,6 +3810,7 @@
         "ZombieDescription": "Her brains are organically grown and harvested."
     },
     {
+        "ZcrId": "char.frankenstein",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -3712,6 +3840,7 @@
         "ZombieDescription": "The ORIGINAL zombie. His friends call him Frank."
     },
     {
+        "ZcrId": "char.mummy_chef",
         "CafeLevelRequired": 5,
         "U2": 0,
         "U3": 0,
@@ -3741,6 +3870,7 @@
         "ZombieDescription": "She's a single, working mummy."
     },
     {
+        "ZcrId": "char.male_mummy_chef",
         "CafeLevelRequired": 6,
         "U2": 0,
         "U3": 0,
@@ -3770,6 +3900,7 @@
         "ZombieDescription": "He's all wrapped up in his job."
     },
     {
+        "ZcrId": "char.witch_chef",
         "CafeLevelRequired": 7,
         "U2": 0,
         "U3": 0,
@@ -3799,6 +3930,7 @@
         "ZombieDescription": "Tip her, or she'll turn you into a newt."
     },
     {
+        "ZcrId": "char.wolfman_chef",
         "CafeLevelRequired": 8,
         "U2": 0,
         "U3": 0,
@@ -3828,6 +3960,7 @@
         "ZombieDescription": "Clap for the wolfman, you're gonna dig him 'til the day you die."
     },
     {
+        "ZcrId": "char.mummy",
         "CafeLevelRequired": 5,
         "U2": 2,
         "U3": 51,
@@ -3857,6 +3990,7 @@
         "ZombieDescription": "She's a single-minded, working mummy."
     },
     {
+        "ZcrId": "char.mummy_2",
         "CafeLevelRequired": 6,
         "U2": 2,
         "U3": 51,
@@ -3886,6 +4020,7 @@
         "ZombieDescription": "He's wrapped up in your cafe's menu."
     },
     {
+        "ZcrId": "char.witch",
         "CafeLevelRequired": 7,
         "U2": 5,
         "U3": 102,
@@ -3915,6 +4050,7 @@
         "ZombieDescription": "She thinks your cafe needs better broomstick parking."
     },
     {
+        "ZcrId": "char.werewolf",
         "CafeLevelRequired": 8,
         "U2": 8,
         "U3": 153,
@@ -3944,6 +4080,7 @@
         "ZombieDescription": "He likes to eat a big plate of raw meat during a full moon."
     },
     {
+        "ZcrId": "char.bride_of_frankenstein",
         "CafeLevelRequired": 10,
         "U2": 0,
         "U3": 102,
@@ -3973,6 +4110,7 @@
         "ZombieDescription": "She's Alive! Well as much as a re-animated corpse can be."
     },
     {
+        "ZcrId": "char.alien",
         "CafeLevelRequired": 15,
         "U2": 0,
         "U3": 153,
@@ -4002,6 +4140,7 @@
         "ZombieDescription": "Take him to your leader; so he can cook for him!"
     },
     {
+        "ZcrId": "char.evil_leprechaun",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -4031,6 +4170,7 @@
         "ZombieDescription": "He has luck on his side, he even has the chance of upgrading your recipes when they are done cooking."
     },
     {
+        "ZcrId": "char.martian_scientist",
         "CafeLevelRequired": 7,
         "U2": 8,
         "U3": 204,
@@ -4060,6 +4200,7 @@
         "ZombieDescription": "It's only logical that you will have him serving in your cafe."
     },
     {
+        "ZcrId": "char.martian_soldier",
         "CafeLevelRequired": 7,
         "U2": 2,
         "U3": 153,
@@ -4089,6 +4230,7 @@
         "ZombieDescription": "Unfortunately he never sets anything to stun, so watch out for those rowdy customers."
     },
     {
+        "ZcrId": "char.martian_commander",
         "CafeLevelRequired": 7,
         "U2": 1,
         "U3": 153,
@@ -4118,6 +4260,7 @@
         "ZombieDescription": "He's prone to giving long boisterous speeches to motivate his team"
     },
     {
+        "ZcrId": "char.martian_doctor",
         "CafeLevelRequired": 8,
         "U2": 7,
         "U3": 153,
@@ -4147,6 +4290,7 @@
         "ZombieDescription": "The commander always fails to realize that he's a doctor, so he's constantly telling everyone."
     },
     {
+        "ZcrId": "char.italian_chef_red",
         "CafeLevelRequired": 6,
         "U2": 0,
         "U3": 0,
@@ -4176,6 +4320,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.italian_chef_green",
         "CafeLevelRequired": 7,
         "U2": 0,
         "U3": 0,
@@ -4205,6 +4350,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.italian_chef_yellow",
         "CafeLevelRequired": 8,
         "U2": 0,
         "U3": 0,
@@ -4234,6 +4380,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.betty_sue",
         "CafeLevelRequired": 10,
         "U2": 0,
         "U3": 0,
@@ -4263,6 +4410,7 @@
         "ZombieDescription": "This cowgirl will help round up customers for your cafe."
     },
     {
+        "ZcrId": "char.billy_bob",
         "CafeLevelRequired": 10,
         "U2": 0,
         "U3": 0,
@@ -4292,6 +4440,7 @@
         "ZombieDescription": "He's got the fastest spatula in the west."
     },
     {
+        "ZcrId": "char.bobby_billy",
         "CafeLevelRequired": 10,
         "U2": 0,
         "U3": 0,
@@ -4321,6 +4470,7 @@
         "ZombieDescription": "He's here to help rustle up some grub."
     },
     {
+        "ZcrId": "char.cowboy",
         "CafeLevelRequired": 11,
         "U2": 7,
         "U3": 102,
@@ -4350,6 +4500,7 @@
         "ZombieDescription": "He used to be a member of a posse, now he's part of a horde."
     },
     {
+        "ZcrId": "char.steam_punk_professor",
         "CafeLevelRequired": 11,
         "U2": 7,
         "U3": 102,
@@ -4379,6 +4530,7 @@
         "ZombieDescription": "He's only interested in studying your brains."
     },
     {
+        "ZcrId": "char.steam_punk_lord",
         "CafeLevelRequired": 11,
         "U2": 7,
         "U3": 102,
@@ -4408,6 +4560,7 @@
         "ZombieDescription": "Men of high society aren't used to serving, good thing zombies don't have opinions."
     },
     {
+        "ZcrId": "char.steam_punk_chef",
         "CafeLevelRequired": 11,
         "U2": 0,
         "U3": 0,
@@ -4437,6 +4590,7 @@
         "ZombieDescription": "He's perfected cooking using only steaming"
     },
     {
+        "ZcrId": "char.black_ninja",
         "CafeLevelRequired": 15,
         "U2": 8,
         "U3": 153,
@@ -4466,6 +4620,7 @@
         "ZombieDescription": "A shinobi kancho of the Koga clan, he's here to secretly review the cafe."
     },
     {
+        "ZcrId": "char.blue_ninja",
         "CafeLevelRequired": 15,
         "U2": 3,
         "U3": 153,
@@ -4495,6 +4650,7 @@
         "ZombieDescription": "A shinobi teisatsu from the Iga clan, when he appears other ninja's are sure to follow."
     },
     {
+        "ZcrId": "char.brown_ninja",
         "CafeLevelRequired": 14,
         "U2": 2,
         "U3": 153,
@@ -4524,6 +4680,7 @@
         "ZombieDescription": "A shinobi kishu from the Koga clan, you won't see him coming."
     },
     {
+        "ZcrId": "char.green_ninja",
         "CafeLevelRequired": 7,
         "U2": 7,
         "U3": 153,
@@ -4553,6 +4710,7 @@
         "ZombieDescription": "A shinobi konran from the Iga clan, trouble follows when he's around."
     },
     {
+        "ZcrId": "char.red_ninja",
         "CafeLevelRequired": 15,
         "U2": 2,
         "U3": 153,
@@ -4582,6 +4740,7 @@
         "ZombieDescription": "A Chunin of the Koga clan, he wears red to hide the mess."
     },
     {
+        "ZcrId": "char.white_ninja",
         "CafeLevelRequired": 15,
         "U2": 0,
         "U3": 153,
@@ -4611,6 +4770,7 @@
         "ZombieDescription": "A Jonin of the Iga, he runs the kitchen like his clan."
     },
     {
+        "ZcrId": "char.east_coast_rap_artist",
         "CafeLevelRequired": 7,
         "U2": 7,
         "U3": 153,
@@ -4640,6 +4800,7 @@
         "ZombieDescription": "He's an upcoming rap super star! At least that's what he thinks he remembers thinking."
     },
     {
+        "ZcrId": "char.east_coast_dj",
         "CafeLevelRequired": 7,
         "U2": 5,
         "U3": 153,
@@ -4669,6 +4830,7 @@
         "ZombieDescription": "The night club king of New York, or at least he was until he realized his passion for people on a whole wheat bun."
     },
     {
+        "ZcrId": "char.west_coast_dj",
         "CafeLevelRequired": 8,
         "U2": 8,
         "U3": 102,
@@ -4698,6 +4860,7 @@
         "ZombieDescription": "In life he was a DJ legend, as a zombie he's looking for a woman with a beautiful brain... cooked medium-rare with spicy green sauce."
     },
     {
+        "ZcrId": "char.west_coast_rap_artist",
         "CafeLevelRequired": 7,
         "U2": 7,
         "U3": 153,
@@ -4727,6 +4890,7 @@
         "ZombieDescription": "Once a rap star living the dream, his new life as a zombie has him meeting very interesting new people... and then eating them."
     },
     {
+        "ZcrId": "char.chef_cousin_jimmy",
         "CafeLevelRequired": 15,
         "U2": 0,
         "U3": 0,
@@ -4756,6 +4920,7 @@
         "ZombieDescription": "buy italian stallion pizza oven"
     },
     {
+        "ZcrId": "char.a_papa_joe",
         "CafeLevelRequired": 15,
         "U2": 0,
         "U3": 0,
@@ -4785,6 +4950,7 @@
         "ZombieDescription": "buy deep dish oven"
     },
     {
+        "ZcrId": "char.chef_don_tony",
         "CafeLevelRequired": 15,
         "U2": 0,
         "U3": 0,
@@ -4814,6 +4980,7 @@
         "ZombieDescription": "buy brick oven pizza"
     },
     {
+        "ZcrId": "char.a_chef_maurizio",
         "CafeLevelRequired": 15,
         "U2": 0,
         "U3": 0,
@@ -4843,6 +5010,7 @@
         "ZombieDescription": "buy pizza oven"
     },
     {
+        "ZcrId": "char.mafia_goon",
         "CafeLevelRequired": 15,
         "U2": 8,
         "U3": 51,
@@ -4872,6 +5040,7 @@
         "ZombieDescription": "He didn't have much of a brain to begin, so being a zombie doesn't change his routine much except for eating the people he's supposed to intimidate."
     },
     {
+        "ZcrId": "char.ny_sports_fan",
         "CafeLevelRequired": 6,
         "U2": 5,
         "U3": 51,
@@ -4901,6 +5070,7 @@
         "ZombieDescription": "Becoming a zombie was the best thing that happened to the New York sports fan, it gave him a purpose in society."
     },
     {
+        "ZcrId": "char.godfather",
         "CafeLevelRequired": 15,
         "U2": 7,
         "U3": 204,
@@ -4930,6 +5100,7 @@
         "ZombieDescription": "The zombie Godfather still rules the Pesto family with an undead fist, but just a bit less serious now that he's got a taste for brains... he can't refuse."
     },
     {
+        "ZcrId": "char.ditzy_mafia_girl",
         "CafeLevelRequired": 14,
         "U2": 5,
         "U3": 153,
@@ -4959,6 +5130,7 @@
         "ZombieDescription": "While still attracted to shiny objects and a taste for strong abs, she doesn't like hair gel anymore as it leaves a bad taste in her mouth."
     },
     {
+        "ZcrId": "char.chef_elephant",
         "CafeLevelRequired": 16,
         "U2": 0,
         "U3": 0,
@@ -4988,6 +5160,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.chef_donkey",
         "CafeLevelRequired": 16,
         "U2": 0,
         "U3": 0,
@@ -5017,6 +5190,7 @@
         "ZombieDescription": "He's the head chef of this establishment, and he won't go down without a fight."
     },
     {
+        "ZcrId": "char.politician_3",
         "CafeLevelRequired": 16,
         "U2": 8,
         "U3": 204,
@@ -5046,6 +5220,7 @@
         "ZombieDescription": "He's running in an election for President of the Zombie Golf Club, he's perfect!"
     },
     {
+        "ZcrId": "char.candidate",
         "CafeLevelRequired": 16,
         "U2": 5,
         "U3": 204,
@@ -5075,6 +5250,7 @@
         "ZombieDescription": "The zombie candidates moto is undercook and over deliver. His favorite color is green."
     },
     {
+        "ZcrId": "char.governor",
         "CafeLevelRequired": 16,
         "U2": 7,
         "U3": 102,
@@ -5104,6 +5280,7 @@
         "ZombieDescription": "There's little difference between this governor and a pit bull, except the governor has a stronger bite."
     },
     {
+        "ZcrId": "char.ex_governor",
         "CafeLevelRequired": 16,
         "U2": 5,
         "U3": 153,
@@ -5133,6 +5310,7 @@
         "ZombieDescription": "He's continuing his public service by serving perfectly cooked pieces of the public to the public."
     },
     {
+        "ZcrId": "char.skeletal_bandito_chef",
         "CafeLevelRequired": 5,
         "U2": 0,
         "U3": 0,
@@ -5162,6 +5340,7 @@
         "ZombieDescription": "buy traditional estufa"
     },
     {
+        "ZcrId": "char.skeleton_bride",
         "CafeLevelRequired": 5,
         "U2": 6,
         "U3": 102,
@@ -5191,6 +5370,7 @@
         "ZombieDescription": "Without a ring and her groom, she is not a bride to be messed with."
     },
     {
+        "ZcrId": "char.skeleton_groom",
         "CafeLevelRequired": 5,
         "U2": 6,
         "U3": 102,
@@ -5220,6 +5400,7 @@
         "ZombieDescription": "With his new look, he is sure to make a killer move down the aisle."
     },
     {
+        "ZcrId": "char.calavera_de_catrina",
         "CafeLevelRequired": 5,
         "U2": 8,
         "U3": 102,
@@ -5249,6 +5430,7 @@
         "ZombieDescription": "She is green with a smirky grin. She is out to keep the spirit alive."
     },
     {
+        "ZcrId": "char.zombie_claus",
         "CafeLevelRequired": 10,
         "U2": 0,
         "U3": 0,
@@ -5278,6 +5460,7 @@
         "ZombieDescription": "Here comes Zombie Claus, serving up your brains!"
     },
     {
+        "ZcrId": "char.stir_fly_head_chef",
         "CafeLevelRequired": 10,
         "U2": 0,
         "U3": 0,
@@ -5307,6 +5490,7 @@
         "ZombieDescription": "With an excellent sense of smell, he's sure to whip up the best."
     },
     {
+        "ZcrId": "char.fish_head_monster",
         "CafeLevelRequired": 10,
         "U2": 6,
         "U3": 153,
@@ -5336,6 +5520,7 @@
         "ZombieDescription": "The seaweed green monster looks crazy hungry."
     },
     {
+        "ZcrId": "char.dr_mantis_face",
         "CafeLevelRequired": 10,
         "U2": 6,
         "U3": 153,
@@ -5365,6 +5550,7 @@
         "ZombieDescription": "The Dr. is in-sane!"
     },
     {
+        "ZcrId": "char.mr",
         "CafeLevelRequired": 9,
         "U2": 6,
         "U3": 153,
@@ -5394,6 +5580,7 @@
         "ZombieDescription": "A little toxin helps him stand out in a crowd."
     },
     {
+        "ZcrId": "char.pink_retro_robot",
         "CafeLevelRequired": 9,
         "U2": 6,
         "U3": 153,
@@ -5423,6 +5610,7 @@
         "ZombieDescription": "Re-programmed and ready to serve."
     },
     {
+        "ZcrId": "char.blue_retro_robot",
         "CafeLevelRequired": 10,
         "U2": 6,
         "U3": 153,
@@ -5452,6 +5640,7 @@
         "ZombieDescription": "Re-programmed and ready to serve."
     },
     {
+        "ZcrId": "char.goblin_chef",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -5481,6 +5670,7 @@
         "ZombieDescription": ""
     },
     {
+        "ZcrId": "char.knight_in_armor",
         "CafeLevelRequired": 8,
         "U2": 8,
         "U3": 51,
@@ -5510,6 +5700,7 @@
         "ZombieDescription": "This knight is going mental! Better keep him unarmed."
     },
     {
+        "ZcrId": "char.executioner",
         "CafeLevelRequired": 8,
         "U2": 8,
         "U3": 51,
@@ -5539,6 +5730,7 @@
         "ZombieDescription": "He is ready to serve your last meal."
     },
     {
+        "ZcrId": "char.wizard",
         "CafeLevelRequired": 8,
         "U2": 7,
         "U3": 102,
@@ -5568,6 +5760,7 @@
         "ZombieDescription": "His magic is now all twisted and weird!"
     },
     {
+        "ZcrId": "char.mighty_king",
         "CafeLevelRequired": 8,
         "U2": 8,
         "U3": 153,
@@ -5597,6 +5790,7 @@
         "ZombieDescription": "\"Off with his head\" is this king's favorite phrase."
     },
     {
+        "ZcrId": "char.dragon",
         "CafeLevelRequired": 8,
         "U2": 6,
         "U3": 153,
@@ -5626,6 +5820,7 @@
         "ZombieDescription": "With a belly full of toxin, he can't wait to spit some serious fire."
     },
     {
+        "ZcrId": "char.evil_queen",
         "CafeLevelRequired": 8,
         "U2": 8,
         "U3": 153,
@@ -5655,6 +5850,7 @@
         "ZombieDescription": "Mirror Mirror on the wall who's the fairest server of them all?"
     },
     {
+        "ZcrId": "char.female_captain",
         "CafeLevelRequired": 11,
         "U2": 6,
         "U3": 153,
@@ -5684,6 +5880,7 @@
         "ZombieDescription": "Oh Captain! My Captain! Our tasty food is done."
     },
     {
+        "ZcrId": "char.marooner",
         "CafeLevelRequired": 11,
         "U2": 5,
         "U3": 51,
@@ -5713,6 +5910,7 @@
         "ZombieDescription": "He will never leave any hungry customer behind."
     },
     {
+        "ZcrId": "char.undead_skeleton_pirate",
         "CafeLevelRequired": 11,
         "U2": 7,
         "U3": 153,
@@ -5742,6 +5940,7 @@
         "ZombieDescription": "Greets customers with a friendly \"Arrr!\"."
     },
     {
+        "ZcrId": "char.shipmate",
         "CafeLevelRequired": 11,
         "U2": 6,
         "U3": 102,
@@ -5771,6 +5970,7 @@
         "ZombieDescription": "He can swab the deck while serving the best."
     },
     {
+        "ZcrId": "char.conquistador",
         "CafeLevelRequired": 11,
         "U2": 5,
         "U3": 153,
@@ -5800,6 +6000,7 @@
         "ZombieDescription": "He rules Spain, the ocean and yes, the kitchen too."
     },
     {
+        "ZcrId": "char.chef_deadbeard",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -5829,6 +6030,7 @@
         "ZombieDescription": "He can hook you up with a boatload of pirate recipes."
     },
     {
+        "ZcrId": "char.vampire_bride",
         "CafeLevelRequired": 12,
         "U2": 8,
         "U3": 102,
@@ -5858,6 +6060,7 @@
         "ZombieDescription": "This runaway bride will steal your heart...literally."
     },
     {
+        "ZcrId": "char.nosferatu",
         "CafeLevelRequired": 9,
         "U2": 8,
         "U3": 153,
@@ -5887,6 +6090,7 @@
         "ZombieDescription": "This vampire is so old, he can't stop coffin'�"
     },
     {
+        "ZcrId": "char.pure_blood",
         "CafeLevelRequired": 10,
         "U2": 8,
         "U3": 102,
@@ -5916,6 +6120,7 @@
         "ZombieDescription": "He will serve you the finest meats, dead or alive."
     },
     {
+        "ZcrId": "char.vampire_hunter",
         "CafeLevelRequired": 12,
         "U2": 8,
         "U3": 153,
@@ -5945,6 +6150,7 @@
         "ZombieDescription": "He's agreed to only hunt non-zombie vampires from now on."
     },
     {
+        "ZcrId": "char.vampire_ghoul",
         "CafeLevelRequired": 13,
         "U2": 8,
         "U3": 153,
@@ -5974,6 +6180,7 @@
         "ZombieDescription": "Flying zombies, they'll revolutionize the service industry!"
     },
     {
+        "ZcrId": "char.goth",
         "CafeLevelRequired": 6,
         "U2": 8,
         "U3": 51,
@@ -6003,6 +6210,7 @@
         "ZombieDescription": "She will take blood donation as tips."
     },
     {
+        "ZcrId": "char.chef_dracula",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -6032,6 +6240,7 @@
         "ZombieDescription": "He can cook the most fang-tastic food."
     },
     {
+        "ZcrId": "char.break_fast",
         "CafeLevelRequired": 12,
         "U2": 8,
         "U3": 0,
@@ -6061,6 +6270,7 @@
         "ZombieDescription": "He can serve at lightning speed."
     },
     {
+        "ZcrId": "char.shadow_skull",
         "CafeLevelRequired": 12,
         "U2": 8,
         "U3": 153,
@@ -6090,6 +6300,7 @@
         "ZombieDescription": "He may take vengeance on the low tipper."
     },
     {
+        "ZcrId": "char.supper_girl",
         "CafeLevelRequired": 6,
         "U2": 8,
         "U3": 102,
@@ -6119,6 +6330,7 @@
         "ZombieDescription": "She dishes out justice and can hold her weight in plates."
     },
     {
+        "ZcrId": "char.zombie_man",
         "CafeLevelRequired": 14,
         "U2": 8,
         "U3": 153,
@@ -6148,6 +6360,7 @@
         "ZombieDescription": "Zombie Man, a moral paragon for zombie kind."
     },
     {
+        "ZcrId": "char.dr_hoboken",
         "CafeLevelRequired": 13,
         "U2": 8,
         "U3": 153,
@@ -6177,6 +6390,7 @@
         "ZombieDescription": "He glows with joy every time new customers walk in."
     },
     {
+        "ZcrId": "char.galacticus",
         "CafeLevelRequired": 13,
         "U2": 8,
         "U3": 153,
@@ -6206,6 +6420,7 @@
         "ZombieDescription": "He is ready to serve the universe on a plate."
     },
     {
+        "ZcrId": "char.henchman",
         "CafeLevelRequired": 10,
         "U2": 8,
         "U3": 102,
@@ -6235,6 +6450,7 @@
         "ZombieDescription": "He's now set for dirtier jobs in the kitchen."
     },
     {
+        "ZcrId": "char.the_mad_griller",
         "CafeLevelRequired": 255,
         "U2": 0,
         "U3": 0,
@@ -6264,6 +6480,7 @@
         "ZombieDescription": "He aims to conquer your hunger and the world!"
     },
     {
+        "ZcrId": "char.maid",
         "CafeLevelRequired": 14,
         "U2": 4,
         "U3": 0,
@@ -6293,6 +6510,7 @@
         "ZombieDescription": "家事をしてもらうと得した気分になる。"
     },
     {
+        "ZcrId": "char.maid_2",
         "CafeLevelRequired": 14,
         "U2": 4,
         "U3": 0,
@@ -6322,6 +6540,7 @@
         "ZombieDescription": "やる気はないが、殺る気はある。"
     },
     {
+        "ZcrId": "char.lieutenant_colonel",
         "CafeLevelRequired": 14,
         "U2": 4,
         "U3": 0,
@@ -6351,6 +6570,7 @@
         "ZombieDescription": "She goes on missions in search of fresh brains"
     },
     {
+        "ZcrId": "char.zcr_sheet3_tester",
         "CafeLevelRequired": 0,
         "U2": 8,
         "U3": 0,
@@ -6380,6 +6600,7 @@
         "ZombieDescription": "Integration test zombie for characterParts3. Recycled development art, not final artwork."
     },
     {
+        "ZcrId": "char.zcr_sheet4_tester",
         "CafeLevelRequired": 0,
         "U2": 8,
         "U3": 0,
