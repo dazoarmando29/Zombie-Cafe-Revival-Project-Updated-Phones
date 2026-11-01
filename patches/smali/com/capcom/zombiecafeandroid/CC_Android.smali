@@ -1796,7 +1796,11 @@
 
     invoke-virtual {v0}, Ljava/lang/Exception;->printStackTrace()V
 
-    const/4 v0, 0x0
+    sget-object v0, Lcom/capcom/zombiecafeandroid/CC_Android;->a:Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;
+
+    invoke-static {v0, p0}, Lcom/capcom/zombiecafeandroid/SaveGuard;->readBackup(Landroid/content/Context;Ljava/lang/String;)[B
+
+    move-result-object v0
 
     goto :goto_0
 .end method
@@ -1888,6 +1892,8 @@
 
     :try_start_0
     sget-object v1, Lcom/capcom/zombiecafeandroid/CC_Android;->a:Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;
+
+    invoke-static {v1, p0}, Lcom/capcom/zombiecafeandroid/SaveGuard;->backupMaybe(Landroid/content/Context;Ljava/lang/String;)V
 
     const/4 v2, 0x0
 
