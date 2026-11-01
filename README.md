@@ -24,6 +24,70 @@
 
 ---
 
+## What's new — engine upgrade (2026-11)
+
+Work from the `feature/engine-upgrade` branch (9 commits). Full details in
+[`docs/ENGINE_UPGRADE_REPORT.md`](docs/ENGINE_UPGRADE_REPORT.md).
+
+### New
+
+- **Real memory diagnostics** — periodic `[heapstat]` / `[texstat]` / `[filetrace]`
+  reports (guest heap live/peak, per-allocation-site bytes, texture count/bytes,
+  duplicate uploads, host RSS). The on-device log (`zcr-log.txt`) now actually
+  gets written (app files dir) — it silently never appeared on Android 10+ before.
+- **New allocator core** (`host/emu_heap.*`) — first-fit + O(1) coalescing with
+  double-free / wild-free detection and full accounting. Verified by a
+  219,329-check unit suite that runs the exact production code on a device
+  (`host/tests/run_heap_tests.ps1`).
+- **Texture tracking** — per-GL-id dimensions/bytes, create/delete balance,
+  FNV content-hash duplicate detection (`[texdupe]`), top-10 largest textures.
+- **Save backup & recovery** — `SaveGuard.smali` snapshots saves to `<name>.bak`
+  before the engine overwrites them and falls back to the backup if the primary
+  file is unreadable (logged as `serving save from backup`).
+- **Asset validator** (`tool/asset_validator`) — runs before every build and
+  fails on malformed content with per-asset errors (character/food count limits,
+  art-string-to-folder resolution, atlas headers, piece-count consistency).
+  8 unit tests; the shipped assets validate clean.
+- **N-sheet character packing** — `characterParts3/`, `characterParts4/`... are
+  packed automatically (data-driven folder naming). A `characterParts3` proof
+  of concept packs a full atlas + offsets + art list through the real pipeline.
+- **Engine content map (RE)** — the engine exports ~6,270 C++ symbols;
+  `ZombieCafe::loadImagePack(String, byte)` turned out to be a **generic** pack
+  loader (pack index 1..254, dynamic table, name-based lookup). The old
+  "2 texture sheets" limit is two unrolled load blocks in `initData`, not a
+  structural limit — exact patch plan documented in
+  [`docs/ASSET_EXPANSION_GUIDE.md`](docs/ASSET_EXPANSION_GUIDE.md).
+
+### Fixed
+
+- **1.5 GB RSS balloon** — an allocator revision zeroed the whole emulated heap
+  on startup; the new reports caught it (VmRSS 1.69 GB). Fixed: only block
+  headers are touched now (VmRSS 288 MB, same workload).
+- **Fragmentation** — the old free list never merged adjacent free blocks;
+  coalescing now runs ~66k times in 30 s of gameplay with zero allocation
+  failures in 311k allocations.
+- **Diagnostic log path** — scoped storage blocked `/sdcard/Download`; logs now
+  resolve the app's external files dir via JNI.
+- **Silent bad assets** — malformed content used to pack without complaint; the
+  validator gate stops the build with the offending file and reason.
+
+### Verified numbers (Android 15 device, cafe loaded & idle)
+
+| Metric | Before | After |
+|---|---|---|
+| Guest heap | not measurable | 7.4 MB live / 27.4 MB peak of 1536 MB |
+| Allocation failures / bad frees | not measurable | 0 in 311k allocs |
+| Process VmRSS | not measurable | 288 MB |
+| Native heap RSS (dumpsys) | 113 MB | 72 MB |
+| Texture memory | invisible | 22 textures, 52.9 MB, tracked per-id |
+| Duplicate texture uploads | invisible | 7 detected at cafe load |
+| Character sheets packable | 2 (hardcoded) | N (data-driven) |
+
+Gameplay, saves, and the classic look are unchanged — tested boot + cafe render
++ saving path on device with `unimpl=0`, `emu_errors=0`.
+
+---
+
 ## Downloads
 
 Grab the latest APK from **[Releases](https://github.com/dazoarmando29/Zombie-Cafe-Revival-Project-Updated-Phones/releases)** and install it on your phone (allow "install from unknown sources" if asked). Install over any previous version — your save is kept.
@@ -72,9 +136,10 @@ The game is a 32-bit ARM binary. Modern phones dropped 32-bit support entirely. 
 | `engine_loader.cpp` | ELF32 loader/relocator (engine at `0x10000000`), import trap stubs, runtime engine patches |
 | `jni_bridge.cpp` | Fake JNIEnv/JavaVM vtables in emulated memory bridging to real ART — signature-aware varargs marshaling (float→double promotion, 64-bit alignment) |
 | `stub_dispatch.cpp` | 16-byte trap slot per imported symbol (151 imports) |
-| `emu_mem.cpp` | 1.5 GB emulated heap with block provenance (alloc/free caller tracking) and double-free rejection |
-| `imports_posix.cpp` / `imports_gl.cpp` | libc/stdio/zlib/math and GLES1 handlers (GL client arrays resolved at draw time) |
-| `diag.cpp` | Logging, crash-time trace ring, heap statistics |
+| `emu_heap.cpp` / `emu_mem.cpp` | 1.5 GB emulated heap: coalescing allocator, block provenance (alloc/free caller tracking), double-free / wild-free rejection |
+| `imports_posix.cpp` / `imports_gl.cpp` | libc/stdio/zlib/math and GLES1 handlers (GL client arrays resolved at draw time; per-texture memory tracking) |
+| `diag.cpp` | Logging (app files dir + logcat), crash-time trace ring, `[heapstat]`/`[texstat]`/`[filetrace]` memory reports |
+| `tests/` | Allocator unit tests (219k checks) built with NDK clang and run on a connected device |
 
 ---
 
@@ -190,8 +255,13 @@ The natives (`DebugAddMoney`, `DebugSetToxin`, `DebugAddXp`, `DebugSetXp`) write
 - [x] Phase 3 — Universal APK, menu + cafe fully playable, saving, audio
 - [x] Offline-first quests (no friend/online requirements)
 - [x] Mod-menu variant (separate release)
+- [x] Engine upgrade: coalescing allocator + 219k-check device test suite
+- [x] Engine upgrade: memory/texture/file diagnostics (`[heapstat]`, `[texstat]`, `[filetrace]`)
+- [x] Engine upgrade: save backup + recovery, scoped-storage log fix
+- [x] Engine upgrade: asset validator build gate, N-sheet packing, content-map RE
+- [ ] Third character sheet engine wiring (cave patch or manifest discovery — plan in `docs/ASSET_EXPANSION_GUIDE.md`)
 - [ ] Online services revival (`tool/server`) — opt-in
-- [ ] Polish: larger mod button, quieter online hooks
+- [ ] Long-session soak test + low-RAM device profile
 
 ---
 

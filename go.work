@@ -1,6 +1,7 @@
 go 1.23
 
 use (
+	./tool/asset_validator
 	./tool/build_tool
 	./tool/resource_manager
 	./tool/file_types

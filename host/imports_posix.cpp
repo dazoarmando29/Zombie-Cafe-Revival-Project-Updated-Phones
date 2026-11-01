@@ -20,6 +20,7 @@
 #include "engine_memory.h"
 #include "emu_mem.h"
 #include "stub_dispatch.h"
+#include "diag.h"
 
 #define TAG "zcr-engine"
 
@@ -386,6 +387,11 @@ static void h_fopen(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
         /* engine often stores saves under its private dir; try relative too */
         f = fopen(path.c_str(), mode.c_str());
     }
+    /* diag: map every open to the engine code that requested it */
+    uint32_t lr = 0;
+    uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+    diag_log("[filetrace] fopen path=%s mode=%s ok=%d caller=0x%x",
+             path.c_str(), mode.c_str(), f ? 1 : 0, lr & ~1u);
     *rv = f ? file_token(f) : 0;
 }
 static void h_fclose(uc_engine *uc, const emu::Args &a, uint32_t *rv) {

@@ -149,6 +149,41 @@ bool on_mem_fault(uc_engine *uc, uc_mem_type type, uint64_t address,
     return false;  /* stop emulation */
 }
 
+/* Diagnostics file goes to the app's external files dir: /sdcard/Download is
+ * not writable under Android scoped storage, which silently disabled the
+ * on-device zcr-log.txt on Android 10+. */
+void resolve_log_dir(JNIEnv *env) {
+    jclass atCls = env->FindClass("android/app/ActivityThread");
+    if (!atCls) return;
+    jmethodID curApp = env->GetStaticMethodID(atCls, "currentApplication",
+                                              "()Landroid/app/Application;");
+    if (!curApp) return;
+    jobject app = env->CallStaticObjectMethod(atCls, curApp);
+    if (!app) return;
+    jclass ctxCls = env->FindClass("android/content/Context");
+    jmethodID getDir = env->GetMethodID(ctxCls, "getExternalFilesDir",
+                                        "(Ljava/lang/String;)Ljava/io/File;");
+    jobject dir = nullptr;
+    if (getDir) dir = env->CallObjectMethod(app, getDir, (jobject)nullptr);
+    if (!dir) {
+        jmethodID getFiles = env->GetMethodID(ctxCls, "getFilesDir",
+                                              "()Ljava/io/File;");
+        if (getFiles) dir = env->CallObjectMethod(app, getFiles);
+    }
+    if (!dir) return;
+    jclass fileCls = env->FindClass("java/io/File");
+    jmethodID getPath = env->GetMethodID(fileCls, "getPath", "()Ljava/lang/String;");
+    if (!getPath) return;
+    jstring path = (jstring)env->CallObjectMethod(dir, getPath);
+    if (!path) return;
+    const char *cpath = env->GetStringUTFChars(path, nullptr);
+    if (cpath) {
+        diag_set_log_dir(cpath);
+        LOGI("diag log dir: %s", cpath);
+        env->ReleaseStringUTFChars(path, cpath);
+    }
+}
+
 bool load_engine_from_assets(JNIEnv *env) {
     jclass atCls = env->FindClass("android/app/ActivityThread");
     jmethodID curApp = env->GetStaticMethodID(atCls, "currentApplication",
@@ -177,6 +212,8 @@ bool load_engine_from_assets(JNIEnv *env) {
 
 bool host_init(JNIEnv *env) {
     if (g_uc) return true;
+
+    resolve_log_dir(env);
 
     if (!load_engine_from_assets(env)) return false;
 
@@ -341,6 +378,10 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
 
     static int frame_count = 0;
     frame_count++;
+    if (frame_count == 2 || (frame_count % 1800) == 0) {
+        /* periodic memory report (heap + textures + host RSS) */
+        diag_report(frame_count == 2 ? "startup" : "periodic");
+    }
     if ((frame_count % 60) == 1) {
         /* readback probe: what did the engine actually put on screen? */
         unsigned char px[4] = {0, 0, 0, 0};

@@ -256,6 +256,35 @@ void do_call(uc_engine *uc, const emu::Args &a, WordSrc &src, Ret ret,
                  args.empty() ? 0.f : args[0].f,
                  args.size() < 2 ? 0.f : args[1].f);
     }
+    /* diag: file I/O trace with the emulated caller PC (LR). This maps each
+     * asset load/save to the engine code that requested it - the key to
+     * locating the character-sheet load sites (Phase 6). */
+    if (m->name.find("file") != std::string::npos ||
+        m->name.find("File") != std::string::npos) {
+        std::string fname;
+        if (!args.empty() && args[0].l) {
+            jstring js = (jstring)args[0].l;
+            const char *c = g_env->GetStringUTFChars(js, nullptr);
+            if (c) {
+                fname = c;
+                g_env->ReleaseStringUTFChars(js, c);
+            }
+        }
+        uint32_t lr = 0;
+        uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+        diag_log("[filetrace] %s(%s) file=%s caller=0x%x",
+                 m->name.c_str(), m->sig.c_str(), fname.c_str(), lr & ~1u);
+        /* for character-sheet loads, dump the emulated stack so the loader's
+         * own caller (saved LR chain) can be recovered */
+        if (fname.find("character") != std::string::npos) {
+            uint32_t sp = 0, stk[8] = {0};
+            uc_reg_read(uc, UC_ARM_REG_SP, &sp);
+            emu::read(uc, sp, stk, sizeof(stk));
+            diag_log("[filetrace]   sp=0x%x stack=%08x %08x %08x %08x %08x %08x %08x %08x",
+                     sp, stk[0], stk[1], stk[2], stk[3], stk[4], stk[5],
+                     stk[6], stk[7]);
+        }
+    }
     jobject obj = (jobject)handle_get(obj_or_cls);
     if (!obj) {
         *rv = 0;

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/disintegration/imaging"
@@ -167,19 +168,42 @@ type PackedCharacterData struct {
 	characterArtFile string
 }
 
-func PackCharacters(in_directory string, out_directory string, out_data_directory string) {
+// CharacterSheetName returns the character-sheet family for a source folder
+// ("characterParts", "characterParts2", ... "characterPartsN"). The engine
+// binary of the English build loads sheets 1-2; the pipeline itself is data
+// driven and packs any number of sheets, so a third sheet only requires an
+// engine-side load (see docs/ASSET_EXPANSION_GUIDE.md).
+func characterSheetOutputs(folderName, variant string) (PackedCharacterData, bool) {
+	if !strings.HasPrefix(folderName, "characterParts") {
+		return PackedCharacterData{}, false
+	}
+	suffix := strings.TrimPrefix(folderName, "characterParts")
+	if suffix != "" {
+		if n, err := strconv.Atoi(suffix); err != nil || n < 1 {
+			return PackedCharacterData{}, false
+		}
+	}
+	scale := float32(0.75)
+	if variant == "jp" {
+		scale = 1
+	}
+	return PackedCharacterData{
+		PackedTextureData{"characterOffsets" + suffix + ".bin.mid", scale},
+		"characterArt" + suffix + ".bin.mid",
+	}, true
+}
+
+func PackCharacters(in_directory string, out_directory string, out_data_directory string, variant string) {
 	entries, _ := os.ReadDir(in_directory)
 	files := []string{}
 	folders := []string{}
 
 	fmt.Println(filepath.Base(in_directory))
-	file_map := map[string]PackedCharacterData{
-		"characterParts":  {PackedTextureData{"characterOffsets.bin.mid", 0.75}, "characterArt.bin.mid"},
-		"characterParts2": {PackedTextureData{"characterOffsets2.bin.mid", 0.75}, "characterArt2.bin.mid"},
-	}
-
 	folder_name := filepath.Base(in_directory)
-	out_data := file_map[folder_name]
+	out_data, ok := characterSheetOutputs(folder_name, variant)
+	if !ok {
+		log.Fatalf("unknown character sheet folder %q (expected characterParts or characterPartsN)", folder_name)
+	}
 
 	piecesPerPack := -1
 
@@ -335,23 +359,25 @@ func tryWriteUnpackedData(result cct_file.TextureResult, index int, out_path str
 }
 
 func UnpackCharacters(in_directory string, out_directory string, data_directory string, is_jp bool) {
-	file_map := map[string]PackedCharacterData{
-		"characterParts.cct.mid":  {PackedTextureData{"characterOffsets.bin.mid", 0.75}, "characterArt.bin.mid"},
-		"characterParts2.cct.mid": {PackedTextureData{"characterOffsets2.bin.mid", 0.75}, "characterArt2.bin.mid"},
-	}
-
+	variant := "en"
 	if is_jp {
-		file_map = map[string]PackedCharacterData{
-			"characterParts.cct.mid":  {PackedTextureData{"characterOffsets.bin.mid", 1}, "characterArt.bin.mid"},
-			"characterParts2.cct.mid": {PackedTextureData{"characterOffsets2.bin.mid", 1}, "characterArt2.bin.mid"},
-			"characterParts3.cct.mid": {PackedTextureData{"characterOffsets3.bin.mid", 1}, "characterArt3.bin.mid"},
-			"characterParts4.cct.mid": {PackedTextureData{"characterOffsets4.bin.mid", 1}, "characterArt4.bin.mid"},
-			"characterParts5.cct.mid": {PackedTextureData{"characterOffsets5.bin.mid", 1}, "characterArt5.bin.mid"},
-		}
+		variant = "jp"
 	}
+	// discover every character sheet present (characterParts.cct.mid,
+	// characterParts2.cct.mid, ...) instead of a fixed two-entry map
+	entries, _ := os.ReadDir(in_directory)
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() || !strings.HasSuffix(name, ".cct.mid") {
+			continue
+		}
+		base := strings.TrimSuffix(name, ".cct.mid")
+		data, ok := characterSheetOutputs(base, variant)
+		if !ok {
+			continue
+		}
 
-	for cct, data := range file_map {
-		path := filepath.Join(in_directory, cct)
+		path := filepath.Join(in_directory, name)
 		offsets_path := filepath.Join(in_directory, data.textureData.offsetsName)
 		character_art_path := filepath.Join(data_directory, data.characterArtFile)
 
@@ -378,7 +404,7 @@ func UnpackCharacters(in_directory string, out_directory string, data_directory 
 
 		piecesPerCharacter := int(character_art_strings.PiecesPerString)
 		for character_index := range character_art_strings.Strings {
-			out_folder := filepath.Join(out_directory, strings.Split(cct, ".")[0], character_art_strings.Strings[character_index])
+			out_folder := filepath.Join(out_directory, strings.Split(name, ".")[0], character_art_strings.Strings[character_index])
 			os.MkdirAll(out_folder, os.ModePerm)
 			fmt.Println("Saving: " + character_art_strings.Strings[character_index])
 

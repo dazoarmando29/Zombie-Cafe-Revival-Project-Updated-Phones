@@ -1,5 +1,6 @@
 #include "emu_mem.h"
 
+#include <algorithm>
 #include <cstring>
 #include <map>
 #include <mutex>
@@ -8,6 +9,7 @@
 #include <android/log.h>
 #include <unicorn/unicorn.h>
 
+#include "emu_heap.h"
 #include "engine_memory.h"
 #include "diag.h"
 
@@ -23,21 +25,13 @@ struct Region {
 };
 std::vector<Region> g_regions;
 
-/* ---- heap: first-fit free list over the aliased heap buffer ---- */
-uint8_t *g_heap = nullptr;
-uint32_t g_heap_bump = HEAP_BASE + 64;
-uint32_t g_heap_end = HEAP_BASE + HEAP_SIZE;
-
-struct Block {            // lives at the start of every allocation
-    uint32_t size;        // user size
-    uint32_t word2;       // kLiveMagic when allocated, next-free when free
-};
-constexpr uint32_t kLiveMagic = 0xA110C8EDu;
+/* ---- heap: emu::Heap (first-fit + coalescing) over the aliased buffer ---- */
+Heap g_heap;
 std::mutex g_heap_mu;
-uint32_t g_free_head = 0;
 
-uint32_t block_hdr(uint32_t user) { return user - 8; }
-uint8_t *block_host(uint32_t hdr) { return g_heap + (hdr - HEAP_BASE); }
+void heap_logger(const char *msg) {
+    __android_log_print(ANDROID_LOG_WARN, "zcr-heap", "%s", msg);
+}
 
 }  // namespace
 
@@ -128,10 +122,9 @@ uint32_t Args::arg(unsigned i) const {
 /* ---------------- heap ---------------- */
 
 bool heap_init(void *buffer) {
-    g_heap = (uint8_t *)buffer;
-    g_heap_bump = HEAP_BASE + 64;
-    g_free_head = 0;
-    return map_alias(HEAP_BASE, HEAP_SIZE, buffer, false);
+    g_heap.set_logger(heap_logger);
+    return g_heap.init(buffer, HEAP_BASE, HEAP_SIZE) &&
+           map_alias(HEAP_BASE, HEAP_SIZE, buffer, false);
 }
 
 /* ---- allocation accounting (find what eats the heap) ---- */
@@ -154,22 +147,183 @@ std::map<uint32_t, AllocStats> g_by_lr;
 std::map<uint32_t, BlockRec> g_blocks; /* hdr -> record (live and recently freed) */
 }  // namespace
 
-uint32_t heap_alloc_tagged(uc_engine *uc, size_t n, const char *tag) {
-    uint32_t p = heap_alloc(uc, n);
-    if (p) {
-        std::lock_guard<std::mutex> lk(g_stats_mu);
-        AllocStats &s = g_stats[tag ? tag : "?"];
-        s.bytes += n;
-        s.count++;
-        s.live++;
-        s.live_bytes += n;
-        auto it = g_blocks.find(p - 8);
-        if (it != g_blocks.end()) it->second.tag = tag ? tag : "?";
+static uint32_t read_lr(uc_engine *uc) {
+    uint32_t lr = 0;
+    if (uc) uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+    return lr & ~1u;
+}
+
+static void note_alloc(uint32_t hdr, uint32_t n, uint32_t lr, const char *tag) {
+    std::lock_guard<std::mutex> ls(g_stats_mu);
+    BlockRec rec;
+    rec.size = n;
+    rec.alloc_lr = lr;
+    rec.tag = tag ? tag : "engine";
+    g_blocks[hdr] = std::move(rec);
+    AllocStats &s = g_stats[tag ? tag : "?"];
+    s.bytes += n;
+    s.count++;
+    s.live++;
+    s.live_bytes += n;
+    AllocStats &l = g_by_lr[lr];
+    l.bytes += n;
+    l.count++;
+    l.live++;
+    l.live_bytes += n;
+}
+
+static void note_free(uint32_t hdr, uint32_t lr) {
+    std::lock_guard<std::mutex> ls(g_stats_mu);
+    auto it = g_blocks.find(hdr);
+    if (it != g_blocks.end()) {
+        BlockRec &rec = it->second;
+        rec.free_lr = lr;
+        auto st = g_stats.find(rec.tag);
+        if (st != g_stats.end() && st->second.live) {
+            st->second.live--;
+            st->second.live_bytes -= rec.size;
+        }
+        auto by = g_by_lr.find(rec.alloc_lr);
+        if (by != g_by_lr.end() && by->second.live) {
+            by->second.live--;
+            by->second.live_bytes -= rec.size;
+        }
     }
+}
+
+uint32_t heap_alloc(uc_engine *uc, size_t n) {
+    std::unique_lock<std::mutex> lk(g_heap_mu);
+    uint32_t lr = read_lr(uc);
+    uint32_t p = g_heap.alloc(n, lr);
+    if (!p) {
+        HeapStats st;
+        g_heap.stats(&st);
+        __android_log_print(ANDROID_LOG_ERROR, "zcr-heap",
+                            "EXHAUSTED: want %zu, live %llu KB, free %llu KB / %u KB",
+                            n, (unsigned long long)(st.cur_bytes / 1024),
+                            (unsigned long long)(st.free_bytes / 1024),
+                            HEAP_SIZE / 1024);
+        lk.unlock();
+        heap_dump_stats();
+        return 0;
+    }
+    note_alloc(p - 8, (uint32_t)((n + 7) & ~7ull), lr, "engine");
     return p;
 }
 
+uint32_t heap_alloc_tagged(uc_engine *uc, size_t n, const char *tag) {
+    std::unique_lock<std::mutex> lk(g_heap_mu);
+    uint32_t lr = read_lr(uc);
+    uint32_t p = g_heap.alloc(n, lr);
+    if (!p) {
+        HeapStats st;
+        g_heap.stats(&st);
+        __android_log_print(ANDROID_LOG_ERROR, "zcr-heap",
+                            "EXHAUSTED: want %zu (%s), live %llu KB, free %llu KB / %u KB",
+                            n, tag ? tag : "?",
+                            (unsigned long long)(st.cur_bytes / 1024),
+                            (unsigned long long)(st.free_bytes / 1024),
+                            HEAP_SIZE / 1024);
+        lk.unlock();
+        heap_dump_stats();
+        return 0;
+    }
+    note_alloc(p - 8, (uint32_t)((n + 7) & ~7ull), lr, tag);
+    return p;
+}
+
+void heap_free(uc_engine *uc, uint32_t addr) {
+    if (!addr) return;
+    std::lock_guard<std::mutex> lk(g_heap_mu);
+    uint32_t lr = read_lr(uc);
+    int r = g_heap.free(addr, lr);
+    if (r == 1) {
+        __android_log_print(ANDROID_LOG_WARN, "zcr-heap",
+                            "[badfree] 0x%x invalid pointer (lr=0x%x)", addr, lr);
+        return;
+    }
+    if (r == 2) {
+        std::lock_guard<std::mutex> ls(g_stats_mu);
+        auto it = g_blocks.find(addr - 8);
+        uint32_t prev_lr = it != g_blocks.end() ? it->second.free_lr : 0;
+        __android_log_print(ANDROID_LOG_WARN, "zcr-heap",
+                            "[badfree] hdr=0x%x double free lr=0x%x prev_free_lr=0x%x",
+                            addr - 8, lr, prev_lr);
+        return;
+    }
+    note_free(addr - 8, lr);
+}
+
+uint32_t heap_realloc(uc_engine *uc, uint32_t addr, size_t n) {
+    if (!addr) return heap_alloc(uc, n);
+    if (!n) {
+        heap_free(uc, addr);
+        return 0;
+    }
+    std::unique_lock<std::mutex> lk(g_heap_mu);
+    uint32_t lr = read_lr(uc);
+    /* read the old size before realloc moves it */
+    uint32_t old_size = 0;
+    {
+        std::lock_guard<std::mutex> ls(g_stats_mu);
+        auto it = g_blocks.find(addr - 8);
+        if (it != g_blocks.end()) old_size = it->second.size;
+    }
+    uint32_t naddr = g_heap.realloc(addr, n, lr);
+    if (!naddr) {
+        lk.unlock();
+        heap_dump_stats();
+        return 0;
+    }
+    if (naddr != addr) {
+        note_free(addr - 8, lr);
+        note_alloc(naddr - 8, (uint32_t)((n + 7) & ~7ull), lr, "engine");
+    } else if (old_size != (uint32_t)((n + 7) & ~7ull)) {
+        std::lock_guard<std::mutex> ls(g_stats_mu);
+        auto it = g_blocks.find(addr - 8);
+        if (it != g_blocks.end()) it->second.size = (uint32_t)((n + 7) & ~7ull);
+    }
+    return naddr;
+}
+
+void heap_stats(uint32_t *used_kb, uint32_t *total_kb, uint32_t *free_blocks) {
+    std::lock_guard<std::mutex> lk(g_heap_mu);
+    HeapStats st;
+    g_heap.stats(&st);
+    *used_kb = (uint32_t)(st.cur_bytes / 1024);
+    *total_kb = HEAP_SIZE / 1024;
+    *free_blocks = (uint32_t)st.free_blocks;
+}
+
+void heap_stats_ex(HeapStats *out) {
+    std::lock_guard<std::mutex> lk(g_heap_mu);
+    g_heap.stats(out);
+}
+
 void heap_dump_stats() {
+    {
+        std::lock_guard<std::mutex> lk(g_heap_mu);
+        HeapStats st;
+        g_heap.stats(&st);
+        diag_log("[heapstat] arena=%lluKB live=%lluKB peak=%lluKB blocks=%llu peak_blocks=%llu",
+                 (unsigned long long)(st.arena_size / 1024),
+                 (unsigned long long)(st.cur_bytes / 1024),
+                 (unsigned long long)(st.peak_bytes / 1024),
+                 (unsigned long long)st.cur_blocks,
+                 (unsigned long long)st.peak_blocks);
+        diag_log("[heapstat] allocs=%llu frees=%llu fails=%llu badfrees=%llu doublefrees=%llu coalesces=%llu",
+                 (unsigned long long)st.total_allocs,
+                 (unsigned long long)st.total_frees,
+                 (unsigned long long)st.alloc_failures,
+                 (unsigned long long)st.bad_frees,
+                 (unsigned long long)st.double_frees,
+                 (unsigned long long)st.coalesces);
+        diag_log("[heapstat] free=%lluKB free_blocks=%llu largest_free=%llu largest_live=%llu",
+                 (unsigned long long)(st.free_bytes / 1024),
+                 (unsigned long long)st.free_blocks,
+                 (unsigned long long)st.largest_free,
+                 (unsigned long long)st.largest_live);
+    }
     std::lock_guard<std::mutex> lk(g_stats_mu);
     for (auto &kv : g_stats) {
         if (kv.second.count)
@@ -196,15 +350,22 @@ void heap_note_lr(uint32_t lr, size_t n) {
 }
 
 void heap_describe(uint32_t addr, char *buf, size_t n) {
+    std::string core;
+    {
+        std::lock_guard<std::mutex> lk(g_heap_mu);
+        char tmp[256];
+        g_heap.describe(addr, tmp, sizeof(tmp));
+        core = tmp;
+    }
     std::lock_guard<std::mutex> lk(g_stats_mu);
-    if (addr < HEAP_BASE + 64 || addr >= g_heap_end) {
+    if (addr < HEAP_BASE + 64 || addr >= HEAP_BASE + HEAP_SIZE) {
         snprintf(buf, n, "0x%x not in heap", addr);
         return;
     }
-    /* nearest block header at or below addr */
+    /* nearest block header at or below addr (provenance metadata) */
     auto it = g_blocks.upper_bound(addr);
     if (it == g_blocks.begin()) {
-        snprintf(buf, n, "0x%x in heap, no block record", addr);
+        snprintf(buf, n, "%s", core.c_str());
         return;
     }
     --it;
@@ -212,164 +373,15 @@ void heap_describe(uint32_t addr, char *buf, size_t n) {
     uint32_t hdr = it->first;
     if (addr < hdr + 8 + rec.size) {
         snprintf(buf, n,
-                 "0x%x in block hdr=0x%x size=%u tag=%s alloc_lr=0x%x free_lr=0x%x off=%u",
-                 addr, hdr, rec.size, rec.tag.c_str(), rec.alloc_lr, rec.free_lr, addr - hdr - 8);
+                 "%s | block hdr=0x%x size=%u tag=%s alloc_lr=0x%x free_lr=0x%x off=%u",
+                 core.c_str(), hdr, rec.size, rec.tag.c_str(), rec.alloc_lr,
+                 rec.free_lr, addr - hdr - 8);
     } else {
-        snprintf(buf, n, "0x%x past block hdr=0x%x size=%u (freed_lr=0x%x gap=%u)",
-                 addr, hdr, rec.size, rec.free_lr, addr - (hdr + 8 + rec.size));
+        snprintf(buf, n,
+                 "%s | past block hdr=0x%x size=%u (freed_lr=0x%x gap=%u)",
+                 core.c_str(), hdr, rec.size, rec.free_lr,
+                 addr - (hdr + 8 + rec.size));
     }
-}
-
-uint32_t heap_alloc(uc_engine *uc, size_t n) {
-    if (n == 0) n = 1;
-    if (n > 0x4000000) {  /* >64MB request = engine bug, fail loudly */
-        __android_log_print(ANDROID_LOG_ERROR, "zcr-heap",
-                            "REJECTED huge alloc %zu bytes", n);
-        return 0;
-    }
-    n = (n + 7) & ~7ull;
-    std::unique_lock<std::mutex> lk(g_heap_mu);
-
-    /* first fit in free list */
-    uint32_t prev = 0, cur = g_free_head;
-    while (cur) {
-        Block *b = (Block *)block_host(cur);
-        if (b->size >= n) {
-            uint32_t nxt = b->word2;
-            if (prev) ((Block *)block_host(prev))->word2 = nxt;
-            else g_free_head = nxt;
-            b->word2 = kLiveMagic;
-            uint32_t lr = 0;
-            if (uc) uc_reg_read(uc, UC_ARM_REG_LR, &lr);
-            std::lock_guard<std::mutex> ls(g_stats_mu);
-            BlockRec rec;
-            rec.size = (uint32_t)n;
-            rec.alloc_lr = lr & ~1u;
-            rec.tag = "engine";
-            g_blocks[cur] = std::move(rec);
-            AllocStats &s = g_by_lr[lr & ~1u];
-            s.bytes += n;
-            s.count++;
-            s.live++;
-            s.live_bytes += n;
-            return cur + 8;
-        }
-        prev = cur;
-        cur = b->word2;
-    }
-
-    if (g_heap_bump + n + 8 > g_heap_end) {
-        __android_log_print(ANDROID_LOG_ERROR, "zcr-heap",
-                            "EXHAUSTED: want %zu, used %u KB / %u KB",
-                            n, (g_heap_bump - HEAP_BASE) / 1024,
-                            HEAP_SIZE / 1024);
-        lk.unlock();
-        heap_dump_stats();
-        return 0;
-    }
-    uint32_t hdr = g_heap_bump;
-    g_heap_bump += (uint32_t)(n + 8);
-    if (((g_heap_bump - HEAP_BASE) & 0xFFFFF) < (n + 8)) {
-        __android_log_print(ANDROID_LOG_INFO, "zcr-heap",
-                            "usage %u KB / %u KB",
-                            (g_heap_bump - HEAP_BASE) / 1024, HEAP_SIZE / 1024);
-    }
-    Block *b = (Block *)block_host(hdr);
-    b->size = (uint32_t)n;
-    b->word2 = kLiveMagic;
-    lk.unlock();
-    {
-        uint32_t lr = 0;
-        if (uc) uc_reg_read(uc, UC_ARM_REG_LR, &lr);
-        std::lock_guard<std::mutex> ls(g_stats_mu);
-        BlockRec rec;
-        rec.size = (uint32_t)n;
-        rec.alloc_lr = lr & ~1u;
-        rec.tag = "engine";
-        g_blocks[hdr] = std::move(rec);
-        AllocStats &s = g_by_lr[lr & ~1u];
-        s.bytes += n;
-        s.count++;
-        s.live++;
-        s.live_bytes += n;
-    }
-    return hdr + 8;
-}
-
-void heap_free(uc_engine *uc, uint32_t addr) {
-    if (!addr) return;
-    uint32_t hdr = block_hdr(addr);
-    if (hdr < HEAP_BASE + 64 || hdr >= g_heap_end) {
-        uint32_t lr = 0;
-        if (uc) uc_reg_read(uc, UC_ARM_REG_LR, &lr);
-        __android_log_print(ANDROID_LOG_WARN, "zcr-heap",
-                            "[badfree] 0x%x outside heap (lr=0x%x)", addr, lr);
-        return;
-    }
-    std::lock_guard<std::mutex> lk(g_heap_mu);
-    Block *b = (Block *)block_host(hdr);
-    /* reject invalid / double frees (the engine has known bad frees) */
-    if (b->word2 != kLiveMagic || b->size == 0 || b->size > HEAP_SIZE) {
-        uint32_t lr = 0;
-        if (uc) uc_reg_read(uc, UC_ARM_REG_LR, &lr);
-        std::lock_guard<std::mutex> ls(g_stats_mu);
-        auto it = g_blocks.find(hdr);
-        uint32_t prev_lr = it != g_blocks.end() ? it->second.free_lr : 0;
-        __android_log_print(ANDROID_LOG_WARN, "zcr-heap",
-                            "[badfree] hdr=0x%x size=%u lr=0x%x prev_free_lr=0x%x",
-                            hdr, b->size, lr, prev_lr);
-        return;
-    }
-    if (b->size >= 1024 * 1024) {
-        __android_log_print(ANDROID_LOG_INFO, "zcr-heap",
-                            "[heapfree] %u KB", b->size / 1024);
-    }
-    {
-        uint32_t lr = 0;
-        if (uc) uc_reg_read(uc, UC_ARM_REG_LR, &lr);
-        std::lock_guard<std::mutex> ls(g_stats_mu);
-        auto it = g_blocks.find(hdr);
-        if (it != g_blocks.end()) {
-            BlockRec &rec = it->second;
-            rec.free_lr = lr & ~1u;
-            auto st = g_stats.find(rec.tag);
-            if (st != g_stats.end() && st->second.live) {
-                st->second.live--;
-                st->second.live_bytes -= rec.size;
-            }
-            auto by = g_by_lr.find(rec.alloc_lr);
-            if (by != g_by_lr.end() && by->second.live) {
-                by->second.live--;
-                by->second.live_bytes -= rec.size;
-            }
-        }
-    }
-    b->word2 = g_free_head;
-    g_free_head = hdr;
-}
-
-uint32_t heap_realloc(uc_engine *uc, uint32_t addr, size_t n) {
-    if (!addr) return heap_alloc(uc, n);
-    if (!n) { heap_free(uc, addr); return 0; }
-    Block *b = (Block *)block_host(block_hdr(addr));
-    if (b->size >= n) return addr;
-    uint32_t naddr = heap_alloc(uc, n);
-    if (!naddr) return 0;
-    memcpy(host_ptr(uc, naddr), host_ptr(uc, addr), b->size);
-    heap_free(uc, addr);
-    return naddr;
-}
-
-void heap_stats(uint32_t *used_kb, uint32_t *total_kb, uint32_t *free_blocks) {
-    std::lock_guard<std::mutex> lk(g_heap_mu);
-    *used_kb = (g_heap_bump - HEAP_BASE) / 1024;
-    *total_kb = HEAP_SIZE / 1024;
-    uint32_t n = 0;
-    for (uint32_t cur = g_free_head; cur && n < 100000; ) {
-        n++;
-        cur = ((Block *)block_host(cur))->word2;
-    }
-    *free_blocks = n;
 }
 
 uint32_t intern_string(uc_engine *uc, const std::string &s) {

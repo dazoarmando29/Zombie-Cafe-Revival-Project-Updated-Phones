@@ -9,6 +9,10 @@
 
 #include <android/log.h>
 
+#include "emu_heap.h"
+#include "emu_mem.h"
+#include "imports_gl.h"
+
 #define TAG "zcr"
 
 uint32_t g_diag_unimpl = 0;
@@ -19,20 +23,25 @@ namespace {
 
 std::mutex g_mu;
 FILE *g_file = nullptr;
+std::string g_log_dir;
 std::vector<std::string> g_unimpl_names;
 
 FILE *log_file() {
     if (g_file) return g_file;
-    static const char *kPaths[] = {
-        "/sdcard/Download/zcr-log.txt",
-        "/storage/emulated/0/Download/zcr-log.txt",
-        "/sdcard/zcr-log.txt",
-        "/storage/emulated/0/zcr-log.txt",
-    };
-    for (const char *p : kPaths) {
-        FILE *f = fopen(p, "a");
+    /* NOTE: always called with g_mu held (from diag_log) */
+    std::vector<std::string> paths;
+    if (!g_log_dir.empty()) paths.push_back(g_log_dir + "/zcr-log.txt");
+    /* legacy world-readable locations (pre-scoped-storage devices) */
+    paths.push_back("/sdcard/Download/zcr-log.txt");
+    paths.push_back("/storage/emulated/0/Download/zcr-log.txt");
+    paths.push_back("/sdcard/zcr-log.txt");
+    paths.push_back("/storage/emulated/0/zcr-log.txt");
+    for (const std::string &p : paths) {
+        FILE *f = fopen(p.c_str(), "a");
         if (f) {
             g_file = f;
+            fprintf(f, "[diag] logging to %s\n", p.c_str());
+            fflush(f);
             return f;
         }
     }
@@ -40,6 +49,11 @@ FILE *log_file() {
 }
 
 }  // namespace
+
+void diag_set_log_dir(const char *dir) {
+    std::lock_guard<std::mutex> lk(g_mu);
+    if (dir && *dir) g_log_dir = dir;
+}
 
 void diag_log(const char *fmt, ...) {
     char buf[1024];
@@ -110,4 +124,23 @@ void diag_summary() {
              g_diag_unimpl, g_diag_emu_errors);
     std::lock_guard<std::mutex> lk(g_mu);
     for (const auto &s : g_unimpl_names) diag_log("[unimpl-list] %s", s.c_str());
+}
+
+void diag_report(const char *why) {
+    diag_log("[report] ==== memory report (%s) ====", why ? why : "?");
+    emu::heap_dump_stats();
+    gl_dump_tex_stats();
+    /* host process memory (RSS/VMS) where /proc is readable */
+    FILE *f = fopen("/proc/self/status", "r");
+    if (f) {
+        char line[256];
+        while (fgets(line, sizeof(line), f)) {
+            if (!strncmp(line, "VmRSS:", 6) || !strncmp(line, "VmSize:", 7) ||
+                !strncmp(line, "VmPeak:", 7) || !strncmp(line, "VmHWM:", 6))
+                diag_log("[report] %s", line);
+        }
+        fclose(f);
+    }
+    diag_summary();
+    diag_log("[report] ==== end report ====");
 }

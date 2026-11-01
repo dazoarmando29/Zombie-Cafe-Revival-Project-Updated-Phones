@@ -41,7 +41,11 @@ func main() {
 	} else if mode == "unpack_characters" {
 		serialization.UnpackCharacters(in_directory, out_directory, data_directory, *is_jp)
 	} else if mode == "pack_characters" {
-		serialization.PackCharacters(in_directory, out_directory, out_directory)
+		variant := "en"
+		if *is_jp {
+			variant = "jp"
+		}
+		serialization.PackCharacters(in_directory, out_directory, out_directory, variant)
 	} else if mode == "validate_save" {
 		file_types.ValidateSave(in_directory)
 	} else if mode == "validate_cafe" {

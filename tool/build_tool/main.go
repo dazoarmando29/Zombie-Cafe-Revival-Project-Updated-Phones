@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"asset_validator/validator"
 	"tool/build_tool/copylist"
 	"tool/resource_manager/serialization"
 )
@@ -30,12 +31,34 @@ func main() {
 	}
 
 	os.RemoveAll(out_directory)
+
+	// validate the asset sources first: malformed content must fail the
+	// build with a clear message instead of shipping a corrupt APK
+	{
+		res := validator.ValidateAssets(filepath.Join(in_directory, "assets"))
+		for _, is := range res.Issues {
+			log.Println(is)
+		}
+		if res.Errors() > 0 {
+			log.Fatalf("asset validation failed with %d error(s)", res.Errors())
+		}
+	}
+
 	copyFiles(in_directory, out_directory)
 
 	serialization.SerializeFiles(filepath.Join(in_directory, "assets", "data"), filepath.Join(out_directory, "assets", "data"))
 	serialization.SerializeFiles(filepath.Join(in_directory, "assets", "images"), filepath.Join(out_directory, "assets", "images"))
-	serialization.PackCharacters(filepath.Join(in_directory, "assets", "images", "characterParts"), filepath.Join(out_directory, "assets", "images"), filepath.Join(out_directory, "assets", "data"))
-	serialization.PackCharacters(filepath.Join(in_directory, "assets", "images", "characterParts2"), filepath.Join(out_directory, "assets", "images"), filepath.Join(out_directory, "assets", "data"))
+	// pack every character sheet folder found (characterParts, characterParts2,
+	// characterParts3, ...) - the pipeline is data driven, so a new sheet is
+	// added by dropping in a new folder (engine-side loading is a separate
+	// concern, see docs/ASSET_EXPANSION_GUIDE.md)
+	if sheetDirs, _ := filepath.Glob(filepath.Join(in_directory, "assets", "images", "characterParts*")); len(sheetDirs) > 0 {
+		for _, dir := range sheetDirs {
+			if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
+				serialization.PackCharacters(dir, filepath.Join(out_directory, "assets", "images"), filepath.Join(out_directory, "assets", "data"), "en")
+			}
+		}
+	}
 	serialization.PackTextures(filepath.Join(in_directory, "assets", "images", "recipeImages"), filepath.Join(out_directory, "assets", "images"))
 	serialization.PackTextures(filepath.Join(in_directory, "assets", "images", "recipeImages2"), filepath.Join(out_directory, "assets", "images"))
 	serialization.PackTextures(filepath.Join(in_directory, "assets", "images", "furniture"), filepath.Join(out_directory, "assets", "images"))

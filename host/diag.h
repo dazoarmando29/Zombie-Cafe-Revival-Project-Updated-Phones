@@ -10,6 +10,13 @@ void diag_note_emu_error(const char *where, const char *what);
 void diag_note_draw();
 void diag_summary();
 
+/* Preferred log directory (e.g. the app's external files dir, which is
+ * writable under Android scoped storage). Falls back to legacy paths. */
+void diag_set_log_dir(const char *dir);
+
+/* Full memory report: heap stats, texture stats, host process memory. */
+void diag_report(const char *why);
+
 /* Ring buffer of recent engine->Java calls, dumped at crash time so we can
  * see the exact call sequence before a fault (ChatGPT's "compare the last
  * successful frame with the first failed one"). */
