@@ -447,6 +447,20 @@ std::string serialize(const State &s) {
     write_int("toxin_earned", s.toxin_earned, &out, &tf);
     write_int("last_cooked_row", s.last_cooked_row, &out, &tf);
     out += "}";
+    /* per-recipe cook add-on (row -> variant) */
+    out += ",\"cookVariant\":{";
+    bool vf = true;
+    for (const auto &kv : s.cook_variant) {
+        if (!vf) out += ",";
+        vf = false;
+        char kbuf[16];
+        snprintf(kbuf, sizeof(kbuf), "\"%d\":", (int)kv.first);
+        out += kbuf;
+        char vbuf[16];
+        snprintf(vbuf, sizeof(vbuf), "%d", (int)kv.second);
+        out += vbuf;
+    }
+    out += "}";
     /* recipes (std::map = sorted keys = deterministic) */
     out += ",\"recipes\":{";
     bool rf = true;
@@ -553,6 +567,15 @@ bool parse_state(const std::string &json, State *out, std::string *err) {
             if (kv.second.type != JsonVal::Int) continue;
             if (kv.second.i < 0 || kv.second.i > 255) continue;
             st.favorites[kv.first] = (int32_t)kv.second.i;
+        }
+    }
+    if (const JsonVal *cv = root.find("cookVariant")) {
+        for (const auto &kv : cv->o) {
+            if (kv.second.type != JsonVal::Int) continue;
+            int32_t row = (int32_t)atoi(kv.first.c_str());
+            if (row < 0 || row >= 250) continue;
+            if (kv.second.i < 0 || kv.second.i > 255) continue;
+            st.cook_variant[row] = (int32_t)kv.second.i;
         }
     }
     if (const JsonVal *tl = root.find("toxin_log")) {

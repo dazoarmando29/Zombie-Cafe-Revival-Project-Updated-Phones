@@ -83,6 +83,9 @@ struct State {
     /* favorite recipes: key -> foodData row (presence = favorite; the
      * original game's star flag resets every launch - Recipe+0x1e) */
     std::map<std::string, int32_t> favorites;
+    /* per-recipe cook add-on (the variant the player cooked with, e.g.
+     * 5 = BULK); auto-cook replays it. Missing rows use the bulk default. */
+    std::map<int32_t, int32_t> cook_variant;
     /* toxin spend ledger, newest last, capped (toxin_ledger_cap) */
     std::vector<SpendEvent> toxin_log;
     /* key = achievement id */

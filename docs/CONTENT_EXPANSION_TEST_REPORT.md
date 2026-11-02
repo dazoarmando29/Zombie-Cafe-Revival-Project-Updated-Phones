@@ -395,3 +395,27 @@ that restores the purchase index. Log lines: `zukan buy: confirm queued
   (original is probabilistic); if live testing shows over-eager task
   churn, the gate needs pacing. The serve guard assumes +0x2e semantics
   hold for all target types (verified for seats + the ServeTask target).
+
+## 11.1 Device verification update (2026-11-02, later session)
+
+| Component | Status |
+|---|---|
+| Auto-cook with player add-on (bulk): `variant=5 cost=16 money=13572->13556 foodstack=...` | DEVICE-TESTED (cost 16 = the cook UI's BULK $16 exactly; coins deducted; cooking started) |
+| Chef loop (walk/cook/carry): `chef assigned to stove=...`; chef visibly tending the cooking pot | DEVICE-TESTED |
+| Auto-serve (done dish -> counter): armed via GameStateCafe+0x54; chef loop carry path | implemented + armed (carry event visual confirmation pending) |
+| Hands-free/idle operation + background catch-up (pause leaves stoves cooking; wall-clock progress continues) | implemented + built |
+| Serve guard (busy-spot divert) | implemented + built (live repro pending) |
+| Staff cleanup gate (dirty fridge/sink "!") forced eligible (`auto-serve gate: forced N eligible checks`) | implemented + firing on device |
+| Unit tests | 158/158 PASS |
+
+### 11.2 RE corrections (verified against raw bytes)
+
+- Stove selection must use `Cafe::createDistanceSortedStoveList(cafe,
+  recipe+0x1a cookType, 0)` and the **+0x2e busy flag** - the generic
+  furniture list matched the wrong appliance (the fridge), and
+  Stove+0x60 goes stale after a dish is carried (false "busy").
+- The chef loop (GameStateCafe::tick): `Stove::isBurned` -> CleanupTask;
+  `Stove::isDoneCooking` -> DishToCounterTask (the auto-serve carry);
+  else CookTask (tend). Driven by the stove assignment at +0x54.
+- The tickStaff CleanupTask gate (dirty furniture, incl. fridge/sink)
+  is `characterCanFollow` - covered by the forced auto-serve gate.

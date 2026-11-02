@@ -225,6 +225,8 @@ static void test_state_roundtrip() {
     on_dish_cooked(s, d, "recipe.brain_burger", 217, 1002);
     on_dish_cooked(s, d, "row:7", 7, 1003);
     CHECK_EQ(s.last_cooked_row, 7);
+    s.cook_variant[0] = 5;
+    s.cook_variant[7] = 3;
     on_toxin_spent(s, d, 4, 1004);
     on_toxin_earned(s, d, 3, 1005);
     mark_claimed(s, "ach.cook_first", 1006);
@@ -239,6 +241,9 @@ static void test_state_roundtrip() {
     CHECK_EQ(back.toxin_spent, 4);
     CHECK_EQ(back.toxin_earned, 3);
     CHECK_EQ(back.last_cooked_row, 7);
+    CHECK_EQ((int)back.cook_variant.size(), 2);
+    CHECK_EQ(back.cook_variant[0], 5);
+    CHECK_EQ(back.cook_variant[7], 3);
     CHECK_EQ(back.recipes.size(), 2);
     CHECK_EQ(back.recipes["recipe.brain_burger"].cooked, 2);
     CHECK(back.recipes["recipe.brain_burger"].zcr_id == "recipe.brain_burger");

@@ -424,6 +424,9 @@ ENTRY(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_InitMethodCalls) {
     CALL(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_InitMethodCalls);
 }
 ENTRY(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_pause) {
+    /* leave stoves cooking before backgrounding: engine wall-clock progress
+     * keeps them cooking while away and the chef loop resumes on return */
+    zcr_companion::qol_tick();
     zcr_companion::flush(true); /* persist companion save on backgrounding */
     GUARD();
     CALL(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_pause);
