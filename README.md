@@ -60,6 +60,12 @@ Work from the `feature/engine-upgrade` branch (9 commits). Full details in
 
 ### Fixed
 
+- **Music no longer plays in the background** — minimizing the app (home / other
+  app) now pauses the game's media players and resumes them when you return.
+- **In-game notifications now fire on modern Android** — cooking/customer
+  reminders were silently dead (Android 12+ `PendingIntent` crash, Android 8+
+  missing notification channel, Android 13+ missing permission). Scheduling,
+  display and permission request all work now (verified on Android 15).
 - **1.5 GB RSS balloon** — an allocator revision zeroed the whole emulated heap
   on startup; the new reports caught it (VmRSS 1.69 GB). Fixed: only block
   headers are touched now (VmRSS 288 MB, same workload).

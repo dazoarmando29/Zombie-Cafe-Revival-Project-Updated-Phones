@@ -29,7 +29,7 @@
             </intent-filter>
             <meta-data android:name="com.tapjoy.TapjoyReferralTracker" android:value="com.android.vending.INSTALL_REFERRER"/>
         </receiver>
-        <receiver android:name="com.capcom.zombiecafeandroid.AlarmReceiver"/>
+        <receiver android:exported="true" android:name="com.capcom.zombiecafeandroid.AlarmReceiver"/>
     </application>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
@@ -39,6 +39,10 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="com.android.vending.BILLING"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
 
     <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
         <background android:drawable="@color/ic_launcher_background" />

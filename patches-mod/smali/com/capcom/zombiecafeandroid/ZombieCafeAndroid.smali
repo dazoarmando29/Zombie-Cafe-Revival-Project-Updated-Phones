@@ -2704,7 +2704,9 @@
 .method public static deleteNotification()V
     .locals 5
 
-    const/4 v1, 0x0
+    # ZCR: FLAG_IMMUTABLE (0x4000000) - a mutability-less PendingIntent throws
+    # on Android 12+, which broke cancel-on-resume.
+    const v1, 0x4000000
 
     const-string v0, "DeleteNotifications"
 
@@ -3037,21 +3039,14 @@
 
     const v3, 0x2f145
 
-    const/high16 v4, 0x10000000
-
-    invoke-static {v2, v3, v1, v4}, Landroid/app/PendingIntent;->getBroadcast(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;
-
-    move-result-object v1
-
-    sget-object v2, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->b:Landroid/app/AlarmManager;
-
-    const/4 v3, 0x0
-
     invoke-virtual {v0}, Ljava/util/Calendar;->getTimeInMillis()J
 
     move-result-wide v4
 
-    invoke-virtual {v2, v3, v4, v5, v1}, Landroid/app/AlarmManager;->set(IJLandroid/app/PendingIntent;)V
+    # ZCR: schedule through NotifHelper - the original getBroadcast used a
+    # mutability-less PendingIntent (throws on Android 12+, alarm silently
+    # never scheduled) and plain set() (no doze handling).
+    invoke-static {v2, v3, v1, v4, v5}, Lcom/capcom/zombiecafeandroid/NotifHelper;->schedule(Landroid/content/Context;ILandroid/content/Intent;J)V
 
     const-string v0, "ZombieCafeAndroid: Unique ID"
 
@@ -4565,14 +4560,16 @@
     invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
 
     # ZCR: targetSdk >= 23 enables the runtime-permission model; request the
-    # two dangerous permissions the original game used. Guarded for API < 23.
+    # dangerous permissions the original game used plus POST_NOTIFICATIONS
+    # (Android 13+, without it game notifications are silently blocked).
+    # Guarded: requestPermissions only exists on API >= 23.
     sget v0, Landroid/os/Build$VERSION;->SDK_INT:I
 
     const/16 v1, 0x17
 
-    if-ge v0, v1, :zcr_perms_done
+    if-lt v0, v1, :zcr_perms_done
 
-    const/4 v0, 0x2
+    const/4 v0, 0x3
 
     new-array v0, v0, [Ljava/lang/String;
 
@@ -4585,6 +4582,12 @@
     const/4 v1, 0x1
 
     const-string v2, "android.permission.WRITE_EXTERNAL_STORAGE"
+
+    aput-object v2, v0, v1
+
+    const/4 v1, 0x2
+
+    const-string v2, "android.permission.POST_NOTIFICATIONS"
 
     aput-object v2, v0, v1
 
@@ -5147,6 +5150,11 @@
 
     invoke-virtual {v0, v1}, Lcom/capcom/zombiecafeandroid/SoundManager;->setEnabled(Z)V
 
+    # ZCR: actually pause the Java-side MediaPlayers - setEnabled() only
+    # tells the emulated engine, so the music kept looping in the background
+    # after leaving the app.
+    invoke-virtual {v0}, Lcom/capcom/zombiecafeandroid/SoundManager;->pauseAllPlayers()V
+
     :cond_0
     sget-object v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->d:Landroid/webkit/WebView;
 
@@ -5250,6 +5258,15 @@
     invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
 
     invoke-super {p0}, Landroid/app/Activity;->onResume()V
+
+    # ZCR: resume the music/SFX that onPause() paused
+    sget-object v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->mSoundManager:Lcom/capcom/zombiecafeandroid/SoundManager;
+
+    if-eqz v0, :zcr_no_audio
+
+    invoke-virtual {v0}, Lcom/capcom/zombiecafeandroid/SoundManager;->resumeAllPlayers()V
+
+    :zcr_no_audio
 
     new-instance v0, Landroid/content/IntentFilter;
 
