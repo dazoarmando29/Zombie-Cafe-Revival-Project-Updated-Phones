@@ -104,6 +104,19 @@ constexpr uint32_t RVA_SERVE_ABORT = 0x10d408; /* ServeTask::tick return-dish pa
 constexpr uint32_t RVA_CAN_FOLLOW = 0x9b35c;   /* characterCanFollow gate */
 constexpr uint32_t OFF_STATE_SELSTOVE = 0x50;  /* GameStateCafe+0x50 = UI stove sel */
 constexpr uint32_t OFF_STATE_LOOPSTOVE = 0x54; /* GameStateCafe+0x54 = chef-loop stove */
+constexpr uint32_t OFF_STATE_SELCHAR = 0x58;   /* GameStateCafe+0x58 = selected char */
+constexpr uint32_t OFF_STATE_CHARS = 0x20;     /* GameStateCafe+0x20 = char count */
+constexpr uint32_t OFF_STATE_CHARARR = 0x24;   /* GameStateCafe+0x24 = char array */
+constexpr uint32_t RVA_COOK_TASK = 0x80d9c;    /* CookTask(char, stove, cafe) ctor */
+constexpr uint32_t RVA_DISH_TASK = 0x81f8c;    /* DishToCounterTask(char, cafe, stove) */
+constexpr uint32_t RVA_CLEAN_TASK = 0x789c8;   /* CleanupTask(char, cafe, furniture) */
+constexpr uint32_t RVA_ASSIGN_TASK = 0x6b1f0;  /* CharacterInstance::assignTask */
+constexpr uint32_t RVA_IS_DONE = 0x77ecc;      /* Stove::isDoneCooking */
+constexpr uint32_t RVA_IS_BURNED = 0x77f04;    /* Stove::isBurned */
+constexpr uint32_t RVA_NEW = 0x138eac;         /* operator new */
+constexpr uint32_t OFF_CHAR_DATA = 0x94;       /* CharacterInstance+0x94 = CharacterData* */
+constexpr uint32_t OFF_CHARDATA_IDLE = 0x48;   /* CharacterData+0x48: <=0 = idle */
+constexpr uint32_t RVA_SELECT_CHAR = 0x9b3dc;  /* GameStateCafe::select(char) */
 constexpr int kBulkVariant = 5;                /* BULK add-on (cost x2, double servings) */
 constexpr int64_t kAutoCookGapSec = 5;         /* driver throttle */
 constexpr int64_t kNotifGapSec = 1800;         /* unaffordable notif throttle */
@@ -747,6 +760,35 @@ void on_cook_start(uc_engine *uc, uint64_t, int32_t, void *) {
     }
 }
 
+/* Preferred chef: the character the player selects ("YOU" panel) - pinned
+ * so the cook/serve tasks always go to the chef even after deselect. */
+uint32_t g_pref_chef = 0;
+
+void on_select_char(uc_engine *uc, uint64_t, int32_t, void *) {
+    std::lock_guard<std::mutex> lk(g_mu);
+    if (!g_ready) return;
+    uint32_t chr = 0;
+    uc_reg_read(uc, UC_ARM_REG_R1, &chr);
+    if (!plausible_ptr(chr) || chr == g_pref_chef) return;
+    g_pref_chef = chr;
+    /* locate the avatar in the character array for zero-tap persistence */
+    uint32_t game = game_instance(), state = 0, arr = 0, count = 0;
+    int idx = -1;
+    if (plausible_ptr(game) &&
+        emu::read(uc, game + OFF_GAME_STATE, &state, 4) && plausible_ptr(state)) {
+        emu::read(uc, state + OFF_STATE_CHARARR, &arr, 4);
+        emu::read(uc, state + OFF_STATE_CHARS, &count, 4);
+        if (plausible_ptr(arr) && count < 4096) {
+            for (uint32_t i = 0; i < count; i++) {
+                uint32_t e = 0;
+                emu::read(uc, arr + i * 4, &e, 4);
+                if (e == chr) { idx = (int)i; break; }
+            }
+        }
+    }
+    logi("chef pinned: char=0x%x idx=%d/%u", chr, idx, count);
+}
+
 /* Auto-cook driver (from the render tick). Idle stove -> cook the most
  * recently cooked recipe; when coins are short, fire a "needs you" Android
  * notification (throttled). The engine cook call performs the real cost
@@ -841,10 +883,29 @@ void qol_tick_impl() {
         }
         jni_call_engine_r0_sp(uc, RVA_FREE | 1u, list, nullptr, 0, sp);
     }
-    /* chef loop assignment: GameStateCafe's tick makes the chef walk to
-     * +0x54, cook it, and carry the done dish to the counter (auto-serve).
-     * Written directly (select(Stove*) would clear the chef at +0x58).
-     * Tend the cooking stove too, so save-loaded dishes get carried. */
+    /* Chef resolution: the selected character ("YOU" panel) is the chef.
+     * Zero-tap fallback: the avatar is character-array[0] (created first in
+     * GameStateChooseChef), so fresh sessions pin him automatically. */
+    uint32_t chef = 0;
+    emu::read(uc, state + OFF_STATE_SELCHAR, &chef, 4);
+    if (!plausible_ptr(chef) && plausible_ptr(g_pref_chef))
+        chef = g_pref_chef;
+    if (!plausible_ptr(chef)) {
+        uint32_t arr = 0;
+        if (emu::read(uc, state + OFF_STATE_CHARARR, &arr, 4) &&
+            plausible_ptr(arr))
+            emu::read(uc, arr, &chef, 4);
+        if (plausible_ptr(chef))
+            logi("chef auto-pinned: char=0x%x (array[0])", chef);
+    }
+    if (plausible_ptr(chef)) {
+        g_pref_chef = chef;
+        uint32_t sel = 0;
+        emu::read(uc, state + OFF_STATE_SELCHAR, &sel, 4);
+        if (sel != chef) emu::write(uc, state + OFF_STATE_SELCHAR, &chef, 4);
+    }
+
+    /* keep the engine's own chef-loop pointing at the same stove */
     uint32_t target = stove ? stove : busy;
     if (target) {
         uint32_t loop = 0;
@@ -852,10 +913,52 @@ void qol_tick_impl() {
         if (loop != target) {
             emu::write(uc, state + OFF_STATE_SELSTOVE, &target, 4);
             emu::write(uc, state + OFF_STATE_LOOPSTOVE, &target, 4);
-            logi("auto-cook: chef assigned to stove=0x%x", target);
         }
     }
+
+    /* Direct task assignment to the chef. The engine's per-frame chef state
+     * machine can leave him idle (health/tutorial gating); assign the
+     * cook/carry/clean task straight to him whenever he is idle. */
+    auto chef_idle = [&]() -> bool {
+        uint32_t data = 0;
+        int32_t v = 0;
+        if (emu::read(uc, chef + OFF_CHAR_DATA, &data, 4) && plausible_ptr(data))
+            emu::read(uc, data + OFF_CHARDATA_IDLE, &v, 4);
+        return v <= 0;
+    };
+    auto assign_task = [&](uint32_t kind, uint32_t tgt) {
+        static uint32_t s_kind = 9, s_tgt = 0;
+        static int64_t s_ts = 0;
+        if (kind == s_kind && tgt == s_tgt && now - s_ts < 30) return;
+        uint32_t alloc = kind == 0 ? 0x30u : (kind == 1 ? 0x44u : 0x40u);
+        uint32_t task =
+            jni_call_engine_r0_sp(uc, RVA_NEW | 1u, alloc, nullptr, 0, sp);
+        if (!plausible_ptr(task)) return;
+        uint32_t a_csc[3] = {chef, tgt, cafe};
+        uint32_t a_ccs[3] = {chef, cafe, tgt};
+        uint32_t ctor = kind == 0 ? RVA_COOK_TASK
+                       : (kind == 1 ? RVA_DISH_TASK : RVA_CLEAN_TASK);
+        jni_call_engine_r0_sp(uc, ctor | 1u, task, kind == 0 ? a_csc : a_ccs,
+                              3, sp);
+        uint32_t aargs[1] = {task};
+        jni_call_engine_r0_sp(uc, RVA_ASSIGN_TASK | 1u, chef, aargs, 1, sp);
+        s_kind = kind;
+        s_tgt = tgt;
+        s_ts = now;
+        logi("chef task: %s stove=0x%x chef=0x%x",
+             kind == 0 ? "cook" : (kind == 1 ? "carry-to-counter" : "clean"),
+             tgt, chef);
+    };
+
     if (!stove) {
+        /* busy stove: carry the done dish (auto-serve), clean burns, tend */
+        if (busy && chef && plausible_ptr(chef) && chef_idle()) {
+            uint32_t burnt =
+                jni_call_engine_r0_sp(uc, RVA_IS_BURNED | 1u, busy, nullptr, 0, sp);
+            uint32_t done =
+                jni_call_engine_r0_sp(uc, RVA_IS_DONE | 1u, busy, nullptr, 0, sp);
+            assign_task(burnt ? 2u : (done ? 1u : 0u), busy);
+        }
         if (do_status) {
             uint32_t f = 0, el = 0, fl = 0;
             if (busy) {
@@ -1060,8 +1163,8 @@ bool init(uc_engine *uc, void *asset_mgr) {
     }
 
     /* QoL hooks: serve guard (overwrite fix) + auto-serve gate + cook
-     * add-on recording */
-    uc_hook h7 = 0, h8 = 0, h9 = 0;
+     * add-on recording + chef pin */
+    uc_hook h7 = 0, h8 = 0, h9 = 0, h10 = 0;
     uc_err e7 = uc_hook_add(uc, &h7, UC_HOOK_CODE, (void *)on_serve_place,
                             nullptr, ENG_ADDR(RVA_SERVE_PLACE),
                             ENG_ADDR(RVA_SERVE_PLACE));
@@ -1071,12 +1174,17 @@ bool init(uc_engine *uc, void *asset_mgr) {
     uc_err e9 = uc_hook_add(uc, &h9, UC_HOOK_CODE, (void *)on_cook_start,
                             nullptr, ENG_ADDR(RVA_COOK),
                             ENG_ADDR(RVA_COOK));
-    if (e7 != UC_ERR_OK || e8 != UC_ERR_OK || e9 != UC_ERR_OK) {
-        logi("qol hooks failed: %s / %s / %s", uc_strerror(e7),
-             uc_strerror(e8), uc_strerror(e9));
+    uc_err e10 = uc_hook_add(uc, &h10, UC_HOOK_CODE, (void *)on_select_char,
+                             nullptr, ENG_ADDR(RVA_SELECT_CHAR),
+                             ENG_ADDR(RVA_SELECT_CHAR));
+    if (e7 != UC_ERR_OK || e8 != UC_ERR_OK || e9 != UC_ERR_OK ||
+        e10 != UC_ERR_OK) {
+        logi("qol hooks failed: %s / %s / %s / %s", uc_strerror(e7),
+             uc_strerror(e8), uc_strerror(e9), uc_strerror(e10));
     } else {
         logi("qol hooks installed (serve guard@0x%x auto-serve@0x%x "
-             "cook-rec@0x%x)", RVA_SERVE_PLACE, RVA_CAN_FOLLOW, RVA_COOK);
+             "cook-rec@0x%x chef-pin@0x%x)", RVA_SERVE_PLACE, RVA_CAN_FOLLOW,
+             RVA_COOK, RVA_SELECT_CHAR);
     }
     flush_locked(false);
     return true;
