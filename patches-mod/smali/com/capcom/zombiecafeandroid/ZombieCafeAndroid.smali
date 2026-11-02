@@ -4970,6 +4970,14 @@
 
     invoke-virtual {v1, v3}, Landroid/widget/Button;->setOnClickListener(Landroid/view/View$OnClickListener;)V
 
+    # ZCR: drag-to-move the MOD trigger (it used to sit on top of the game's
+    # back button); a tap still fires the click listener via performClick().
+    new-instance v3, Lcom/capcom/zombiecafeandroid/ModDragTouchListener;
+
+    invoke-direct {v3}, Lcom/capcom/zombiecafeandroid/ModDragTouchListener;-><init>()V
+
+    invoke-virtual {v1, v3}, Landroid/widget/Button;->setOnTouchListener(Landroid/view/View$OnTouchListener;)V
+
     sget-object v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->e:Landroid/widget/RelativeLayout;
 
     invoke-virtual {v0, v1, v2}, Landroid/widget/RelativeLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
