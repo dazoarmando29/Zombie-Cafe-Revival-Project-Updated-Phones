@@ -35,4 +35,9 @@ bool init(uc_engine *uc, void *asset_mgr);
 /* Persist now (e.g. on app pause). Safe to call from any thread. */
 void flush(bool force);
 
+/* QoL driver tick: auto-cook idle stoves (repeat last recipe; notify the
+ * user when coins are short). Throttled internally. MUST run on the
+ * emulator thread (nested engine calls). */
+void qol_tick();
+
 }  // namespace zcr_companion

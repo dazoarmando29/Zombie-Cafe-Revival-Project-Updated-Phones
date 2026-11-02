@@ -8,7 +8,10 @@ for evidence and `docs/CONTENT_EXPANSION_ROADMAP.md` Stage B for order.
 
 | Feature | Design notes | Status |
 |---|---|---|
-| Recipe favorites | The engine already ships the star UI (toggle, favorites tab, 14-slot list) but state round-trips through the engine save with save-timing staleness. Companion save now records toggles write-through and reconciles at book-open (adopt-on-empty / companion-wins). | implemented + device-tested (2026-11-02, test report §9) |
+| Auto-cook | Idle stoves automatically cook the most recently cooked recipe (companion tracks `last_cooked_row`); when coins are short an Android notification ("Your cafe needs you!") fires (throttled 30 min). Engine `GameStateCafe::cook` does the real cost check + deduction. | implemented + built; device verification pending (test report A11) |
+| Auto-serve | Staff serving gate (`characterCanFollow`) is forced eligible - cooked dishes get carried to waiting customers automatically instead of at the original random pace. | implemented + built; device verification pending (test report A11) |
+| Serve overwrite fix | `ServeTask` placed dishes without checking the spot's in-use flag (CafeObject+0x2e) - a second dish landed on an occupied spot and the new dish vanished. Guard hook diverts busy-spot serves to the engine's own return-to-counter path. | implemented + built; device verification pending (test report A11) |
+| Recipe favorites | The engine already ships the star UI (toggle, favorites tab, 14-slot list) but state round-trips through the engine save with save-timing staleness. Companion save now records toggles write-through and reconciles at book-open (adopt-on-empty / companion-wins). | implemented + device-tested (2026-11-02, test report A9) |
 | One-tap repeat cooking | Remember last recipe per stove (companion file); re-issue the cook command after affordability checks. Must not spend currency before confirmation. | planned |
 | Multi-stove cooking | Extend repeat-cooking to apply to selected idle stoves; validate each stove independently; never touch active cook slots. | planned (investigate stove state machine first) |
 | Recipe sorting | Sort options (time/profit/XP/servings/mastery/favorites) with data-order as default. | planned |

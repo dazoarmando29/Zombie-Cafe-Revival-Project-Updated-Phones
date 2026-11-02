@@ -395,6 +395,8 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
      * the render tick (flush_locked is throttled + dirty-guarded, this is
      * a cheap mutex+bool check every ~2s) */
     if ((frame_count % 120) == 0) zcr_companion::flush(false);
+    /* QoL driver (auto-cook): throttled internally to >=5s */
+    if ((frame_count % 120) == 0) zcr_companion::qol_tick();
     if (frame_count == 2 || (frame_count % 1800) == 0) {
         /* periodic memory report (heap + textures + host RSS) */
         diag_report(frame_count == 2 ? "startup" : "periodic");

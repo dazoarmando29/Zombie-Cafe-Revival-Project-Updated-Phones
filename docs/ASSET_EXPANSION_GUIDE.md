@@ -306,3 +306,47 @@ index literal and re-enters `buyCharacter`; the hook recognizes the cave
 return address and lets the engine spend normally. Key ABI facts:
 `String::String(char const*)` 0x141f1c (String = 4-byte value in r1..r3),
 `ConfirmDialog::show` stack args are cb at `[sp]`, ctx at `[sp+4]`.
+
+### 9.8 Cook / serve engine ABI (2026-11-02)
+
+Cooking (used by the auto-cook QoL driver):
+
+* `GameStateCafe::cook(GameStateCafe*, Stove*, int row, int variant,
+  CapcomDate, String, String)` @0x9d534 - CapcomDate is 8B by value
+  (stack words 0-1), then two 4B String handles (words 2-3). The engine
+  builds a FoodStack(recipeRow, variant), looks up the coin cost
+  (`Recipe` cost fn @0xfa350 with (Recipe*, variant)), compares against
+  `ZombieCafe+0x1ac` (coins) and silently returns when short. The cook
+  is dispatched via `Stove::startCooking` @0x113c58.
+* Object graph: `CapcomApp+4` = `ZombieCafe*`; `ZombieCafe+0x8` = active
+  `GameStateCafe*`; `GameStateCafe+0xc` = `ZombieCafe*`;
+  `GameStateCafe+0x14` = `Cafe*`; `ZombieCafe+0x128` = recipe table
+  (0x20-byte rows).
+* Stove enumeration: `Cafe::createDistanceSortedFurnitureList(cafe,
+  type, 0)` @0x65e7c (type 1 = stoves, 2 = counters, 4 = seats) returns
+  a list object; `[list+8]` = head node, `node+0` = item, `node+8` =
+  next (caller frees the list). `Stove+0x60` = FoodStack* (idle iff 0).
+
+Serving (used by the serve guard + auto-serve QoL):
+
+* `ServeTask(CharacterInstance*, Cafe*, CharacterInstance*)` @0x10d8f8
+  is created per staff/customer pair in `GameStateCafe::tickStaff`
+  @0xa3ebc behind the eligibility gate `characterCanFollow` @0x9b35c
+  (probabilistic in the original game).
+* `ServeTask::tick` @0x10d038: walk -> pick a random serving from a
+  counter (`ServingCounter::getNewRandomFoodServing` @0x10de2c) -> on
+  arrival construct `Food` @0x8a510 and call the target's virtual
+  placeFood (`vtable+0x24`).
+* **CafeObject+0x2e = in-use flag**: set by `FindSeatTask::start`
+  (seat claim) and by ServeTask after placing food; cleared by
+  `EatTask` when the customer starts waiting / finishes eating.
+  ServeTask never checks it before placing - two dishes land on one
+  spot and the new one is lost (the overwrite bug). The placement
+  block at 0x10d386 is the guard hook point; 0x10d408 is the engine's
+  own return-dish-to-counter abort path (same register frame).
+
+Notifications: `javaSendNotification(type, msg, extra, delaySec)`
+@0x17e474 -> `CC_Android.fromNative_SendNotification` ->
+`ZombieCafeAndroid.sendNotification` -> AlarmManager at now+delaySec
+(p3 is seconds; the Java side was rewritten in the "dead notifications"
+modernization).

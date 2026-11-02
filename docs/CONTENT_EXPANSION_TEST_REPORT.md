@@ -369,3 +369,29 @@ code; the gate only intercepts the entry, queues the engine's own dialog
 (ConfirmDialog* at zukan+0xb0) and re-enters through a host-mapped cave
 that restores the purchase index. Log lines: `zukan buy: confirm queued
 (index=N ...)` and `toxin spent: N via zukan_buy` after YES.
+
+## 11. Cooking/serving QoL: auto-cook, auto-serve, serve guard (2026-11-02)
+
+### 11.1 Implemented (engine RE: ASSET_EXPANSION_GUIDE A9.8)
+
+| Component | Status |
+|---|---|
+| Auto-cook: idle stove -> cook last-cooked recipe (companion `last_cooked_row`), engine `GameStateCafe::cook` handles cost + deduction | implemented + built |
+| Unaffordable -> Android notification "Your cafe needs you!" (throttled 30 min) via `javaSendNotification` -> AlarmManager | implemented + built |
+| Auto-serve: `characterCanFollow` gate forced eligible (staff carry dishes at full pace) | implemented + built |
+| Serve guard: busy-spot (CafeObject+0x2e) serves divert to the engine's return-dish path (overwrite fix) | implemented + built |
+| Unit tests (155 checks incl. `last_cooked_row` roundtrip) | PENDING (phone unplugged at test time; 153/153 passed pre-change) |
+| Device verification (auto-cook log lines, serve-guard lines, notification visible) | PENDING (phone unplugged) |
+
+### 11.2 Honest labels
+
+- RE-verified: cook ABI, cost/money fields, stove list, ServeTask flow,
+  +0x2e flag lifecycle (set by FindSeatTask/ServeTask, cleared by EatTask),
+  notification AlarmManager semantics.
+- Code paths built clean; behavior on device not yet observed (the hook
+  points redirect PC inside engine frames - same technique as the zukan
+  gate, but ServeTask/characterCanFollow have not been exercised live).
+- Risk notes: auto-serve forces eligibility for all staff/customer pairs
+  (original is probabilistic); if live testing shows over-eager task
+  churn, the gate needs pacing. The serve guard assumes +0x2e semantics
+  hold for all target types (verified for seats + the ServeTask target).

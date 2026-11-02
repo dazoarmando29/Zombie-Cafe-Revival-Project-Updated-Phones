@@ -68,6 +68,42 @@ constexpr uint32_t CAVE_PAGE = 0xF3000000u;    /* Thumb re-entry cave (mapped RW
 constexpr uint32_t CAVE_INDEX_OFF = 0x0c;      /* cave literal: saved purchase index */
 constexpr uint32_t CAVE_RET_OFF = 8u;          /* blx site+4 = LR of cave re-entry */
 
+/* ---- QoL: auto-cook / auto-serve / serve guard (docs/QOL_RE_NOTES) ----
+ * Verified engine ABI (2026-11-02 disasm):
+ *   GameStateCafe::cook(GameStateCafe*, Stove*, row, variant, CapcomDate,
+ *                       String, String) @0x9d534 - CapcomDate = 8B by value
+ *   then 2 String handles; cost check inside (Recipe cost @0xfa350,
+ *   money at ZombieCafe+0x1ac); silent return when unaffordable.
+ *   ZombieCafe+0x8 = active GameStateCafe*, GameStateCafe+0x14 = Cafe*.
+ *   Cafe::createDistanceSortedFurnitureList(cafe, type, 0) @0x65e7c returns
+ *   a list object ([list+8] = head; node+0 = item, node+8 = next); type 1 =
+ *   stoves (matches advanceStoves), 2 = counters, 4 = seats.
+ *   Stove+0x60 = FoodStack* (idle iff 0).
+ *   CafeObject+0x2e = in-use flag: seat claimed (FindSeatTask) or food
+ *   placed (ServeTask); EatTask clears it when waiting/eaten. ServeTask
+ *   never checks it before placing - the overwrite bug.
+ *   javaSendNotification(type, msg, extra, delaySec) @0x17e474 -> Java
+ *   AlarmManager notification at now+delaySec. */
+constexpr uint32_t RVA_COOK = 0x9d534;         /* GameStateCafe::cook */
+constexpr uint32_t RVA_STOVE_LIST = 0x65e7c;   /* Cafe::createDistanceSortedFurnitureList */
+constexpr uint32_t RVA_RECIPE_COST = 0xfa350;  /* Recipe cost (Recipe*, variant) */
+constexpr uint32_t RVA_DATE_NOW = 0x199cc8;    /* CapcomDate now (out* 8B) */
+constexpr uint32_t RVA_STR_FROM_INT = 0x141ba8;/* String::String(int) (empty for 0) */
+constexpr uint32_t RVA_SEND_NOTIF = 0x17e474;  /* javaSendNotification */
+constexpr uint32_t RVA_FREE = 0x138e88;        /* operator delete */
+constexpr uint32_t OFF_GAME_STATE = 0x8;       /* ZombieCafe+0x8 = GameStateCafe* */
+constexpr uint32_t OFF_STATE_CAFE = 0x14;      /* GameStateCafe+0x14 = Cafe* */
+constexpr uint32_t OFF_STATE_GAME = 0xc;       /* GameStateCafe+0xc = ZombieCafe* */
+constexpr uint32_t OFF_GAME_MONEY = 0x1ac;     /* ZombieCafe+0x1ac = coins */
+constexpr uint32_t OFF_STOVE_FOOD = 0x60;      /* Stove+0x60 = FoodStack* */
+constexpr uint32_t OFF_TASK_TARGET = 0x28;     /* ServeTask+0x28 = target */
+constexpr uint32_t OFF_OBJ_BUSY = 0x2e;        /* CafeObject+0x2e = in-use */
+constexpr uint32_t RVA_SERVE_PLACE = 0x10d386; /* ServeTask::tick placement block */
+constexpr uint32_t RVA_SERVE_ABORT = 0x10d408; /* ServeTask::tick return-dish path */
+constexpr uint32_t RVA_CAN_FOLLOW = 0x9b35c;   /* characterCanFollow gate */
+constexpr int64_t kAutoCookGapSec = 5;         /* driver throttle */
+constexpr int64_t kNotifGapSec = 1800;         /* unaffordable notif throttle */
+
 constexpr const char *kFileName = "zcr_companion.json";
 constexpr const char *kAchAsset = "data/zcr_achievements.json";
 constexpr const char *kLockAsset = "data/zcr_registry.lock.json";
@@ -645,6 +681,150 @@ void on_zukan_buy(uc_engine *uc, uint64_t, int32_t, void *) {
     logi("zukan buy: confirm queued (index=%u zukan=0x%x)", index, zukan);
 }
 
+/* ---- QoL hooks ---- */
+
+/* ServeTask::tick placement block (RVA_SERVE_PLACE). The engine places the
+ * carried dish without checking the target's in-use flag (CafeObject+0x2e),
+ * so a second dish lands on a spot that already has one and the new dish
+ * vanishes (the overwrite bug). When the spot is busy, divert to the
+ * engine's own return-dish-to-counter path (RVA_SERVE_ABORT). Registers are
+ * untouched: the abort path sees the same frame state the engine would. */
+void on_serve_place(uc_engine *uc, uint64_t, int32_t, void *) {
+    uint32_t task = 0;
+    uc_reg_read(uc, UC_ARM_REG_R4, &task);
+    uint32_t target = 0;
+    if (!plausible_ptr(task) ||
+        !emu::read(uc, task + OFF_TASK_TARGET, &target, 4) ||
+        !plausible_ptr(target))
+        return;
+    uint8_t busy = 0;
+    emu::read(uc, target + OFF_OBJ_BUSY, &busy, 1);
+    if (busy == 0) return; /* empty spot: place normally */
+    uint32_t pc = RVA_SERVE_ABORT | 1u;
+    uc_reg_write(uc, UC_ARM_REG_PC, &pc);
+    logi("serve guard: spot busy - dish returned to counter (task=0x%x)", task);
+}
+
+/* GameStateCafe::characterCanFollow - the staff/serve eligibility gate in
+ * tickStaff (probabilistic in the original). Auto-serve: always eligible. */
+void on_can_follow(uc_engine *uc, uint64_t, int32_t, void *) {
+    std::lock_guard<std::mutex> lk(g_mu);
+    if (!g_ready) return;
+    uint32_t one = 1, lr = 0;
+    uc_reg_write(uc, UC_ARM_REG_R0, &one);
+    uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+    uint32_t pc = lr | 1u;
+    uc_reg_write(uc, UC_ARM_REG_PC, &pc);
+}
+
+/* Auto-cook driver (from the render tick). Idle stove -> cook the most
+ * recently cooked recipe; when coins are short, fire a "needs you" Android
+ * notification (throttled). The engine cook call performs the real cost
+ * check + deduction; this pre-check only decides between cook/notify. */
+void qol_tick_impl() {
+    std::lock_guard<std::mutex> lk(g_mu);
+    if (!g_ready || !g_uc) return;
+    static int64_t s_last_cook = 0, s_last_notif = 0;
+    int64_t now = (int64_t)time(nullptr);
+    if (now - s_last_cook < kAutoCookGapSec) return;
+    uc_engine *uc = g_uc;
+
+    uint32_t game = game_instance();
+    uint32_t state = 0, cafe = 0;
+    if (!plausible_ptr(game) ||
+        !emu::read(uc, game + OFF_GAME_STATE, &state, 4) ||
+        !plausible_ptr(state) ||
+        !emu::read(uc, state + OFF_STATE_CAFE, &cafe, 4) ||
+        !plausible_ptr(cafe))
+        return;
+
+    int32_t row = g_state.last_cooked_row;
+    if (row < 0 || row >= 250) return;
+
+    Regs snap;
+    snap.save(uc);
+    uint32_t sp = (snap.r[13] - 512u) & ~7u;
+
+    /* stove list (type 1), node: +0 = Stove*, +8 = next */
+    uint32_t list_words[2] = {1u, 0u};
+    uint32_t list = jni_call_engine_r0_sp(uc, RVA_STOVE_LIST | 1u, cafe,
+                                          list_words, 2, sp);
+    uint32_t stove = 0;
+    if (plausible_ptr(list)) {
+        uint32_t node = 0, guard = 0;
+        emu::read(uc, list + 8, &node, 4);
+        while (plausible_ptr(node) && guard++ < 256) {
+            uint32_t item = 0, next = 0;
+            emu::read(uc, node, &item, 4);
+            emu::read(uc, node + 8, &next, 4);
+            if (plausible_ptr(item)) {
+                uint32_t food = 0;
+                emu::read(uc, item + OFF_STOVE_FOOD, &food, 4);
+                if (food == 0) { stove = item; break; }
+            }
+            node = next;
+        }
+        jni_call_engine_r0_sp(uc, RVA_FREE | 1u, list, nullptr, 0, sp);
+    }
+    if (!stove) {
+        snap.restore(uc);
+        return;
+    }
+
+    /* cost of the repeat recipe (variant 0) vs coins */
+    uint32_t table = 0;
+    emu::read(uc, game + OFF_GAME_RECIPES, &table, 4);
+    uint32_t recipe = 0;
+    if (plausible_ptr(table))
+        recipe = table + (uint32_t)row * RECIPE_STRIDE;
+    uint32_t cost = 0;
+    if (recipe) {
+        uint32_t cost_args[1] = {0u};
+        cost = jni_call_engine_r0_sp(uc, RVA_RECIPE_COST | 1u, recipe,
+                                     cost_args, 1, sp);
+    }
+    uint32_t zgame = 0, money = 0;
+    emu::read(uc, state + OFF_STATE_GAME, &zgame, 4);
+    if (plausible_ptr(zgame)) emu::read(uc, zgame + OFF_GAME_MONEY, &money, 4);
+
+    if (cost > money) {
+        if (now - s_last_notif >= kNotifGapSec) {
+            s_last_notif = now;
+            uint32_t msg = emu::intern_string(
+                uc, "Your cafe needs you! Not enough coins to keep cooking.");
+            uint32_t n_args[3] = {msg, 0u, 0u}; /* extra=0, delay=0s */
+            jni_call_engine_r0_sp(uc, RVA_SEND_NOTIF | 1u, 0u, n_args, 3, sp);
+            logi("auto-cook: unaffordable (row=%u cost=%u money=%u) - "
+                 "notified user", row, cost, money);
+        }
+        snap.restore(uc);
+        return;
+    }
+
+    /* CapcomDate now + two empty Strings, then cook */
+    uint32_t scratch = emu::heap_alloc(uc, 32);
+    if (!scratch) {
+        snap.restore(uc);
+        return;
+    }
+    jni_call_engine_r0_sp(uc, RVA_DATE_NOW | 1u, scratch, nullptr, 0, sp);
+    uint32_t zero = 0;
+    jni_call_engine_r0_sp(uc, RVA_STR_FROM_INT | 1u, scratch + 8, &zero, 1, sp);
+    jni_call_engine_r0_sp(uc, RVA_STR_FROM_INT | 1u, scratch + 12, &zero, 1, sp);
+    uint32_t date0 = 0, date1 = 0, s1 = 0, s2 = 0;
+    emu::read(uc, scratch, &date0, 4);
+    emu::read(uc, scratch + 4, &date1, 4);
+    emu::read(uc, scratch + 8, &s1, 4);
+    emu::read(uc, scratch + 12, &s2, 4);
+    uint32_t cook_words[7] = {stove, (uint32_t)row, 0u, date0, date1, s1, s2};
+    jni_call_engine_r0_sp(uc, RVA_COOK | 1u, state, cook_words, 7, sp);
+    emu::heap_free(uc, scratch);
+    s_last_cook = now;
+    snap.restore(uc);
+    logi("auto-cook: stove=0x%x row=%u cost=%u money=%u", stove, row, cost,
+         money);
+}
+
 }  // namespace
 
 bool init(uc_engine *uc, void *asset_mgr) {
@@ -778,6 +958,21 @@ bool init(uc_engine *uc, void *asset_mgr) {
                  RVA_ZUKAN_BUY, CAVE_PAGE);
         }
     }
+
+    /* QoL hooks: serve guard (overwrite fix) + auto-serve gate */
+    uc_hook h7 = 0, h8 = 0;
+    uc_err e7 = uc_hook_add(uc, &h7, UC_HOOK_CODE, (void *)on_serve_place,
+                            nullptr, ENG_ADDR(RVA_SERVE_PLACE),
+                            ENG_ADDR(RVA_SERVE_PLACE));
+    uc_err e8 = uc_hook_add(uc, &h8, UC_HOOK_CODE, (void *)on_can_follow,
+                            nullptr, ENG_ADDR(RVA_CAN_FOLLOW),
+                            ENG_ADDR(RVA_CAN_FOLLOW));
+    if (e7 != UC_ERR_OK || e8 != UC_ERR_OK) {
+        logi("qol hooks failed: %s / %s", uc_strerror(e7), uc_strerror(e8));
+    } else {
+        logi("qol hooks installed (serve guard@0x%x auto-serve@0x%x)",
+             RVA_SERVE_PLACE, RVA_CAN_FOLLOW);
+    }
     flush_locked(false);
     return true;
 }
@@ -786,5 +981,7 @@ void flush(bool force) {
     std::lock_guard<std::mutex> lk(g_mu);
     flush_locked(force);
 }
+
+void qol_tick() { qol_tick_impl(); }
 
 }  // namespace zcr_companion
