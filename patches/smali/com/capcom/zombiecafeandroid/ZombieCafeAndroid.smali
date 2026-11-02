@@ -5025,6 +5025,10 @@
     # after leaving the app.
     invoke-virtual {v0}, Lcom/capcom/zombiecafeandroid/SoundManager;->pauseAllPlayers()V
 
+    # ZCR: the in-game music runs through CC_Android.mMusics[], which is a
+    # separate player array from SoundManager's lists - pause that too.
+    invoke-static {}, Lcom/capcom/zombiecafeandroid/CC_Android;->pauseAllMusics()V
+
     :cond_0
     sget-object v0, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->d:Landroid/webkit/WebView;
 
@@ -5137,6 +5141,9 @@
     invoke-virtual {v0}, Lcom/capcom/zombiecafeandroid/SoundManager;->resumeAllPlayers()V
 
     :zcr_no_audio
+
+    # ZCR: resume the in-game music paused in onPause()
+    invoke-static {}, Lcom/capcom/zombiecafeandroid/CC_Android;->resumeAllMusics()V
 
     new-instance v0, Landroid/content/IntentFilter;
 

@@ -23,6 +23,10 @@
 
 .field public static mMusics:[Landroid/media/MediaPlayer;
 
+# ZCR: parallel flag array - which music players pauseAllMusics() paused,
+# so resumeAllMusics() restarts exactly those.
+.field private static mPausedMusics:[Z
+
 .field public static numMusics:I
 
 .field public static numSoundEffects:I
@@ -47,6 +51,10 @@
     new-array v0, v2, [Landroid/media/MediaPlayer;
 
     sput-object v0, Lcom/capcom/zombiecafeandroid/CC_Android;->mMusics:[Landroid/media/MediaPlayer;
+
+    new-array v0, v2, [Z
+
+    sput-object v0, Lcom/capcom/zombiecafeandroid/CC_Android;->mPausedMusics:[Z
 
     new-array v0, v2, [Ljava/lang/String;
 
@@ -3444,5 +3452,103 @@
 .method public onPrepared(Landroid/media/MediaPlayer;)V
     .locals 0
 
+    return-void
+.end method
+
+# ---- ZCR: pause/resume the mMusics[] MediaPlayers when the activity
+# leaves/enters the foreground. The in-game music (fromNative_startMusic)
+# runs through this array and nothing paused it - the music kept playing
+# after leaving the app. Register discipline: v0/v1 objects, v2..v5 ints
+# and one object slot, never mixed across types. ----
+
+.method public static pauseAllMusics()V
+    .locals 6
+
+    sget-object v0, Lcom/capcom/zombiecafeandroid/CC_Android;->mMusics:[Landroid/media/MediaPlayer;
+
+    if-eqz v0, :done
+
+    sget-object v1, Lcom/capcom/zombiecafeandroid/CC_Android;->mPausedMusics:[Z
+
+    array-length v2, v0
+
+    const/4 v3, 0x0
+
+    :loop
+    if-ge v3, v2, :done
+
+    aget-object v4, v0, v3
+
+    if-eqz v4, :next
+
+    invoke-virtual {v4}, Landroid/media/MediaPlayer;->isPlaying()Z
+
+    move-result v5
+
+    if-eqz v5, :next
+
+    invoke-virtual {v4}, Landroid/media/MediaPlayer;->pause()V
+
+    if-eqz v1, :next
+
+    const/4 v5, 0x1
+
+    aput-boolean v5, v1, v3
+
+    :next
+    add-int/lit8 v3, v3, 0x1
+
+    goto :loop
+
+    :done
+    return-void
+.end method
+
+.method public static resumeAllMusics()V
+    .locals 6
+
+    sget-object v0, Lcom/capcom/zombiecafeandroid/CC_Android;->mMusics:[Landroid/media/MediaPlayer;
+
+    if-eqz v0, :done
+
+    sget-object v1, Lcom/capcom/zombiecafeandroid/CC_Android;->mPausedMusics:[Z
+
+    if-eqz v1, :done
+
+    array-length v2, v0
+
+    const/4 v3, 0x0
+
+    :loop
+    if-ge v3, v2, :done
+
+    aget-boolean v5, v1, v3
+
+    if-eqz v5, :next
+
+    const/4 v5, 0x0
+
+    aput-boolean v5, v1, v3
+
+    aget-object v4, v0, v3
+
+    if-eqz v4, :next
+
+    :try_start_0
+    invoke-virtual {v4}, Landroid/media/MediaPlayer;->start()V
+    :try_end_0
+    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
+
+    goto :next
+
+    :catch_0
+    move-exception v4
+
+    :next
+    add-int/lit8 v3, v3, 0x1
+
+    goto :loop
+
+    :done
     return-void
 .end method
