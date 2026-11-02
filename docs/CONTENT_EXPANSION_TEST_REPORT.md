@@ -340,3 +340,32 @@ save.
 * Adopt-from-engine path (companion empty + engine restored favorites)
   is implemented but not yet exercised on device (the test companion was
   non-empty by then).
+
+## 10. Toxin-spend confirmation (2026-11-02, Stage B QoL)
+
+### 10.1 Audit (RE-verified, ASSET_EXPANSION_GUIDE A9.6)
+
+Complete 20-site `spendToxin` map with per-site gating evidence:
+19 of 20 spends are already behind the engine's ConfirmDialog (GOT-wired
+yes-callbacks verified per site; `ConfirmDialog::tick` fires the callback
+on the affirmative button only). `CharacterDetails::heal` is dead code
+(no xrefs). The single real gap was the zookdex character purchase
+(`GameStateZukan::buyCharacter` common path: one-tap spend after a
+balance check).
+
+### 10.2 Implemented
+
+| Component | Status |
+|---|---|
+| Zookdex purchase confirm gate (entry hook + engine ConfirmDialog + Thumb re-entry cave) | implemented + built (out-mod.apk) |
+| Dialog wording ("DO YOU WISH TO BUY THIS CHARACTER?" BUY/CANCEL) - neutral, covers toxin- and coin-priced characters | implemented |
+| Failure-safe pass-through (no dialog instance -> vanilla behavior) | implemented |
+| Device verification (dialog appears, YES buys, CANCEL aborts) | PENDING (phone unplugged at build time) |
+
+### 10.3 Design notes
+
+No engine binary patching: the spend path itself is untouched engine
+code; the gate only intercepts the entry, queues the engine's own dialog
+(ConfirmDialog* at zukan+0xb0) and re-enters through a host-mapped cave
+that restores the purchase index. Log lines: `zukan buy: confirm queued
+(index=N ...)` and `toxin spent: N via zukan_buy` after YES.

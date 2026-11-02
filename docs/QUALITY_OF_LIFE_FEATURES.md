@@ -27,11 +27,11 @@ for evidence and `docs/CONTENT_EXPANSION_ROADMAP.md` Stage B for order.
 | Raid team presets | Save/load team compositions locally. | planned |
 | Zombie collection book | Encyclopedic discovery list (uses `ZcrId`s). | planned |
 
-## Economy & safety
+## Economy
 
 | Feature | Design notes | Status |
 |---|---|---|
-| Toxin-spend confirmation | Optional confirm dialog before toxin purchases. NOTE: the original game already confirms toxin spends for cook instant-finish ("DO YOU WISH TO USE 1 TOXIN?" - device-observed 2026-11-02); the remaining gap is the buy/upgrade flows. | planned |
+| Toxin-spend confirmation | Audit (ASSET_EXPANSION_GUIDE §9.6): 19/20 engine spend paths already confirm via the shared ConfirmDialog (cook instant-finish device-observed). The one gap (zookdex character purchase) is now gated with the engine's own dialog + cave re-entry (§9.7). | implemented + RE-verified; device verification pending (test report §10) |
 | Earnable toxins | Limited rewards via achievements/mastery/quests; never infinitely farmable. | prototype (achievement rewards implemented: bounded, non-repeatable, see CONTENT_EXPANSION_TEST_REPORT.md §8) |
 | Daily/weekly objectives | Local tracker + reward claiming with save/reload exploit protection. | planned |
 

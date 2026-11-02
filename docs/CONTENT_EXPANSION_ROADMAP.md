@@ -24,7 +24,7 @@ statically tested, device test pending), **prototype**, **planned**,
 | One-tap repeat cooking | planned |
 | Improved zombie management / staff overview | planned (candidate vehicle: host overlay or mod-menu extension) |
 | Recipe sorting | planned |
-| Toxin-spending confirmation | planned (engine dialog hook; note: the game already confirms cook instant-finish spends - device-observed) |
+| Toxin-spending confirmation | done (audit: 19/20 flows already confirm; zookdex purchase gap gated via engine dialog + cave re-entry, ASSET_EXPANSION_GUIDE A9.6/9.7) |
 | Raid info / history | planned |
 | Multi-stove cooking | planned (investigate stove state machine first) |
 | Cooking queue / food expiration options | planned (compatibility layer only if stable) |
