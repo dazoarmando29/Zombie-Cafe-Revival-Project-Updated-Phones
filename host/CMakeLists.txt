@@ -21,6 +21,7 @@ add_library(zcr_host SHARED
   zcr_companion.cpp
   companion_state.cpp
   event_state.cpp
+  boss_state.cpp
   engine_loader.cpp
   stub_dispatch.cpp
   jni_bridge.cpp

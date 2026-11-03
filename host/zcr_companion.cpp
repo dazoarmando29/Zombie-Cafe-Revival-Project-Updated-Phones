@@ -15,6 +15,7 @@
 #include <mutex>
 #include <atomic>
 #include "event_state.h"
+#include "boss_state.h"
 #include <string>
 #include <vector>
 
@@ -29,6 +30,9 @@ namespace zcr_companion {
 /* seasonal-event progress hook (defined after the unnamed namespace;
  * called from hooks inside it). Must be declared here, at this scope. */
 void event_progress_locked(int32_t kind, int64_t amount);
+void boss_damage_locked(int64_t amount, int source);
+void zombie_add_xp_locked(uint32_t char_data, uint32_t instance, int64_t xp,
+                          const char *why);
 
 namespace {
 
@@ -97,6 +101,9 @@ constexpr uint32_t RVA_RECIPE_COST = 0xfa350;  /* Recipe cost (Recipe*, variant)
 constexpr uint32_t RVA_DATE_NOW = 0x199cc8;    /* CapcomDate now (out* 8B) */
 constexpr uint32_t RVA_STR_FROM_INT = 0x141ba8;/* String::String(int) (empty for 0) */
 constexpr uint32_t RVA_SEND_NOTIF = 0x17e474;  /* javaSendNotification */
+constexpr uint32_t RVA_DEALT_DAMAGE = 0x6d8c1; /* CharacterInstance::dealtDamage */
+constexpr uint32_t RVA_POWERUP = 0x6b18d;      /* CharacterInstance::startPowerUp */
+constexpr uint32_t OFF_PLAYER_LEVEL = 0x1b0;   /* ZombieCafe+0x1b0 = cafe level */
 constexpr uint32_t RVA_FREE = 0x138e88;        /* operator delete */
 constexpr uint32_t OFF_GAME_STATE = 0x8;       /* ZombieCafe+0x8 = GameStateCafe* */
 constexpr uint32_t OFF_STATE_CAFE = 0x14;      /* GameStateCafe+0x14 = Cafe* */
@@ -149,7 +156,26 @@ std::string g_toast;
 bool g_toast_pending = false;
 int64_t g_last_money = -1;
 
-/* defined below in this unnamed namespace */
+/* Preferred chef: the character the player selects ("YOU" panel). Used
+ * for auto-serve tasking and zombie perk attribution. */
+uint32_t g_pref_chef = 0;
+
+/* raid bosses + zombie perks */
+zcr_boss::BossState g_boss;
+std::string g_boss_path;    /* <filesDir>/zcr_boss.json */
+bool g_boss_dirty = false;
+int32_t g_player_level = 0;
+int64_t g_boss_last_tick = 0;
+/* zombie type (CharacterData*) -> companion XP/level */
+struct ZombiePerk {
+    int64_t xp = 0;
+    int32_t level = 0;
+};
+std::map<uint32_t, ZombiePerk> g_zombies;
+std::string g_zombies_path;
+bool g_zombies_dirty = false;
+
+/* defined below (persistence / seasonal events) */
 bool read_file(const std::string &path, std::string *out);
 std::map<int32_t, std::string> g_row_ids;
 std::string g_path;        /* <filesDir>/zcr_companion.json */
@@ -225,6 +251,35 @@ bool resolve_app(JNIEnv *env) {
         std::string ej;
         if (read_file(g_events_path, &ej) && !zcr_ev::parse(ej, &g_event))
             g_event = zcr_ev::EventState();
+        g_boss_path = dir + "zcr_boss.json";
+        g_zombies_path = dir + "zcr_zombies.json";
+        std::string bj;
+        if (read_file(g_boss_path, &bj) && !zcr_boss::parse(bj, &g_boss))
+            g_boss = zcr_boss::BossState();
+        std::string zj;
+        if (read_file(g_zombies_path, &zj)) {
+            /* {"zombies":[{"id":N,"xp":N,"lvl":N},...]} - tiny parser */
+            size_t pos = zj.find('[');
+            while (pos != std::string::npos) {
+                size_t b = zj.find('{', pos);
+                size_t e = (b == std::string::npos) ? std::string::npos
+                                                    : zj.find('}', b);
+                if (b == std::string::npos || e == std::string::npos) break;
+                std::string obj = zj.substr(b, e - b + 1);
+                ZombiePerk zp;
+                uint32_t id = 0;
+                int64_t v = 0;
+                size_t p = obj.find("\"id\":");
+                if (p != std::string::npos) id = (uint32_t)strtoul(obj.c_str() + p + 5, nullptr, 10);
+                p = obj.find("\"xp\":");
+                if (p != std::string::npos) zp.xp = strtoll(obj.c_str() + p + 5, nullptr, 10);
+                p = obj.find("\"lvl\":");
+                if (p != std::string::npos) zp.level = (int32_t)strtol(obj.c_str() + p + 6, nullptr, 10);
+                (void)v;
+                if (id != 0) g_zombies[id] = zp;
+                pos = e;
+            }
+        }
     }
     return !g_path.empty();
 }
@@ -408,6 +463,13 @@ void on_cooked(uc_engine *uc, uint64_t, int32_t, void *) {
         event_progress_locked(zcr_ev::ObjCookEvent, 1);
         logi("event specialty cooked: %s",
              zcr_ev::event_food_label(g_event.event, (int32_t)rowb));
+    }
+    boss_damage_locked(2, 2);
+    {
+        uint32_t cd = 0;
+        if (plausible_ptr(g_pref_chef))
+            emu::read(uc, g_pref_chef + OFF_CHAR_DATA, &cd, 4);
+        zombie_add_xp_locked(cd, g_pref_chef, 1, "kitchen");
     }
     handle_unlocked(unlocked, now);
     flush_locked(false);
@@ -752,9 +814,15 @@ void on_serve_place(uc_engine *uc, uint64_t, int32_t, void *) {
     emu::read(uc, target + OFF_OBJ_BUSY, &busy, 1);
     if (busy == 0) {
         /* empty spot: the dish is being served - counts toward the
-         * seasonal event "serve dishes" objectives */
+         * seasonal event "serve dishes" objectives and damages the
+         * active raid boss */
         std::lock_guard<std::mutex> lk(g_mu);
         event_progress_locked(zcr_ev::ObjServe, 1);
+        boss_damage_locked(5, 1);
+        uint32_t cd = 0;
+        if (plausible_ptr(g_pref_chef))
+            emu::read(uc, g_pref_chef + OFF_CHAR_DATA, &cd, 4);
+        zombie_add_xp_locked(cd, g_pref_chef, 1, "service");
         return;
     }
     uint32_t pc = RVA_SERVE_ABORT | 1u;
@@ -781,9 +849,28 @@ void on_can_follow(uc_engine *uc, uint64_t, int32_t, void *) {
     uc_reg_write(uc, UC_ARM_REG_PC, &pc);
 }
 
-/* Preferred chef: the character the player selects ("YOU" panel) - pinned
- * so the carry tasks always go to the chef even after deselect. */
-uint32_t g_pref_chef = 0;
+/* CharacterInstance::dealtDamage(CharacterInstance*, int) - real battle
+ * hits during friend raids. Damage the active raid boss and train both
+ * fighters (companion zombie XP). r0=this, r1=other, r2=amount. */
+void on_dealt_damage(uc_engine *uc, uint64_t, int32_t, void *) {
+    uint32_t self = 0, other = 0, dmg = 0;
+    uc_reg_read(uc, UC_ARM_REG_R0, &self);
+    uc_reg_read(uc, UC_ARM_REG_R1, &other);
+    uc_reg_read(uc, UC_ARM_REG_R2, &dmg);
+    std::lock_guard<std::mutex> lk(g_mu);
+    if (!g_ready) return;
+    int64_t d = (dmg > 0 && dmg < 100000) ? (int64_t)dmg : 2;
+    boss_damage_locked(d > 50 ? 50 : d, 3);
+    uint32_t d1 = 0, d2 = 0;
+    if (plausible_ptr(self)) emu::read(uc, self + OFF_CHAR_DATA, &d1, 4);
+    if (plausible_ptr(other)) emu::read(uc, other + OFF_CHAR_DATA, &d2, 4);
+    zombie_add_xp_locked(d1, self, 2, "battle");
+    if (d2 != d1) zombie_add_xp_locked(d2, other, 2, "battle");
+}
+
+/* Preferred chef (g_pref_chef, declared in the globals block): the
+ * character the player selects ("YOU" panel) - pinned so the carry tasks
+ * always go to the chef even after deselect. */
 
 void on_select_char(uc_engine *uc, uint64_t, int32_t, void *) {
     std::lock_guard<std::mutex> lk(g_mu);
@@ -1073,6 +1160,12 @@ bool init(uc_engine *uc, void *asset_mgr) {
              "chef-pin@0x%x)", RVA_SERVE_PLACE, RVA_CAN_FOLLOW,
              RVA_SELECT_CHAR);
     }
+    uc_hook h11 = 0;
+    uc_err e11 = uc_hook_add(uc, &h11, UC_HOOK_CODE, (void *)on_dealt_damage,
+                             nullptr, ENG_ADDR(RVA_DEALT_DAMAGE),
+                             ENG_ADDR(RVA_DEALT_DAMAGE));
+    logi("boss hook (battle damage@0x%x): %s", RVA_DEALT_DAMAGE,
+         e11 == UC_ERR_OK ? "ok" : uc_strerror(e11));
     flush_locked(false);
     return true;
 }
@@ -1225,6 +1318,198 @@ void events_tick() {
 
 int weather_event() { return g_weather_id.load(); }
 
+/* ---- raid bosses + zombie perks ----
+ * Bosses (zcr_boss::BossState, zcr_boss.json) gate on the cafe level
+ * (ZombieCafe+0x1b0) and take damage from gameplay: dishes served,
+ * dishes cooked and real raid hits (CharacterInstance::dealtDamage).
+ * Zombie types earn companion XP (zcr_zombies.json, keyed by the stable
+ * CharacterData* template) and unlock ability tiers at levels 2/4/6/8/10
+ * (engine-backed via CharacterInstance::startPowerUp). */
+
+void flush_boss(bool force) {
+    if (!g_boss_dirty && !force) return;
+    if (g_boss_path.empty()) return;
+    if (write_file(g_boss_path, zcr_boss::serialize(g_boss)))
+        g_boss_dirty = false;
+}
+
+void flush_zombies(bool force) {
+    if (!g_zombies_dirty && !force) return;
+    if (g_zombies_path.empty()) return;
+    std::string out = "{\"zombies\":[";
+    bool first = true;
+    for (std::map<uint32_t, ZombiePerk>::const_iterator it = g_zombies.begin();
+         it != g_zombies.end(); ++it) {
+        if (!first) out += ",";
+        first = false;
+        out += "{\"id\":" + std::to_string(it->first) +
+               ",\"xp\":" + std::to_string(it->second.xp) +
+               ",\"lvl\":" + std::to_string(it->second.level) + "}";
+    }
+    out += "]}";
+    if (write_file(g_zombies_path, out))
+        g_zombies_dirty = false;
+}
+
+int32_t player_level() {
+    uint32_t game = game_instance();
+    int32_t lvl = 0;
+    if (game) emu::read(g_uc, game + OFF_PLAYER_LEVEL, &lvl, 4);
+    return lvl;
+}
+
+void power_up_flourish(uint32_t instance) {
+    if (!g_uc || !plausible_ptr(instance)) return;
+    Regs snap;
+    snap.save(g_uc);
+    uint32_t sp = (snap.r[13] - 512u) & ~7u;
+    uint32_t args[1] = {1u}; /* the tombstone power-up type */
+    jni_call_engine_r0_sp(g_uc, RVA_POWERUP | 1u, instance, args, 1, sp);
+    snap.restore(g_uc);
+}
+
+const zcr_boss::BossDef *boss_def() { return zcr_boss::boss_by_id(g_boss.boss_id); }
+
+void boss_announce(const char *msg) {
+    notify_user(msg);
+    set_toast(msg);
+}
+
+void zombie_add_xp_locked(uint32_t char_data, uint32_t instance,
+                          int64_t xp, const char *why) {
+    if (!char_data || xp <= 0) return;
+    ZombiePerk &z = g_zombies[char_data];
+    z.xp += xp;
+    g_zombies_dirty = true;
+    int32_t newlvl = 1 + (int32_t)(z.xp / 5);
+    if (newlvl > 10) newlvl = 10;
+    if (newlvl > z.level) {
+        z.level = newlvl;
+        flush_zombies(true);
+        if (newlvl == 2 || newlvl == 4 || newlvl == 6 || newlvl == 8 ||
+            newlvl == 10) {
+            power_up_flourish(instance);
+            char msg[192];
+            snprintf(msg, sizeof(msg),
+                     "ZOMBIE LEVEL UP! Your zombie reached level %d and "
+                     "unlocked a new ability (%s)!",
+                     (int)newlvl, why);
+            boss_announce(msg);
+        }
+    }
+}
+
+/* Caller must hold g_mu. */
+void boss_damage_locked(int64_t amount, int source) {
+    if (amount <= 0) return;
+    int64_t now = (int64_t)time(nullptr);
+    if (g_boss.phase == zcr_boss::Available) {
+        /* first act of gameplay issues the challenge */
+        if (zcr_boss::start(&g_boss, now)) {
+            const zcr_boss::BossDef *d = boss_def();
+            g_boss_dirty = true;
+            char msg[192];
+            snprintf(msg, sizeof(msg),
+                     "BOSS FIGHT! %s (HP %lld) challenges you! Serve, cook "
+                     "and raid to damage it before time runs out!",
+                     d ? d->name : "Boss", (long long)g_boss.hp);
+            boss_announce(msg);
+        }
+    }
+    if (g_boss.phase != zcr_boss::Active) return;
+    int64_t dealt = zcr_boss::apply_damage(&g_boss, amount, source, now);
+    if (dealt <= 0) return;
+    g_boss_dirty = true;
+    if (zcr_boss::is_defeated(g_boss)) {
+        const zcr_boss::BossDef *d = boss_def();
+        g_boss.reward_granted = true;
+        g_boss.cooldown_until = now + 6 * 3600;
+        g_boss_dirty = true;
+        flush_boss(true);
+        int64_t coins = d ? d->reward_coins : 0;
+        int32_t toxin = d ? d->reward_toxin : 0;
+        if (coins > 0) grant_coins(coins);
+        if (toxin > 0) grant_toxin(toxin);
+        char msg[192];
+        snprintf(msg, sizeof(msg),
+                 "BOSS DEFEATED! %s has fallen! Reward: %lld coins, %d toxin.",
+                 d ? d->name : "Boss", (long long)coins, (int)toxin);
+        boss_announce(msg);
+    }
+}
+
+void bosses_tick() {
+    std::lock_guard<std::mutex> lk(g_mu);
+    int64_t now = (int64_t)time(nullptr);
+    if (g_boss_last_tick && now - g_boss_last_tick < 5) return;
+    g_boss_last_tick = now;
+
+    g_player_level = player_level();
+    int64_t day = now / 86400;
+
+    /* idle -> roll the boss of the day (level-gated) */
+    bool idle = (g_boss.phase == zcr_boss::Locked ||
+                 g_boss.phase == zcr_boss::Defeated ||
+                 g_boss.phase == zcr_boss::Expired) &&
+                now >= g_boss.cooldown_until;
+    if (idle && g_player_level > 0) {
+        int32_t id = zcr_boss::pick_boss(g_player_level, day);
+        if (id != 0 && (id != g_boss.boss_id ||
+                        g_boss.phase == zcr_boss::Defeated ||
+                        g_boss.phase == zcr_boss::Expired)) {
+            zcr_boss::BossState fresh;
+            fresh.boss_id = id;
+            g_boss = fresh;
+            g_boss_dirty = true;
+        }
+    }
+    if (g_boss.boss_id != 0 &&
+        zcr_boss::sync_level(&g_boss, g_player_level, now)) {
+        g_boss_dirty = true;
+        const zcr_boss::BossDef *d = boss_def();
+        if (g_boss.phase == zcr_boss::Available && !g_boss.announced_available) {
+            g_boss.announced_available = true;
+            g_boss_dirty = true;
+            flush_boss(true);
+            char msg[224];
+            snprintf(msg, sizeof(msg),
+                     "RAID BOSS AVAILABLE: %s (needs level %d, HP %lld)! "
+                     "Serve or cook a dish to challenge it!",
+                     d ? d->name : "Boss", d ? (int)d->level_req : 0,
+                     d ? (long long)d->max_hp : 0LL);
+            boss_announce(msg);
+        }
+    }
+
+    /* regen / swarm upkeep + expiry (Thief) */
+    if (g_boss.phase == zcr_boss::Active && zcr_boss::tick(&g_boss, now)) {
+        g_boss_dirty = true;
+        const zcr_boss::BossDef *d = boss_def();
+        int64_t stolen = zcr_boss::thief_penalty(g_boss);
+        if (stolen > 0) {
+            uint32_t game = game_instance();
+            if (game) {
+                uint32_t money = 0;
+                emu::read(g_uc, game + OFF_GAME_MONEY, &money, 4);
+                uint32_t v =
+                    (money > (uint32_t)stolen) ? money - (uint32_t)stolen : 0;
+                emu::write(g_uc, game + OFF_GAME_MONEY, &v, 4);
+                g_last_money = (int64_t)v;
+            }
+        }
+        g_boss.cooldown_until = now + 3 * 3600;
+        flush_boss(true);
+        char msg[192];
+        snprintf(msg, sizeof(msg),
+                 "The boss %s escaped!%s", d ? d->name : "Boss",
+                 stolen > 0 ? " It stole coins on the way out!" : "");
+        boss_announce(msg);
+    }
+
+    flush_boss(false);
+    flush_zombies(false);
+}
+
 bool take_toast(char *buf, size_t n) {
     std::lock_guard<std::mutex> lk(g_toast_mu);
     if (!g_toast_pending || !buf || n == 0) return false;
@@ -1235,6 +1520,7 @@ bool take_toast(char *buf, size_t n) {
 
 void qol_tick() {
     events_tick();
+    bosses_tick();
     qol_tick_impl();
 }
 

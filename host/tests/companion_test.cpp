@@ -9,6 +9,7 @@
  * registry-lock parsing, and anti-exploit monotonicity guards. */
 #include "../companion_state.h"
 #include "../event_state.h"
+#include "../boss_state.h"
 
 #include <cstdio>
 #include <cstring>
@@ -589,6 +590,93 @@ static void test_event_names_and_food() {
     CHECK(std::string(event_special_name(EvChristmas)) == "Frostbitten Zombie");
 }
 
+/* ---- raid bosses (zcr_boss) ---- */
+
+static void test_boss_flow() {
+    using namespace zcr_boss;
+    CHECK_EQ(pick_boss(1, 100), 0); /* below every level gate */
+    int32_t b = pick_boss(3, 100);
+    CHECK(b != 0);
+    const BossDef *d = boss_by_id(b);
+    CHECK(d != nullptr);
+    if (d) CHECK(d->level_req <= 3);
+    CHECK_EQ(pick_boss(20, 100), pick_boss(20, 100)); /* deterministic */
+
+    BossState s;
+    s.boss_id = 1; /* The Meat Grinder: level 3, 150 HP, no abilities */
+    CHECK(!sync_level(&s, 2, 1000));
+    CHECK_EQ(s.phase, (int)Locked);
+    CHECK(sync_level(&s, 3, 1000));
+    CHECK_EQ(s.phase, (int)Available);
+    CHECK(start(&s, 1000));
+    CHECK_EQ(s.phase, (int)Active);
+    CHECK_EQ(s.hp, 150);
+    CHECK_EQ(apply_damage(&s, 20, 1, 1001), 20);
+    CHECK_EQ(s.hp, 130);
+    CHECK_EQ(apply_damage(&s, 200, 2, 1002), 130); /* overkill clamps */
+    CHECK_EQ(s.hp, 0);
+    CHECK_EQ(s.phase, (int)Defeated);
+    CHECK(is_defeated(s));
+    s.reward_granted = true;
+    CHECK(!is_defeated(s)); /* reward latch: one payout only */
+}
+
+static void test_boss_abilities() {
+    using namespace zcr_boss;
+    /* Shield (Frost Queen id 4): absorbs the first 120 */
+    BossState s;
+    s.boss_id = 4;
+    CHECK(start(&s, 0));
+    CHECK_EQ(s.shield_left, 120);
+    CHECK_EQ(apply_damage(&s, 50, 1, 0), 0);
+    CHECK_EQ(s.shield_left, 70);
+    CHECK_EQ(apply_damage(&s, 100, 1, 0), 30);
+    CHECK_EQ(s.shield_left, 0);
+    /* Rage (Pumpkin King id 3): below 50% HP damage is halved */
+    BossState r;
+    r.boss_id = 3;
+    CHECK(start(&r, 0));
+    CHECK_EQ(apply_damage(&r, 350, 1, 0), 350);
+    CHECK_EQ(r.hp, 350);
+    CHECK_EQ(apply_damage(&r, 100, 1, 0), 50);
+    CHECK_EQ(r.hp, 300);
+    /* Regen (Baron id 2): 3 HP per minute */
+    BossState g;
+    g.boss_id = 2;
+    CHECK(start(&g, 0));
+    apply_damage(&g, 100, 1, 0);
+    CHECK_EQ(g.hp, 300);
+    CHECK(!tick(&g, 120));
+    CHECK_EQ(g.hp, 306);
+    /* Expiry + Thief penalty */
+    BossState t;
+    t.boss_id = 3;
+    CHECK(start(&t, 0));
+    CHECK(tick(&t, 25 * 3600));
+    CHECK_EQ(t.phase, (int)Expired);
+    CHECK_EQ(thief_penalty(t), 2000);
+}
+
+static void test_boss_roundtrip() {
+    using namespace zcr_boss;
+    BossState s;
+    s.boss_id = 5;
+    CHECK(start(&s, 777));
+    apply_damage(&s, 250, 3, 778);
+    std::string js = serialize(s);
+    BossState t;
+    CHECK(parse(js, &t));
+    CHECK_EQ(t.boss_id, 5);
+    CHECK_EQ(t.phase, s.phase);
+    CHECK_EQ(t.hp, s.hp);
+    CHECK_EQ(t.shield_left, s.shield_left);
+    CHECK_EQ(t.damage_dealt, s.damage_dealt);
+    CHECK_EQ(t.deadline_ts, s.deadline_ts);
+    BossState u;
+    CHECK(!parse("{}", &u));
+    CHECK(!parse("", &u));
+}
+
 int main() {
     test_mastery();
     test_recipe_key();
@@ -608,6 +696,9 @@ int main() {
     test_event_progress();
     test_event_roundtrip();
     test_event_names_and_food();
+    test_boss_flow();
+    test_boss_abilities();
+    test_boss_roundtrip();
 
     printf("companion tests: %d checks, %d failures\n", g_checks, g_failures);
     return g_failures == 0 ? 0 : 1;

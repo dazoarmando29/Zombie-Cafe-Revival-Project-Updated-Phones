@@ -610,3 +610,65 @@ infection/roster spawn-path RE (CharacterData row resolution + roster
 pinning). The framework carries the designation and announces it
 (`event_special_name`: Headless Barista Zombie / Frostbitten Zombie /
 Zombie Bunny); spawn-gating is the documented next step.
+
+## 15. Raid bosses with special abilities (2026-11-03) - built; device run pending
+
+`host/boss_state.{h,cpp}` (pure logic) + wiring in `zcr_companion.cpp`:
+
+- **Roster** (6 bosses): The Meat Grinder (lv3), Baron Von Brain (lv6),
+  Pumpkin King (lv8), Frost Queen (lv10), The Lich of Leftovers (lv14),
+  Apocalypse Cow (lv20). Boss of the day is rolled deterministically
+  among level-eligible bosses (`pick_boss(level, day)`).
+- **Level gates**: the cafe level is read straight from the engine
+  (ZombieCafe+0x1b0, verified via the LevelUpDialog caller at 0xa259a).
+  Bosses stay Locked until the gate is met - "you need a specific level
+  to challenge them".
+- **Challenge**: the first act of gameplay (serving/cooking a dish or
+  landing a raid hit) issues the challenge and starts the fight timer
+  (24-48h by boss).
+- **Damage**: dishes served (5), dishes cooked (2) and REAL battle hits
+  via a new hook on `CharacterInstance::dealtDamage` @0x6d8c1 (raid
+  attacks, capped 50/hit).
+- **Special abilities** (all tested in the unit suite): Regen (heals per
+  minute), Shield (absorbs the first N damage), Rage (below 50% HP takes
+  less damage), Thief (steals coins on timeout), Swarm (heals every 10
+  dishes). Defeat pays coins + toxin (persist-then-grant); a 6h cooldown
+  follows.
+- **Persistence**: `zcr_boss.json`, announced via notification + toast.
+
+## 16. Zombie customization + per-level abilities (2026-11-03) - built; device run pending
+
+- **Costume generator** (`tool/gen_costumes.py`): palette-rotates part
+  sheets into `characterParts5/` (the N-sheet pipeline packs them like
+  any other sheet) and appends character rows to
+  `characterData.bin.mid.json` (idempotent: `char.costume.*` rows are
+  regenerated). Accessories = the shared head slot
+  (`CharacterArtStringHead`: generic/oldman/nerd/...); bodies via
+  `CharacterArtString`; **male/female** via `IsFemale` (the field is
+  real: 175 male / 46 female rows in the data).
+- **Generated roster** (5 costumes x male/female art, level-gated +
+  boosted stats, purchasable with coins): Santa Zombie (lv5),
+  Mrs. Claus Zombie (lv5), Neon Zombie (lv8), Phantom Zombie (lv10),
+  Frost Zombie (lv12) - each with Energy/Speed/AttackStrength and
+  perk bonuses (CookSpeedBonus/TipMultiplier/...).
+- **Per-level zombie abilities**: zombie types earn companion XP from
+  service, kitchen and battle duty (keyed by the stable CharacterData*
+  template); levels 2/4/6/8/10 unlock ability tiers, each backed by the
+  engine power-up (`CharacterInstance::startPowerUp` @0x6b18d - the same
+  boost power-tombstones grant) plus an announcement. State in
+  `zcr_zombies.json`.
+- **RE map for live closet swaps** (documented next step):
+  `CharacterInstance+0x38` = `ToonAnimation*`;
+  `ToonAnimation::setData(ToonAnimation::Data*)` @0x14a0b5 swaps the
+  running art set; `ToonAnimation::Data::create(String,int)` @0x14a1c5
+  builds one from an art string - that is the exact mechanism a
+  runtime "change costume" button needs.
+
+### 16.1 Verification status (honest)
+
+- Unit suites extended again (boss flow/abilities/round-trip = ~35 new
+  checks). Device harness run PENDING (phone unplugged).
+- Both APKs build clean; the asset validator passes with the new
+  costume sheets + rows (40 MB APK, up from 39.6).
+- Device verification pending: boss announcements/fight flow, costume
+  rows appearing in the roster/zookdex, zombie level-up flourishes.

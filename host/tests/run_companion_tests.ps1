@@ -30,6 +30,7 @@ Write-Host "[build] $Out" -ForegroundColor Cyan
     -Wall -Wextra -Wno-unused-parameter `
 (Join-Path $ProjectRoot "host\companion_state.cpp") `
 (Join-Path $ProjectRoot "host\event_state.cpp") `
+(Join-Path $ProjectRoot "host\boss_state.cpp") `
 (Join-Path $ProjectRoot "host\tests\companion_test.cpp") `
     -o $Out
 if ($LASTEXITCODE -ne 0) { throw "compile failed" }
