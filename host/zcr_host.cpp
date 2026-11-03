@@ -11,6 +11,7 @@
 #include <atomic>
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>
 #include <string>
 #include <vector>
 
@@ -454,6 +455,15 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
 
     static int frame_count = 0;
     frame_count++;
+    if (frame_count == 1) {
+        /* low-end tier: <3GB RAM -> lighter weather */
+        long pages = sysconf(_SC_PHYS_PAGES);
+        long psize = sysconf(_SC_PAGE_SIZE);
+        bool low = (pages > 0 && psize > 0 && (long long)pages * psize < 3000000000LL);
+        zcr_weather::set_quality(low);
+        diag_log("[perf] low-end tier: %s (ram=%lldMB)", low ? "yes" : "no",
+                 (long long)pages * psize / (1024 * 1024));
+    }
     /* companion save safety net: the Java onPause never calls the native
      * pause entry, so backgrounding cannot flush from there - piggyback on
      * the render tick (flush_locked is throttled + dirty-guarded, this is
@@ -465,8 +475,10 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
         /* periodic memory report (heap + textures + host RSS) */
         diag_report(frame_count == 2 ? "startup" : "periodic");
     }
-    if ((frame_count % 60) == 1) {
-        /* readback probe: what did the engine actually put on screen? */
+    if ((frame_count % 600) == 1) {
+        /* readback probe: what did the engine actually put on screen?
+         * glReadPixels is a full GPU pipeline stall - keep it rare
+         * (was every 60 frames: a per-second stutter on low-end phones). */
         unsigned char px[4] = {0, 0, 0, 0};
         glReadPixels(1400, 630, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, px);
         GLenum err = glGetError();

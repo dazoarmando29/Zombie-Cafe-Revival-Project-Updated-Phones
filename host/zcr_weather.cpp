@@ -23,6 +23,7 @@ Particle g_p[kMax];
 int g_count = 0;
 int g_cur_event = -1;
 float g_time = 0.0f;
+bool g_low_end = false;
 
 uint32_t rgb(uint8_t r, uint8_t g, uint8_t b) {
     return ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
@@ -39,7 +40,7 @@ void seed_particle(Particle *p, int ev, bool top) {
             p->vy = -(0.045f + frand() * 0.11f);
             p->size = 1.6f + frand() * 3.2f;
             if (frand() < 0.12f) p->size = 5.0f + frand() * 2.5f; /* big flakes */
-            p->alpha = 0.35f + frand() * 0.6f;
+            p->alpha = 0.30f + frand() * 0.45f;
             p->color = frand() < 0.25f ? rgb(200, 220, 255) : rgb(255, 255, 255);
             break;
         case 1: /* Halloween embers/sparks */
@@ -48,7 +49,7 @@ void seed_particle(Particle *p, int ev, bool top) {
             p->vx = (frand() - 0.5f) * 0.018f;
             p->vy = 0.02f + frand() * 0.055f;
             p->size = 1.4f + frand() * 2.4f;
-            p->alpha = 0.25f + frand() * 0.5f;
+            p->alpha = 0.15f + frand() * 0.25f;
             p->color = frand() < 0.55f ? rgb(255, 140, 30) : rgb(190, 80, 255);
             break;
         case 3: /* Easter petals */
@@ -74,20 +75,25 @@ void seed_particle(Particle *p, int ev, bool top) {
 
 void rebuild(int ev) {
     g_cur_event = ev;
-    g_count = (ev == 2) ? 480 : (ev == 1 ? 240 : (ev == 3 ? 260 : 0));
+    g_count = (ev == 2) ? 320 : (ev == 1 ? 110 : (ev == 3 ? 140 : 0));
+    if (g_low_end) g_count = (int)(g_count * 45) / 100;
     for (int i = 0; i < g_count; i++) seed_particle(&g_p[i], ev, false);
 }
 
 void tint_for(int ev, float *r, float *g, float *b, float *a) {
+    /* THEME MUST NEVER OBSCURE GAMEPLAY: subtle washes only. */
     switch (ev) {
-        case 2: *r = 0.55f; *g = 0.66f; *b = 0.95f; *a = 0.10f; break; /* icy */
-        case 1: *r = 0.30f; *g = 0.06f; *b = 0.34f; *a = 0.13f; break; /* spooky */
-        case 3: *r = 0.96f; *g = 0.72f; *b = 0.92f; *a = 0.09f; break; /* pastel */
+        case 2: *r = 0.55f; *g = 0.66f; *b = 0.95f; *a = 0.05f; break; /* icy */
+        case 1: *r = 0.30f; *g = 0.06f; *b = 0.34f; *a = 0.05f; break; /* spooky */
+        case 3: *r = 0.96f; *g = 0.72f; *b = 0.92f; *a = 0.04f; break; /* pastel */
         default: *a = 0; break;
     }
+    if (g_low_end && *a > 0) *a *= 0.6f;
 }
 
 }  // namespace
+
+void set_quality(bool low_end) { g_low_end = low_end; }
 
 void on_frame(int event_id, float delta_s) {
     if (event_id <= 0) {

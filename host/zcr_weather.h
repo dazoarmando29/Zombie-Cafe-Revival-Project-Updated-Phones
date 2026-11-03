@@ -7,6 +7,9 @@
 
 namespace zcr_weather {
 
+/* Low-end devices: fewer particles + weaker tint. */
+void set_quality(bool low_end);
+
 /* event_id: 1=halloween, 2=christmas, 3=easter, 0=off (draws nothing). */
 void on_frame(int event_id, float delta_s);
 
