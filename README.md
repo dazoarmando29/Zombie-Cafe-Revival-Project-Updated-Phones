@@ -24,6 +24,38 @@
 
 ---
 
+## What's new — content expansion (v0.3.0, 2026-11)
+
+Work from the `feature/content-expansion` branch (7 commits). Full details in
+[`docs/CONTENT_EXPANSION_TEST_REPORT.md`](docs/CONTENT_EXPANSION_TEST_REPORT.md)
+and [`docs/QUALITY_OF_LIFE_FEATURES.md`](docs/QUALITY_OF_LIFE_FEATURES.md).
+
+### New
+
+- **Auto-serve** — when a dish **you** cooked finishes, the chef (your avatar)
+  carries it to the serving counter automatically and the staff keep serving it
+  to customers' tables. Cooking itself stays manual — auto-cooking was removed
+  on request, pots never appear on their own. Dishes progress by wall-clock, so
+  the carry fires within seconds of reopening the game even after being away.
+- **Toxin purchase confirmations** — every toxin spend now asks first. All 20
+  engine call sites were audited by disassembly (including the zookdex card
+  purchases, which were the one unguarded path).
+- **Serve overwrite fix** — a dish landing on an occupied serving spot used to
+  vanish; it now returns to the counter instead.
+- **Dirty appliance cleanup** — staff clean the fridge/sink again (the "!"
+  markers), not just spilled food.
+
+### Fixed
+
+- **Magenta boot flash** — the pink first frame at launch is gone. Root-caused
+  by pixel math: a diagnostic underlay showed through the splash screen's
+  fade-in; the underlay is black now.
+- **Phone comfort** — the screen no longer sleeps mid-cook, and notched/cutout
+  displays render full-bleed instead of letterboxing ("Game zoomed in - display
+  cutout area unavailable").
+
+---
+
 ## What's new — engine upgrade (2026-11)
 
 Work from the `feature/engine-upgrade` branch (9 commits). Full details in
@@ -265,6 +297,10 @@ The natives (`DebugAddMoney`, `DebugSetToxin`, `DebugAddXp`, `DebugSetXp`) write
 - [x] Engine upgrade: memory/texture/file diagnostics (`[heapstat]`, `[texstat]`, `[filetrace]`)
 - [x] Engine upgrade: save backup + recovery, scoped-storage log fix
 - [x] Engine upgrade: asset validator build gate, N-sheet packing, content-map RE
+- [x] Content expansion: toxin-spend confirmations (20-site RE audit + zookdex gate)
+- [x] Content expansion: auto-serve (chef dish carry + staff table serving, works while away)
+- [x] Content expansion: serve overwrite fix, dirty-appliance cleanup gate
+- [x] Stability: magenta boot flash fix, keep-screen-on, display cutout full-bleed
 - [ ] Third character sheet engine wiring (cave patch or manifest discovery — plan in `docs/ASSET_EXPANSION_GUIDE.md`)
 - [ ] Online services revival (`tool/server`) — opt-in
 - [ ] Long-session soak test + low-RAM device profile
