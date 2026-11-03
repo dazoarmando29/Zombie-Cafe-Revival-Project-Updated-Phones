@@ -28,8 +28,9 @@ $Out = Join-Path $env:TEMP "zcr_companion_test"
 Write-Host "[build] $Out" -ForegroundColor Cyan
 & $Clang --target=aarch64-linux-android21 -static-libstdc++ -O1 -g `
     -Wall -Wextra -Wno-unused-parameter `
-    (Join-Path $ProjectRoot "host\companion_state.cpp") `
-    (Join-Path $ProjectRoot "host\tests\companion_test.cpp") `
+(Join-Path $ProjectRoot "host\companion_state.cpp") `
+(Join-Path $ProjectRoot "host\event_state.cpp") `
+(Join-Path $ProjectRoot "host\tests\companion_test.cpp") `
     -o $Out
 if ($LASTEXITCODE -ne 0) { throw "compile failed" }
 

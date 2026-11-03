@@ -13,6 +13,8 @@
 #include <ctime>
 #include <map>
 #include <mutex>
+#include <atomic>
+#include "event_state.h"
 #include <string>
 #include <vector>
 
@@ -23,6 +25,11 @@
 #include "jni_bridge.h"
 
 namespace zcr_companion {
+
+/* seasonal-event progress hook (defined after the unnamed namespace;
+ * called from hooks inside it). Must be declared here, at this scope. */
+void event_progress_locked(int32_t kind, int64_t amount);
+
 namespace {
 
 /* ---- verified engine RVAs / fields (docs/ASSET_EXPANSION_GUIDE.md §5) ---- */
@@ -132,6 +139,18 @@ AAssetManager *g_amgr = nullptr;
 std::mutex g_mu;
 zcr_comp::State g_state;
 zcr_comp::Defs g_defs;
+zcr_ev::EventState g_event;
+std::string g_events_path;   /* <filesDir>/zcr_events.json */
+std::string g_override_path; /* <filesDir>/zcr_event_override.txt */
+bool g_event_dirty = false;
+std::atomic<int> g_weather_id{0};
+std::mutex g_toast_mu;
+std::string g_toast;
+bool g_toast_pending = false;
+int64_t g_last_money = -1;
+
+/* defined below in this unnamed namespace */
+bool read_file(const std::string &path, std::string *out);
 std::map<int32_t, std::string> g_row_ids;
 std::string g_path;        /* <filesDir>/zcr_companion.json */
 jobject g_context = nullptr; /* global ref to the Application */
@@ -198,6 +217,15 @@ bool resolve_app(JNIEnv *env) {
     if (!cpath) return false;
     g_path = std::string(cpath) + "/" + kFileName;
     env->ReleaseStringUTFChars(path, cpath);
+    /* seasonal events save + live override file, same directory */
+    {
+        std::string dir = g_path.substr(0, g_path.rfind('/') + 1);
+        g_events_path = dir + "zcr_events.json";
+        g_override_path = dir + "zcr_event_override.txt";
+        std::string ej;
+        if (read_file(g_events_path, &ej) && !zcr_ev::parse(ej, &g_event))
+            g_event = zcr_ev::EventState();
+    }
     return !g_path.empty();
 }
 
@@ -375,6 +403,12 @@ void on_cooked(uc_engine *uc, uint64_t, int32_t, void *) {
     g_dirty = true;
     logi("cooked: row=%u variant=%u key=%s total=%lld", (unsigned)rowb,
          (unsigned)varb, key.c_str(), (long long)g_state.total_cooked);
+    event_progress_locked(zcr_ev::ObjCook, 1);
+    if (zcr_ev::is_event_food(g_event.event, (int32_t)rowb)) {
+        event_progress_locked(zcr_ev::ObjCookEvent, 1);
+        logi("event specialty cooked: %s",
+             zcr_ev::event_food_label(g_event.event, (int32_t)rowb));
+    }
     handle_unlocked(unlocked, now);
     flush_locked(false);
 }
@@ -436,6 +470,7 @@ void on_spend(uc_engine *uc, uint64_t, int32_t, void *) {
     g_dirty = true;
     logi("toxin spent: %u via %s (total %lld)", (unsigned)amount, flow.c_str(),
          (long long)g_state.toxin_spent);
+    event_progress_locked(zcr_ev::ObjToxin, (int64_t)amount);
     handle_unlocked(unlocked, now);
     flush_locked(false);
 }
@@ -715,7 +750,13 @@ void on_serve_place(uc_engine *uc, uint64_t, int32_t, void *) {
         return;
     uint8_t busy = 0;
     emu::read(uc, target + OFF_OBJ_BUSY, &busy, 1);
-    if (busy == 0) return; /* empty spot: place normally */
+    if (busy == 0) {
+        /* empty spot: the dish is being served - counts toward the
+         * seasonal event "serve dishes" objectives */
+        std::lock_guard<std::mutex> lk(g_mu);
+        event_progress_locked(zcr_ev::ObjServe, 1);
+        return;
+    }
     uint32_t pc = RVA_SERVE_ABORT | 1u;
     uc_reg_write(uc, UC_ARM_REG_PC, &pc);
     logi("serve guard: spot busy - dish returned to counter (task=0x%x)", task);
@@ -1041,6 +1082,160 @@ void flush(bool force) {
     flush_locked(force);
 }
 
-void qol_tick() { qol_tick_impl(); }
+/* ---- seasonal events (Halloween / Christmas / Easter) ----
+ * State lives in <filesDir>/zcr_events.json (zcr_ev::EventState). An
+ * override file (<filesDir>/zcr_event_override.txt: "christmas" /
+ * "halloween" / "easter" / "off") forces an event for testing. The
+ * weather overlay reads weather_event() every frame; progress comes
+ * from the same engine hooks as the companion stats. */
+
+void set_toast(const std::string &msg) {
+    std::lock_guard<std::mutex> lk(g_toast_mu);
+    g_toast = msg;
+    g_toast_pending = true;
+}
+
+void flush_events(bool force) {
+    if (!g_event_dirty && !force) return;
+    if (g_events_path.empty()) return;
+    if (write_file(g_events_path, zcr_ev::serialize(g_event))) {
+        g_event_dirty = false;
+    } else {
+        logi("events flush FAILED to %s", g_events_path.c_str());
+    }
+}
+
+void grant_coins(int64_t reward) {
+    uint32_t game = game_instance();
+    if (!game || reward <= 0) return;
+    uint32_t cur = 0;
+    emu::read(g_uc, game + OFF_GAME_MONEY, &cur, 4);
+    int64_t next = (int64_t)cur + reward;
+    if (next > 2000000000ll) next = 2000000000ll;
+    uint32_t v = (uint32_t)next;
+    emu::write(g_uc, game + OFF_GAME_MONEY, &v, 4);
+    g_last_money = (int64_t)v; /* do not count our own grant */
+    logi("event reward granted: +%lld coins -> %u", (long long)reward, v);
+}
+
+void notify_user(const std::string &msg) {
+    if (!g_uc) return;
+    Regs snap;
+    snap.save(g_uc);
+    uint32_t sp = (snap.r[13] - 1024u) & ~7u;
+    uint32_t m = emu::intern_string(g_uc, msg);
+    uint32_t args[3] = {m, 0u, 0u};
+    jni_call_engine_r0_sp(g_uc, RVA_SEND_NOTIF | 1u, 0u, args, 3, sp);
+    snap.restore(g_uc);
+    logi("event notify: %s", msg.c_str());
+}
+
+/* Caller must hold g_mu. Progress + completion rewards. */
+void event_progress_locked(int32_t kind, int64_t amount) {
+    if (g_event.event == 0 || amount <= 0) return;
+    if ((int32_t)g_weather_id.load() != g_event.event) return; /* not active */
+    std::vector<int> hit = zcr_ev::add_progress(&g_event, kind, amount);
+    if (hit.empty()) return;
+    g_event_dirty = true;
+    for (int idx : hit) {
+        const zcr_ev::Objective &o = g_event.objectives[(size_t)idx];
+        char msg[192];
+        snprintf(msg, sizeof(msg),
+                 "%s EVENT objective complete! Reward: %lld coins.",
+                 zcr_ev::event_name(g_event.event), (long long)o.reward_coins);
+        notify_user(msg);
+        set_toast(msg);
+        g_event.objectives[(size_t)idx].rewarded = true;
+        flush_events(true);
+        grant_coins(o.reward_coins);
+    }
+}
+
+void events_tick() {
+    std::lock_guard<std::mutex> lk(g_mu);
+    static int64_t s_last = 0;
+    int64_t now = (int64_t)time(nullptr);
+    if (s_last && now - s_last < 5) return;
+    s_last = now;
+
+    /* effective event: override file wins, else the date window */
+    int32_t eff;
+    std::string oname;
+    if (!g_override_path.empty() && read_file(g_override_path, &oname)) {
+        if (oname.find("off") == 0) {
+            eff = zcr_ev::EvNone;
+        } else {
+            int32_t f = (int32_t)zcr_ev::event_from_name(oname);
+            eff = (f != zcr_ev::EvNone) ? f : (int32_t)zcr_ev::event_for_time(now);
+        }
+    } else {
+        eff = (int32_t)zcr_ev::event_for_time(now);
+    }
+    g_weather_id.store(eff);
+
+    time_t t = (time_t)now;
+    struct tm tmv;
+#if defined(_WIN32)
+    localtime_s(&tmv, &t);
+#else
+    localtime_r(&t, &tmv);
+#endif
+    int year = tmv.tm_year + 1900;
+
+    /* roll a fresh event instance when the season (or year) changes */
+    if (eff != zcr_ev::EvNone &&
+        (g_event.event != eff || g_event.year != year)) {
+        g_event = zcr_ev::make_event(eff, year, now);
+        g_event_dirty = true;
+        char objs[224];
+        size_t pos = 0;
+        objs[0] = 0;
+        for (size_t i = 0; i < g_event.objectives.size(); i++) {
+            const zcr_ev::Objective &o = g_event.objectives[i];
+            int n = snprintf(objs + pos, sizeof(objs) - pos, "%s%s: %lld",
+                             i ? "; " : "", zcr_ev::event_name(eff),
+                             (long long)o.target);
+            if (n > 0) pos += (size_t)n;
+            if (pos >= sizeof(objs)) break;
+        }
+        char msg[384];
+        snprintf(msg, sizeof(msg),
+                 "%s EVENT started! Objectives: %s. Special guest: %s!",
+                 zcr_ev::event_name(eff), objs,
+                 zcr_ev::event_special_name(eff));
+        notify_user(msg);
+        set_toast(msg);
+        g_event.announced = true;
+        flush_events(true);
+    }
+
+    /* coin-earned progress from the money field */
+    uint32_t game = game_instance();
+    if (game) {
+        uint32_t money = 0;
+        emu::read(g_uc, game + OFF_GAME_MONEY, &money, 4);
+        if (g_last_money >= 0 && (int64_t)money > g_last_money)
+            event_progress_locked(zcr_ev::ObjCoins,
+                                  (int64_t)money - g_last_money);
+        g_last_money = (int64_t)money;
+    }
+
+    flush_events(false);
+}
+
+int weather_event() { return g_weather_id.load(); }
+
+bool take_toast(char *buf, size_t n) {
+    std::lock_guard<std::mutex> lk(g_toast_mu);
+    if (!g_toast_pending || !buf || n == 0) return false;
+    snprintf(buf, n, "%s", g_toast.c_str());
+    g_toast_pending = false;
+    return true;
+}
+
+void qol_tick() {
+    events_tick();
+    qol_tick_impl();
+}
 
 }  // namespace zcr_companion

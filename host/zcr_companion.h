@@ -40,4 +40,12 @@ void flush(bool force);
  * emulator thread (nested engine calls). */
 void qol_tick();
 
+/* Seasonal events: id of the active event for the weather overlay
+ * (0=off, 1=halloween, 2=christmas, 3=easter). Safe from any thread. */
+int weather_event();
+
+/* Pop the pending event announcement/progress toast (once). Safe from
+ * any thread. */
+bool take_toast(char *buf, size_t n);
+
 }  // namespace zcr_companion

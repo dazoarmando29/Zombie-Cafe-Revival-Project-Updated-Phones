@@ -559,3 +559,54 @@ Reading the .smali source is not enough - the mnemonic flips silently.
 
 `Log.d` lines from the app never appear in logcat on the test device;
 `Log.i`/`Log.e` do. Diagnostics in smali must use Log.i or higher.
+
+## 14. Seasonal events (2026-11-03) - built; device run pending
+
+`host/event_state.{h,cpp}` (pure logic) + `host/zcr_weather.{h,cpp}`
+(GL overlay) + wiring in `zcr_companion.cpp` / `zcr_host.cpp`:
+
+- **Seasons**: Halloween Oct 15 - Nov 5, Christmas Dec 1 - Jan 5, Easter
+  (Gregorian Easter Sunday, window -7d .. +3d). Off-season = no event.
+- **Randomized objectives**: every season instance rolls 3 distinct
+  objectives from pools (serve dishes / cook dishes / cook event
+  specialties / earn coins / spend toxin), seeded per year so each
+  Halloween/Easter/Christmas brings a different task set. Completion
+  credits coins (persist-then-grant) and announces via engine
+  notification + toast.
+- **Event specialties** (the "specific items"): designated recipes per
+  event - Halloween: Smash-o-Lantern, Exjack-o-Lantern, Heart Dog on a
+  Stake...; Christmas: Puking Duck, Fruit Cake, Tur-Key...; Easter: Snot
+  Cross Buns, Green Eggs and Sam... - tracked by the same on_cooked hook
+  as recipe mastery.
+- **Weather + theme** (`zcr_weather.cpp`): particles + full-screen tint
+  drawn over EVERY engine frame - Christmas snow (menu, cafe AND raids),
+  Halloween embers with flicker + purple tint, Easter pastel petals.
+  Plain GLES1, matrices/client state restored, zero engine state
+  touched.
+- **Live override**: write `christmas` / `halloween` / `easter` / `off`
+  to `<files>/zcr_event_override.txt`; the next tick (<=5s) switches the
+  event and weather immediately (demo/testing).
+- **Progress hooks**: on_serve_place (serves), on_cooked (dishes +
+  specialties), on_spend (toxin), money-delta sampling (coins earned).
+  State in `<files>/zcr_events.json`.
+
+### 14.1 Verification status (honest)
+
+- ~40 new event checks (calendars + Easter anchors 2024/2025/2026, window
+  edges, deterministic rolls, year variance, progress latches, JSON
+  round-trip) compile into the device harness alongside the 158 existing
+  ones - RUN PENDING (phone unplugged at build time).
+- The deterministic roll was additionally mirrored in Python at build
+  time (identical LCG + pools): determinism, year variance and reward
+  formulas verified there.
+- Both APKs build clean. Device verification (weather visuals on
+  menu/cafe/raid, override switching, reward crediting) is PENDING the
+  next phone connection.
+
+### 14.2 Known scope boundary: event-only special zombies
+
+"Infect special zombies that only appear in that event" needs the
+infection/roster spawn-path RE (CharacterData row resolution + roster
+pinning). The framework carries the designation and announces it
+(`event_special_name`: Headless Barista Zombie / Frostbitten Zombie /
+Zombie Bunny); spawn-gating is the documented next step.

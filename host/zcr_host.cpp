@@ -28,6 +28,7 @@
 #include "stub_dispatch.h"
 #include "zcr_companion.h"
 #include "zcr_sheets.h"
+#include "zcr_weather.h"
 #include "diag.h"
 #include "generated/engine_tables.h"
 
@@ -370,6 +371,46 @@ uint32_t jf(jfloat f) {
  * touches the view hierarchy and throws CalledFromWrongThreadException
  * from the GL thread (2026-11-03) - do NOT move this back to JNI. */
 
+/* Seasonal event toast (event start / objective complete). Toast is
+ * thread-tolerant and needs no view hierarchy, so the GL thread is fine. */
+static void post_toast(JNIEnv *env, const char *msg) {
+    jclass cc = env->FindClass("com/capcom/zombiecafeandroid/CC_Android");
+    if (!cc || env->ExceptionCheck()) {
+        env->ExceptionClear();
+        return;
+    }
+    jfieldID fid = env->GetStaticFieldID(
+        cc, "a", "Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;");
+    if (!fid || env->ExceptionCheck()) {
+        env->ExceptionClear();
+        return;
+    }
+    jobject act = env->GetStaticObjectField(cc, fid);
+    if (!act || env->ExceptionCheck()) {
+        env->ExceptionClear();
+        return;
+    }
+    jclass toast = env->FindClass("android/widget/Toast");
+    if (!toast || env->ExceptionCheck()) {
+        env->ExceptionClear();
+        return;
+    }
+    jmethodID mk = env->GetStaticMethodID(
+        toast, "makeText",
+        "(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;");
+    if (!mk || env->ExceptionCheck()) {
+        env->ExceptionClear();
+        return;
+    }
+    jstring js = env->NewStringUTF(msg);
+    jobject t = env->CallStaticObjectMethod(toast, mk, act, js, 1);
+    if (t && !env->ExceptionCheck()) {
+        jmethodID sh = env->GetMethodID(toast, "show", "()V");
+        if (sh && !env->ExceptionCheck()) env->CallVoidMethod(t, sh);
+    }
+    if (env->ExceptionCheck()) env->ExceptionClear();
+}
+
 /* --- no-arg / simple --- */
 extern "C" JNIEXPORT jint JNICALL
 Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
@@ -395,6 +436,21 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
     }
     uint32_t draws_before = g_diag_draws;
     uint32_t rv = jni_call_engine(g_uc, rva, w, 2);
+
+    /* seasonal weather overlay: particles + theme tint on EVERY frame
+     * (title screen, cafe, raids). frame = delta ms from the Java loop. */
+    int ev = zcr_companion::weather_event();
+    if (ev > 0) {
+        float dt = (frame > 0 && frame < 200) ? (float)frame / 1000.0f
+                                              : 0.016f;
+        zcr_weather::on_frame(ev, dt);
+    }
+    /* seasonal event announcements / objective completions */
+    {
+        char tmsg[256];
+        if (zcr_companion::take_toast(tmsg, sizeof(tmsg)))
+            post_toast(env, tmsg);
+    }
 
     static int frame_count = 0;
     frame_count++;

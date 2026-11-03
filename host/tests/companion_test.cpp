@@ -8,6 +8,7 @@
  * unlocks, latch semantics), reward claim persist-then-grant ordering,
  * registry-lock parsing, and anti-exploit monotonicity guards. */
 #include "../companion_state.h"
+#include "../event_state.h"
 
 #include <cstdio>
 #include <cstring>
@@ -453,6 +454,141 @@ static void test_toxin_ledger() {
     CHECK(u.toxin_log.front().flow == "f18");
 }
 
+/* ---- seasonal events (zcr_ev) ---- */
+
+static void test_event_calendars() {
+    using namespace zcr_ev;
+    int32_t m = 0, d = 0;
+    easter_sunday(2024, &m, &d);
+    CHECK_EQ(m, 3);
+    CHECK_EQ(d, 31);
+    easter_sunday(2025, &m, &d);
+    CHECK_EQ(m, 4);
+    CHECK_EQ(d, 20);
+    easter_sunday(2026, &m, &d);
+    CHECK_EQ(m, 4);
+    CHECK_EQ(d, 5);
+
+    CHECK_EQ(event_for_date(2026, 10, 15), (int)EvHalloween);
+    CHECK_EQ(event_for_date(2026, 10, 31), (int)EvHalloween);
+    CHECK_EQ(event_for_date(2026, 11, 5), (int)EvHalloween);
+    CHECK_EQ(event_for_date(2026, 11, 6), (int)EvNone);
+    CHECK_EQ(event_for_date(2026, 12, 1), (int)EvChristmas);
+    CHECK_EQ(event_for_date(2026, 12, 25), (int)EvChristmas);
+    CHECK_EQ(event_for_date(2027, 1, 5), (int)EvChristmas);
+    CHECK_EQ(event_for_date(2027, 1, 6), (int)EvNone);
+    /* Easter 2026 = Apr 5 -> window Mar 29 .. Apr 8 */
+    CHECK_EQ(event_for_date(2026, 3, 28), (int)EvNone);
+    CHECK_EQ(event_for_date(2026, 3, 29), (int)EvEaster);
+    CHECK_EQ(event_for_date(2026, 4, 5), (int)EvEaster);
+    CHECK_EQ(event_for_date(2026, 4, 8), (int)EvEaster);
+    CHECK_EQ(event_for_date(2026, 4, 9), (int)EvNone);
+}
+
+static void test_event_roll() {
+    using namespace zcr_ev;
+    EventState a = make_event(EvChristmas, 2026, 1000);
+    EventState b = make_event(EvChristmas, 2026, 2000);
+    CHECK_EQ(a.objectives.size(), 3);
+    for (int i = 0; i < 3; i++) {
+        CHECK_EQ(a.objectives[i].kind, b.objectives[i].kind);
+        CHECK_EQ(a.objectives[i].target, b.objectives[i].target);
+    }
+    CHECK(a.objectives[0].kind != a.objectives[1].kind);
+    CHECK(a.objectives[1].kind != a.objectives[2].kind);
+    CHECK(a.objectives[0].kind != a.objectives[2].kind);
+    for (int i = 0; i < 3; i++) {
+        const Objective &o = a.objectives[i];
+        CHECK(o.target > 0);
+        CHECK(o.reward_coins > 0);
+        if (o.kind == ObjCoins) CHECK_EQ(o.reward_coins, o.target / 4);
+        if (o.kind == ObjServe) CHECK_EQ(o.reward_coins, o.target * 60);
+    }
+    /* "randomize every halloween/easter/christmas": next year differs */
+    EventState c = make_event(EvChristmas, 2027, 1000);
+    bool differs = false;
+    for (int i = 0; i < 3; i++)
+        if (c.objectives[i].kind != a.objectives[i].kind ||
+            c.objectives[i].target != a.objectives[i].target)
+            differs = true;
+    CHECK(differs);
+}
+
+static void test_event_progress() {
+    using namespace zcr_ev;
+    EventState s;
+    s.event = EvHalloween;
+    Objective o;
+    o.kind = ObjServe;
+    o.target = 10;
+    o.reward_coins = 600;
+    s.objectives.push_back(o);
+    CHECK_EQ(add_progress(&s, ObjServe, 4).size(), 0);
+    CHECK_EQ(s.objectives[0].progress, 4);
+    CHECK_EQ(add_progress(&s, ObjServe, 6).size(), 1);
+    CHECK(s.objectives[0].done);
+    CHECK_EQ(s.objectives[0].progress, 10);
+    /* done latches: no double completion, no overcount */
+    CHECK_EQ(add_progress(&s, ObjServe, 50).size(), 0);
+    CHECK_EQ(s.objectives[0].progress, 10);
+    /* wrong kind ignored */
+    CHECK_EQ(add_progress(&s, ObjCook, 5).size(), 0);
+    /* over-target clamps */
+    EventState s2;
+    s2.event = EvChristmas;
+    Objective o2;
+    o2.kind = ObjToxin;
+    o2.target = 10;
+    o2.reward_coins = 1500;
+    s2.objectives.push_back(o2);
+    CHECK_EQ(add_progress(&s2, ObjToxin, 25).size(), 1);
+    CHECK(s2.objectives[0].done);
+    CHECK_EQ(s2.objectives[0].progress, 10);
+    /* zero/negative amounts are inert */
+    CHECK_EQ(add_progress(&s2, ObjToxin, 0).size(), 0);
+}
+
+static void test_event_roundtrip() {
+    using namespace zcr_ev;
+    EventState s = make_event(EvEaster, 2026, 123456);
+    s.announced = true;
+    s.objectives[1].progress = 3;
+    std::string js = serialize(s);
+    EventState t;
+    CHECK(parse(js, &t));
+    CHECK_EQ(t.event, s.event);
+    CHECK_EQ(t.year, s.year);
+    CHECK_EQ(t.started_ts, s.started_ts);
+    CHECK(t.announced);
+    CHECK_EQ(t.objectives.size(), s.objectives.size());
+    for (size_t i = 0; i < s.objectives.size(); i++) {
+        CHECK_EQ(t.objectives[i].kind, s.objectives[i].kind);
+        CHECK_EQ(t.objectives[i].target, s.objectives[i].target);
+        CHECK_EQ(t.objectives[i].progress, s.objectives[i].progress);
+        CHECK_EQ(t.objectives[i].reward_coins, s.objectives[i].reward_coins);
+        CHECK_EQ(t.objectives[i].done, s.objectives[i].done);
+        CHECK_EQ(t.objectives[i].rewarded, s.objectives[i].rewarded);
+    }
+    EventState u;
+    CHECK(!parse("{}", &u));
+    CHECK(!parse("", &u));
+    CHECK(!parse("{\"objectives\":[]", &u));
+}
+
+static void test_event_names_and_food() {
+    using namespace zcr_ev;
+    CHECK_EQ(event_from_name("christmas"), (int)EvChristmas);
+    CHECK_EQ(event_from_name("christmas\n"), (int)EvChristmas);
+    CHECK_EQ(event_from_name("HalloweEn"), (int)EvNone); /* case-sensitive */
+    CHECK_EQ(event_from_name("off"), (int)EvNone);
+    CHECK(is_event_food(EvHalloween, 37));
+    CHECK(!is_event_food(EvHalloween, 38));
+    CHECK(is_event_food(EvChristmas, 71));
+    CHECK(is_event_food(EvEaster, 66));
+    CHECK(std::string(event_food_label(EvHalloween, 37)) == "Smash-o-Lantern");
+    CHECK(std::string(event_special_name(EvChristmas)) == "Frostbitten Zombie");
+}
+
 int main() {
     test_mastery();
     test_recipe_key();
@@ -467,6 +603,11 @@ int main() {
     test_json_escapes();
     test_favorites();
     test_toxin_ledger();
+    test_event_calendars();
+    test_event_roll();
+    test_event_progress();
+    test_event_roundtrip();
+    test_event_names_and_food();
 
     printf("companion tests: %d checks, %d failures\n", g_checks, g_failures);
     return g_failures == 0 ? 0 : 1;
