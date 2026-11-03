@@ -419,3 +419,59 @@ that restores the purchase index. Log lines: `zukan buy: confirm queued
   else CookTask (tend). Driven by the stove assignment at +0x54.
 - The tickStaff CleanupTask gate (dirty furniture, incl. fridge/sink)
   is `characterCanFollow` - covered by the forced auto-serve gate.
+
+## 12. Stability pass (2026-11-03) - device-tested
+
+### 12.1 Magenta boot flash - root-caused and FIXED
+
+- Symptom: every cold launch showed a solid magenta/pink screen with a
+  pink-tinted Beeline splash for the first frame(s).
+- Root cause (pixel-solved, not guessed): the splash draws over an
+  *uncleared* framebuffer while its fade-in alpha is still low. Sample
+  solve: measured frame-1 pixels are exactly
+  `blend(magenta(255,0,255), splash, a=0.32)` - e.g. bg (244,111,43)
+  -> (251,35,189) and white logo (255,244,255) -> (255,76,255).
+  The magenta dest was OUR OWN diagnostic underlay in
+  `zcr_host.cpp` `Java_..._CapcomRenderer_render`: `glClearColor(1,0,1)`
+  every frame "so a dead engine shows magenta". The engine's boot
+  splash fades in over it -> the underlay showed through.
+- Fix: underlay changed to black (`zcr_host.cpp`). Boot flash can no
+  longer occur regardless of fade timing (black = neutral under any
+  alpha-blended screen).
+- Verification: 10-screenshot cold-launch sweep before = frame 1 at
+  89.5% magenta; after = 0.0% on all 10 frames (device-tested).
+
+### 12.2 Frame rate - no cap to remove (measured)
+
+- Display: vivo 120Hz panel (`settings get system peak_refresh_rate`
+  = 120.0); SurfaceFlinger vsync period 16666666ns.
+- Java render loop (`CapcomRenderer.onDrawFrame` smali): passes the
+  frame delta to the native render and `Thread.sleep(5)` - no fixed
+  timestep, no 30fps limiter; `setRenderMode`/`requestRender` are
+  never called (continuous render).
+- Measured render rate: 12 diag lines (=12x60 frames) in 6.246s =
+  **~115fps** (vsync-locked to the 120Hz panel). The game already
+  runs at the display's full rate; engine stepping is delta-based
+  (frame-rate independent). No fps unlock needed or possible.
+- Note: the emulator-hosted engine (Unicorn ARM32 in the arm64 host)
+  keeps up comfortably; our hook overhead is a per-frame bool check.
+
+### 12.3 Phone compatibility - fixes + honest limits
+
+- FIXED: screen no longer sleeps mid-play - `FLAG_KEEP_SCREEN_ON`
+  applied at frame 1 via `CC_Android.a` (the live Activity) from
+  `zcr_host.cpp` `apply_window_compat()` (log: "window: FLAG_KEEP_SCREEN_ON
+  + cutout shortEdges applied").
+- FIXED: display cutout handling - `LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES`
+  set on the window at runtime (the vivo used to show "Game zoomed in -
+  display cutout area unavailable"). Set via
+  `WindowManager.LayoutParams.layoutInDisplayCutoutMode` (API 27+,
+  skipped gracefully below; a manifest attribute is NOT usable - the
+  apktool framework rejects the API-27 attr).
+- Architecture note: the engine (`assets/engine/game.so`) is a 32-bit
+  ARM binary that runs EMULATED (Unicorn, `uc_open(UC_ARCH_ARM)`)
+  inside the host library, so device ABI is not a limitation - both
+  `arm64-v8a` and `armeabi-v7a` host libs ship and are verified.
+- Honest limits: minSdk 23; GLES 1.x required (manifest
+  `glEsVersion="1"`); 64-bit-only devices are untested (host libs are
+  provided for both ABIs so they should work, but no device evidence).
