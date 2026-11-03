@@ -247,9 +247,10 @@ void do_call(uc_engine *uc, const emu::Args &a, WordSrc &src, Ret ret,
     marshal(src, m->sig, &args);
     diag_trace("jni %s(%s) n=%u", m->name.c_str(), m->sig.c_str(),
                (unsigned)args.size());
-    /* diag: trace audio-related calls (volume mystery) */
-    if (m->name.find("Volume") != std::string::npos ||
-        m->name.find("Music") != std::string::npos) {
+    /* diag: trace audio-related calls (volume mystery) - verbose only */
+    if (diag_verbose() &&
+        (m->name.find("Volume") != std::string::npos ||
+         m->name.find("Music") != std::string::npos)) {
         diag_log("[jni-call] %s(%s) nargs=%u arg0.i=%d arg0.f=%f arg1.f=%f",
                  m->name.c_str(), m->sig.c_str(), (unsigned)args.size(),
                  args.empty() ? 0 : args[0].i,
@@ -258,9 +259,12 @@ void do_call(uc_engine *uc, const emu::Args &a, WordSrc &src, Ret ret,
     }
     /* diag: file I/O trace with the emulated caller PC (LR). This maps each
      * asset load/save to the engine code that requested it - the key to
-     * locating the character-sheet load sites (Phase 6). */
-    if (m->name.find("file") != std::string::npos ||
-        m->name.find("File") != std::string::npos) {
+     * locating the character-sheet load sites (Phase 6). VERBOSITY-GATED:
+     * the engine probes doesFileExist in hot loops and the unconditional
+     * log filled 4M+ lines (hundreds of MB) in long sessions. */
+    if (diag_verbose() &&
+        (m->name.find("file") != std::string::npos ||
+         m->name.find("File") != std::string::npos)) {
         std::string fname;
         if (!args.empty() && args[0].l) {
             jstring js = (jstring)args[0].l;
@@ -322,7 +326,7 @@ void do_call(uc_engine *uc, const emu::Args &a, WordSrc &src, Ret ret,
             jobject o = is_static ? g_env->CallStaticObjectMethodA((jclass)obj, m->id, args.data())
                                   : g_env->CallObjectMethodA(obj, m->id, args.data());
             *rv = handle_for(o);
-            if (m->name.find("fileRead") != std::string::npos && o)
+            if (diag_verbose() && m->name.find("fileRead") != std::string::npos && o)
                 diag_log("[fileRead] returned array len=%d",
                          (int)g_env->GetArrayLength((jarray)o));
             break;

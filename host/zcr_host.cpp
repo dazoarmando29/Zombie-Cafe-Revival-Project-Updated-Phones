@@ -11,6 +11,7 @@
 #include <atomic>
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>
 #include <string>
 #include <vector>
 
@@ -229,12 +230,20 @@ bool host_init(JNIEnv *env) {
     }
     emu::set_engine(g_uc);
 
-    /* larger TCG buffer = fewer codegen flushes */
-    /* larger TCG buffer = fewer codegen flushes (a flush stalls ~100ms+
-     * = the navigation jank spikes; 64MB holds every code path the cafe,
-     * map and menus touch) */
-    size_t tcg = 64u * 1024u * 1024u;
-    uc_ctl(g_uc, UC_CTL_WRITE(UC_CTL_TCG_BUFFER_SIZE, 1), &tcg);
+    /* larger TCG buffer = fewer codegen flushes (a flush stalls 100ms+
+     * = the navigation jank spikes). Tiered for low-RAM phones: 64MB
+     * holds every code path cafe/map/menus touch; memory-tight devices
+     * get 32MB to leave room for textures and the JVM. */
+    {
+        long pages = sysconf(_SC_PHYS_PAGES), psize = sysconf(_SC_PAGE_SIZE);
+        unsigned long long ram =
+            (pages > 0 && psize > 0) ? (unsigned long long)pages * psize : 0;
+        size_t tcg = (ram > 0 && ram < 3000000000ULL) ? (32u * 1024u * 1024u)
+                                                      : (64u * 1024u * 1024u);
+        uc_ctl(g_uc, UC_CTL_WRITE(UC_CTL_TCG_BUFFER_SIZE, 1), &tcg);
+        if (g_uc) diag_log("[perf] tcg=%zuMB ram=%lluMB", tcg / (1024 * 1024),
+                           ram / (1024 * 1024));
+    }
 
     /* zero-copy host buffers for stack/heap + trap pages */
     void *heap_buf = calloc(1, HEAP_SIZE);

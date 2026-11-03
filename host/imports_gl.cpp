@@ -664,6 +664,121 @@ static bool tex_decompress_palette(GLenum internal, GLsizei w, GLsizei h,
     return true;
 }
 
+/* GL_EXT_texture_compression_s3tc -> RGBA8888 (DXT1/3/5 incl. the sRGB
+ * variants 0x8C00-0x8C03 found in the engine's constant pool). Drivers
+ * without S3TC reject these uploads and the texture samples WHITE - one
+ * of the white-screen doors on new Android GPUs. */
+static void dxt_color_block(const uint8_t *blk, uint8_t *out4x4,
+                            bool force4) {
+    uint16_t c0 = (uint16_t)(blk[0] | (blk[1] << 8));
+    uint16_t c1 = (uint16_t)(blk[2] | (blk[3] << 8));
+    uint32_t rgb[4][3];
+    for (int i = 0; i < 2; i++) {
+        uint16_t c = i ? c1 : c0;
+        rgb[i][0] = (uint32_t)(((c >> 11) & 31) * 255 / 31);
+        rgb[i][1] = (uint32_t)(((c >> 5) & 63) * 255 / 63);
+        rgb[i][2] = (uint32_t)((c & 31) * 255 / 31);
+    }
+    bool four = force4 || (c0 > c1);
+    if (four) {
+        for (int k = 0; k < 3; k++) {
+            rgb[2][k] = (2u * rgb[0][k] + rgb[1][k]) / 3u;
+            rgb[3][k] = (rgb[0][k] + 2u * rgb[1][k]) / 3u;
+        }
+    } else {
+        for (int k = 0; k < 3; k++) rgb[2][k] = (rgb[0][k] + rgb[1][k]) / 2u;
+        rgb[3][0] = rgb[3][1] = rgb[3][2] = 0;
+    }
+    for (int y = 0; y < 4; y++) {
+        for (int x = 0; x < 4; x++) {
+            int idx = (blk[4 + y] >> (x * 2)) & 3;
+            uint8_t *o = out4x4 + (y * 4 + x) * 4;
+            o[0] = (uint8_t)rgb[idx][0];
+            o[1] = (uint8_t)rgb[idx][1];
+            o[2] = (uint8_t)rgb[idx][2];
+            o[3] = (uint8_t)((!four && idx == 3) ? 0 : 255);
+        }
+    }
+}
+
+static bool tex_decompress_dxt(GLenum internal, GLsizei w, GLsizei h,
+                               const uint8_t *src, size_t n,
+                               std::vector<uint8_t> *out) {
+    int kind = 0; /* 1=DXT1, 3=DXT3, 5=DXT5 */
+    switch (internal) {
+        case 0x83F0: case 0x8C00: case 0x8C01: kind = 1; break;
+        case 0x83F2: case 0x8C02: kind = 3; break;
+        case 0x83F3: case 0x8C03: kind = 5; break;
+        default: return false;
+    }
+    size_t block = (kind == 1) ? 8 : 16;
+    size_t need = (size_t)((w + 3) / 4) * (size_t)((h + 3) / 4) * block;
+    if (!src || w <= 0 || h <= 0 || n < need) return false;
+    out->assign((size_t)w * (size_t)h * 4, 255);
+    uint8_t *d = out->data();
+    size_t off = 0;
+    for (int by = 0; by < (h + 3) / 4; by++) {
+        for (int bx = 0; bx < (w + 3) / 4; bx++) {
+            const uint8_t *blk = src + off;
+            off += block;
+            uint8_t a[16];
+            for (int i = 0; i < 16; i++) a[i] = 255;
+            const uint8_t *color = blk;
+            if (kind == 3) {
+                for (int i = 0; i < 16; i++) {
+                    int nib = (blk[i / 2] >> ((i % 2) * 4)) & 0xf;
+                    a[i] = (uint8_t)(nib * 17);
+                }
+                color = blk + 8;
+            } else if (kind == 5) {
+                uint8_t a0 = blk[0], a1 = blk[1];
+                uint8_t pal[8];
+                pal[0] = a0;
+                pal[1] = a1;
+                if (a0 > a1) {
+                    for (int i = 1; i <= 6; i++)
+                        pal[1 + i] = (uint8_t)(((7 - i) * a0 + i * a1) / 7);
+                } else {
+                    for (int i = 1; i <= 4; i++)
+                        pal[1 + i] = (uint8_t)(((5 - i) * a0 + i * a1) / 5);
+                    pal[6] = 0;
+                    pal[7] = 255;
+                }
+                uint64_t bits = (uint64_t)(blk[2] | (blk[3] << 8) |
+                                           (blk[4] << 16)) |
+                                ((uint64_t)(blk[5] | (blk[6] << 8) |
+                                            (blk[7] << 16)) << 24);
+                for (int i = 0; i < 16; i++)
+                    a[i] = pal[(bits >> (3 * i)) & 7];
+                color = blk + 8;
+            }
+            uint8_t px[64];
+            dxt_color_block(color, px, kind != 1);
+            for (int y = 0; y < 4; y++) {
+                for (int x = 0; x < 4; x++) {
+                    int gx = bx * 4 + x, gy = by * 4 + y;
+                    if (gx >= w || gy >= h) continue;
+                    uint8_t *o = d + ((size_t)gy * w + gx) * 4;
+                    const uint8_t *p = px + (y * 4 + x) * 4;
+                    o[0] = p[0];
+                    o[1] = p[1];
+                    o[2] = p[2];
+                    o[3] = (kind == 1) ? p[3] : a[y * 4 + x];
+                }
+            }
+        }
+    }
+    return true;
+}
+
+/* Last resort: a COMPLETE 1x1 gray texture. An incomplete texture samples
+ * as WHITE on GLES1 (the white-ghost bug) - never leave one incomplete. */
+static void tex_upload_fallback(GLenum target, GLint level) {
+    static const uint8_t kGray[4] = {128, 128, 128, 255};
+    glTexImage2D(target, level, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 kGray);
+}
+
 static void h_glTexImage2D(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     uint32_t pixels = a.arg(8);
     GLsizei w = (GLsizei)a.r[3], h = (GLsizei)a.arg(4);
@@ -680,19 +795,23 @@ static void h_glTexImage2D(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     if (err != GL_NO_ERROR && p && w > 0 && h > 0) {
         static int s_retries = 0;
         std::vector<uint8_t> conv;
-        if (tex_convert_rgba(w, h, format, type, (const uint8_t *)p, n,
-                             &conv)) {
+        bool ok = tex_convert_rgba(w, h, format, type, (const uint8_t *)p, n,
+                                   &conv);
+        if (ok) {
             glTexImage2D((GLenum)a.r[0], (GLint)a.r[1], GL_RGBA, w, h, 0,
                          GL_RGBA, GL_UNSIGNED_BYTE, conv.data());
+            err = glGetError();
+        }
+        if (!ok || err != GL_NO_ERROR) {
+            /* never leave the texture incomplete (samples WHITE) */
+            tex_upload_fallback((GLenum)a.r[0], (GLint)a.r[1]);
             if (s_retries++ < 24)
-                diag_log("[texcompat] texImage2D f=0x%x t=0x%x %dx%d "
-                         "err=0x%x -> RGBA8888 retry",
-                         format, type, w, h, err);
-        } else {
-            if (s_retries++ < 24)
-                diag_log("[texcompat] texImage2D REJECTED f=0x%x t=0x%x "
-                         "%dx%d err=0x%x (no converter)",
-                         format, type, w, h, err);
+                diag_log("[texcompat] texImage2D FALLBACK f=0x%x t=0x%x "
+                         "%dx%d err=0x%x", format, type, w, h, err);
+        } else if (s_retries++ < 24) {
+            diag_log("[texcompat] texImage2D f=0x%x t=0x%x %dx%d "
+                     "err=0x%x -> RGBA8888 retry",
+                     format, type, w, h, err);
         }
     }
     tex_compat_fixup(w, h);
@@ -713,23 +832,34 @@ static void h_glCompressedTexImage2D(uc_engine *uc, const emu::Args &a,
     glCompressedTexImage2D((GLenum)a.r[0], (GLint)a.r[1], (GLenum)a.r[2],
                            (GLsizei)a.r[3], (GLsizei)a.arg(4), (GLint)a.arg(5),
                            size, p);
-    /* driver compat: paletted formats are gone on new drivers - expand */
+    /* driver compat: paletted/S3TC formats are gone or flaky on new
+     * drivers - decompress to RGBA8888 ourselves */
     GLenum err = glGetError();
     if (err != GL_NO_ERROR && p && size > 0) {
         GLsizei w = (GLsizei)a.r[3], h = (GLsizei)a.arg(4);
         std::vector<uint8_t> conv;
-        if (tex_decompress_palette((GLenum)a.r[2], w, h,
-                                   (const uint8_t *)p, (size_t)size, &conv)) {
+        bool ok = tex_decompress_palette((GLenum)a.r[2], w, h,
+                                         (const uint8_t *)p, (size_t)size,
+                                         &conv) ||
+                  tex_decompress_dxt((GLenum)a.r[2], w, h,
+                                     (const uint8_t *)p, (size_t)size, &conv);
+        if (ok) {
             glTexImage2D((GLenum)a.r[0], (GLint)a.r[1], GL_RGBA, w, h, 0,
                          GL_RGBA, GL_UNSIGNED_BYTE, conv.data());
+            err = glGetError();
+        }
+        if (!ok || err != GL_NO_ERROR) {
+            tex_upload_fallback((GLenum)a.r[0], (GLint)a.r[1]);
             static int s_pal = 0;
             if (s_pal++ < 24)
-                diag_log("[texcompat] palette 0x%x %dx%d err=0x%x -> "
-                         "RGBA8888", (unsigned)a.r[2], w, h, err);
+                diag_log("[texcompat] compressed FALLBACK fmt=0x%x %dx%d "
+                         "err=0x%x", (unsigned)a.r[2], (int)a.r[3],
+                         (int)a.arg(4), err);
         } else {
-            diag_log("[texcompat] compressed REJECTED fmt=0x%x %dx%d "
-                     "err=0x%x (no decompressor)",
-                     (unsigned)a.r[2], (int)a.r[3], (int)a.arg(4), err);
+            static int s_pal = 0;
+            if (s_pal++ < 24)
+                diag_log("[texcompat] compressed 0x%x %dx%d err=0x%x -> "
+                         "RGBA8888", (unsigned)a.r[2], w, h, err);
         }
     }
     tex_compat_fixup((GLsizei)a.r[3], (GLsizei)a.arg(4));

@@ -24,6 +24,8 @@ namespace {
 std::mutex g_mu;
 FILE *g_file = nullptr;
 std::string g_log_dir;
+std::string g_log_path;
+long g_written = 0;
 std::vector<std::string> g_unimpl_names;
 
 FILE *log_file() {
@@ -40,6 +42,9 @@ FILE *log_file() {
         FILE *f = fopen(p.c_str(), "a");
         if (f) {
             g_file = f;
+            g_log_path = p;
+            fseek(f, 0, SEEK_END);
+            g_written = ftell(f);
             fprintf(f, "[diag] logging to %s\n", p.c_str());
             fflush(f);
             return f;
@@ -55,6 +60,21 @@ void diag_set_log_dir(const char *dir) {
     if (dir && *dir) g_log_dir = dir;
 }
 
+bool diag_verbose() {
+    static int v = -1;
+    if (v < 0) {
+        v = 0;
+        if (!g_log_dir.empty()) {
+            FILE *f = fopen((g_log_dir + "/zcr_verbose").c_str(), "r");
+            if (f) {
+                v = 1;
+                fclose(f);
+            }
+        }
+    }
+    return v == 1;
+}
+
 void diag_log(const char *fmt, ...) {
     char buf[1024];
     va_list ap;
@@ -67,6 +87,16 @@ void diag_log(const char *fmt, ...) {
         fputs(buf, f);
         fputc('\n', f);
         fflush(f);
+        g_written += (long)strlen(buf) + 1;
+        /* rotate at 8MB: an unbounded log turns into 100s of MB of
+         * per-call I/O on long sessions (a real jank source) */
+        if (g_written > (8L << 20) && !g_log_path.empty()) {
+            fclose(f);
+            g_file = nullptr;
+            remove((g_log_path + ".1").c_str());
+            rename(g_log_path.c_str(), (g_log_path + ".1").c_str());
+            g_written = 0;
+        }
     }
 }
 

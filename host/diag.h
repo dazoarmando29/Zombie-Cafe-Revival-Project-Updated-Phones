@@ -14,6 +14,12 @@ void diag_summary();
  * writable under Android scoped storage). Falls back to legacy paths. */
 void diag_set_log_dir(const char *dir);
 
+/* Verbose per-call tracing ([filetrace]/[jni-call]): only when a
+ * zcr_verbose marker file exists in the log dir. Default OFF - these
+ * were one-off hunt diagnostics and their file I/O in the emulated hot
+ * path was a real jank source (4M+ lines in long sessions). */
+bool diag_verbose();
+
 /* Full memory report: heap stats, texture stats, host process memory. */
 void diag_report(const char *why);
 
