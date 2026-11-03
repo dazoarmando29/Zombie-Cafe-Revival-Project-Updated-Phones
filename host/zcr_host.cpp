@@ -229,7 +229,10 @@ bool host_init(JNIEnv *env) {
     emu::set_engine(g_uc);
 
     /* larger TCG buffer = fewer codegen flushes */
-    size_t tcg = 32u * 1024u * 1024u;
+    /* larger TCG buffer = fewer codegen flushes (a flush stalls ~100ms+
+     * = the navigation jank spikes; 64MB holds every code path the cafe,
+     * map and menus touch) */
+    size_t tcg = 64u * 1024u * 1024u;
     uc_ctl(g_uc, UC_CTL_WRITE(UC_CTL_TCG_BUFFER_SIZE, 1), &tcg);
 
     /* zero-copy host buffers for stack/heap + trap pages */
@@ -398,6 +401,22 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
 
     static int frame_count = 0;
     frame_count++;
+    /* [perf] frame-time stats (frame = delta ms from the Java loop).
+     * Reported every ~300 frames so smoothness is measurable on-device. */
+    static double s_ms_sum = 0, s_ms_max = 0;
+    static int s_ms_n = 0;
+    if (frame > 0 && frame < 500) {
+        s_ms_sum += frame;
+        if ((double)frame > s_ms_max) s_ms_max = frame;
+        s_ms_n++;
+    }
+    if (s_ms_n >= 300) {
+        diag_log("[perf] frames=%d avg=%.2fms max=%.0fms fps=%.1f", s_ms_n,
+                 s_ms_sum / s_ms_n, s_ms_max, 1000.0 * s_ms_n / s_ms_sum);
+        s_ms_sum = 0;
+        s_ms_max = 0;
+        s_ms_n = 0;
+    }
     /* companion save safety net: the Java onPause never calls the native
      * pause entry, so backgrounding cannot flush from there - piggyback on
      * the render tick (flush_locked is throttled + dirty-guarded, this is
@@ -409,8 +428,10 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
         /* periodic memory report (heap + textures + host RSS) */
         diag_report(frame_count == 2 ? "startup" : "periodic");
     }
-    if ((frame_count % 60) == 1) {
-        /* readback probe: what did the engine actually put on screen? */
+    if ((frame_count % 600) == 1) {
+        /* readback probe: what did the engine actually put on screen?
+         * glReadPixels is a FULL GPU pipeline stall - keep it rare
+         * (was every 60 frames: a ~1Hz stutter while navigating). */
         unsigned char px[4] = {0, 0, 0, 0};
         glReadPixels(1400, 630, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, px);
         GLenum err = glGetError();

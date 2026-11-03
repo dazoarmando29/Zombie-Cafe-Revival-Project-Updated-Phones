@@ -125,7 +125,10 @@ void tex_track_upload(GLuint id, GLsizei w, GLsizei h, GLenum format,
     g_tex_upload_bytes += bytes;
     if (g_tex_live_bytes > g_tex_peak_bytes) g_tex_peak_bytes = g_tex_live_bytes;
     if (pixels && bytes && bytes <= (64u << 20)) {
-        r.hash = fnv1a((const uint8_t *)pixels, bytes) ^
+        /* hash only the first 8KB: full-atlas hashing cost 8MB of reads
+         * per upload (load-time jank); duplicate detection still works */
+        size_t hn = bytes > 8192 ? 8192 : bytes;
+        r.hash = fnv1a((const uint8_t *)pixels, hn) ^
                  ((uint64_t)w << 32) ^ ((uint64_t)h << 8) ^ format;
         auto it = g_tex_by_hash.find(r.hash);
         if (it != g_tex_by_hash.end() && it->second != id) {
@@ -436,7 +439,23 @@ P1(h_glScissor, glScissor((GLint)a.r[0], (GLint)a.r[1], (GLsizei)a.r[2], (GLsize
 P1(h_glLineWidth, glLineWidth(u2f(a.r[0])))
 P1(h_glFinish, glFinish())
 P1(h_glBindTexture, glBindTexture((GLenum)a.r[0], (GLuint)a.r[1]))
-P1(h_glTexParameteri, glTexParameteri((GLenum)a.r[0], (GLenum)a.r[1], (GLint)a.r[2]))
+/* driver compat: mipmap min-filters without mip data make textures
+ * incomplete (= white) on strict GLES drivers - coerce to GL_LINEAR. */
+static void h_glTexParameteri(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
+    (void)uc;
+    GLenum target = (GLenum)a.r[0], pname = (GLenum)a.r[1];
+    GLint v = (GLint)a.r[2];
+    if (pname == GL_TEXTURE_MIN_FILTER &&
+        (v == GL_NEAREST_MIPMAP_NEAREST || v == GL_LINEAR_MIPMAP_NEAREST ||
+         v == GL_NEAREST_MIPMAP_LINEAR || v == GL_LINEAR_MIPMAP_LINEAR)) {
+        static int s_coerced = 0;
+        if (s_coerced++ < 16)
+            diag_log("[texcompat] mipmap min-filter 0x%x -> GL_LINEAR", v);
+        v = GL_LINEAR;
+    }
+    glTexParameteri(target, pname, v);
+    *rv = 0;
+}
 P1(h_glActiveTexture, glActiveTexture((GLenum)a.r[0]))
 P1(h_glClientActiveTexture, glClientActiveTexture((GLenum)a.r[0]))
 P1(h_glBindFramebufferOES, glBindFramebufferOES((GLenum)a.r[0], (GLuint)a.r[1]))
@@ -478,6 +497,173 @@ static void h_glDeleteTextures(uc_engine *uc, const emu::Args &a, uint32_t *rv) 
     *rv = 0;
 }
 
+/* ================= driver-compatibility layer =================
+ * Strict/new GLES drivers (Android 16 era) turn rejected uploads into
+ * INCOMPLETE textures, which GLES1 samples as WHITE - the "everything
+ * renders white" bug. Cover the known rejects:
+ *   - GL_OES_compressed_paletted_texture formats (dropped on new
+ *     drivers) -> decompressed to RGBA8888 here,
+ *   - invalid format/type pairs -> converted to RGBA8888 and retried,
+ *   - NPOT with REPEAT wrap -> CLAMP_TO_EDGE. */
+
+#define GL_PALETTE4_RGB8_OES 0x8B90
+#define GL_PALETTE4_RGBA8_OES 0x8B91
+#define GL_PALETTE4_R5_G6_B5_OES 0x8B92
+#define GL_PALETTE4_RGBA4_OES 0x8B93
+#define GL_PALETTE4_RGB5_A1_OES 0x8B94
+#define GL_PALETTE8_RGB8_OES 0x8B95
+#define GL_PALETTE8_RGBA8_OES 0x8B96
+#define GL_PALETTE8_R5_G6_B5_OES 0x8B97
+#define GL_PALETTE8_RGBA4_OES 0x8B98
+#define GL_PALETTE8_RGB5_A1_OES 0x8B99
+
+static void tex_compat_fixup(GLsizei w, GLsizei h) {
+    if ((w & (w - 1)) != 0 || (h & (h - 1)) != 0) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    }
+}
+
+/* expand any 565/4444/5551/RGB/LUMINANCE/ALPHA source to RGBA8888 */
+static bool tex_convert_rgba(GLsizei w, GLsizei h, GLenum format, GLenum type,
+                             const uint8_t *src, size_t n,
+                             std::vector<uint8_t> *out) {
+    size_t count = (size_t)w * (size_t)h;
+    if (!src || count == 0 || count > (64u << 20)) return false;
+    out->assign(count * 4, 255);
+    uint8_t *d = out->data();
+    if (type == GL_UNSIGNED_BYTE) {
+        if (format == GL_RGBA && n >= count * 4) {
+            memcpy(d, src, count * 4);
+            return true;
+        }
+        if (format == GL_RGB && n >= count * 3) {
+            for (size_t i = 0; i < count; i++) {
+                d[i * 4] = src[i * 3];
+                d[i * 4 + 1] = src[i * 3 + 1];
+                d[i * 4 + 2] = src[i * 3 + 2];
+            }
+            return true;
+        }
+        if ((format == GL_LUMINANCE || format == GL_ALPHA) && n >= count) {
+            for (size_t i = 0; i < count; i++) {
+                uint8_t v = src[i];
+                if (format == GL_LUMINANCE) {
+                    d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v;
+                } else {
+                    d[i * 4 + 3] = v;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+    if (type == GL_UNSIGNED_SHORT_5_6_5 && n >= count * 2) {
+        for (size_t i = 0; i < count; i++) {
+            uint16_t v;
+            memcpy(&v, src + i * 2, 2);
+            d[i * 4] = (uint8_t)((v >> 11 & 0x1f) * 255 / 31);
+            d[i * 4 + 1] = (uint8_t)((v >> 5 & 0x3f) * 255 / 63);
+            d[i * 4 + 2] = (uint8_t)((v & 0x1f) * 255 / 31);
+        }
+        return true;
+    }
+    if (type == GL_UNSIGNED_SHORT_4_4_4_4 && n >= count * 2) {
+        for (size_t i = 0; i < count; i++) {
+            uint16_t v;
+            memcpy(&v, src + i * 2, 2);
+            d[i * 4] = (uint8_t)((v >> 12 & 0xf) * 17);
+            d[i * 4 + 1] = (uint8_t)((v >> 8 & 0xf) * 17);
+            d[i * 4 + 2] = (uint8_t)((v >> 4 & 0xf) * 17);
+            d[i * 4 + 3] = (uint8_t)((v & 0xf) * 17);
+        }
+        return true;
+    }
+    if (type == GL_UNSIGNED_SHORT_5_5_5_1 && n >= count * 2) {
+        for (size_t i = 0; i < count; i++) {
+            uint16_t v;
+            memcpy(&v, src + i * 2, 2);
+            d[i * 4] = (uint8_t)((v >> 11 & 0x1f) * 255 / 31);
+            d[i * 4 + 1] = (uint8_t)((v >> 6 & 0x1f) * 255 / 31);
+            d[i * 4 + 2] = (uint8_t)((v >> 1 & 0x1f) * 255 / 31);
+            d[i * 4 + 3] = (uint8_t)((v & 1) * 255);
+        }
+        return true;
+    }
+    return false;
+}
+
+/* GL_OES_compressed_paletted_texture -> RGBA8888 (palette table first,
+ * then 4-bit or 8-bit indices). */
+static bool tex_decompress_palette(GLenum internal, GLsizei w, GLsizei h,
+                                   const uint8_t *src, size_t n,
+                                   std::vector<uint8_t> *out) {
+    size_t count = (size_t)w * (size_t)h;
+    if (!src || count == 0) return false;
+    int entries = 0, idx_bits = 0;
+    switch (internal) {
+        case GL_PALETTE4_RGB8_OES: case GL_PALETTE4_RGBA8_OES:
+        case GL_PALETTE4_R5_G6_B5_OES: case GL_PALETTE4_RGBA4_OES:
+        case GL_PALETTE4_RGB5_A1_OES:
+            entries = 16; idx_bits = 4; break;
+        case GL_PALETTE8_RGB8_OES: case GL_PALETTE8_RGBA8_OES:
+        case GL_PALETTE8_R5_G6_B5_OES: case GL_PALETTE8_RGBA4_OES:
+        case GL_PALETTE8_RGB5_A1_OES:
+            entries = 256; idx_bits = 8; break;
+        default: return false;
+    }
+    int ent_fmt = internal & 0xf; /* 0=RGB8 1=RGBA8 2=565 3=RGBA4 4=5551 */
+    size_t ent_bytes = (ent_fmt == 1) ? 4 : (ent_fmt == 0 ? 3 : 2);
+    size_t pal_bytes = (size_t)entries * ent_bytes;
+    size_t idx_bytes = (idx_bits == 4) ? (count + 1) / 2 : count;
+    if (n < pal_bytes + idx_bytes) return false;
+    out->assign(count * 4, 255);
+    uint8_t *d = out->data();
+    for (size_t i = 0; i < count; i++) {
+        uint8_t idx;
+        if (idx_bits == 8) {
+            idx = src[pal_bytes + i];
+        } else {
+            uint8_t b = src[pal_bytes + i / 2];
+            idx = (i & 1) ? (uint8_t)(b & 0xf) : (uint8_t)(b >> 4);
+        }
+        const uint8_t *e = src + (size_t)idx * ent_bytes;
+        switch (ent_fmt) {
+            case 0: /* RGB8 */
+                d[i * 4] = e[0]; d[i * 4 + 1] = e[1]; d[i * 4 + 2] = e[2];
+                break;
+            case 1: /* RGBA8 */
+                d[i * 4] = e[0]; d[i * 4 + 1] = e[1];
+                d[i * 4 + 2] = e[2]; d[i * 4 + 3] = e[3];
+                break;
+            case 2: { /* 565 */
+                uint16_t v = (uint16_t)(e[0] | (e[1] << 8));
+                d[i * 4] = (uint8_t)((v >> 11 & 0x1f) * 255 / 31);
+                d[i * 4 + 1] = (uint8_t)((v >> 5 & 0x3f) * 255 / 63);
+                d[i * 4 + 2] = (uint8_t)((v & 0x1f) * 255 / 31);
+                break;
+            }
+            case 3: { /* 4444 */
+                uint16_t v = (uint16_t)(e[0] | (e[1] << 8));
+                d[i * 4] = (uint8_t)((v >> 12 & 0xf) * 17);
+                d[i * 4 + 1] = (uint8_t)((v >> 8 & 0xf) * 17);
+                d[i * 4 + 2] = (uint8_t)((v >> 4 & 0xf) * 17);
+                d[i * 4 + 3] = (uint8_t)((v & 0xf) * 17);
+                break;
+            }
+            default: { /* 5551 */
+                uint16_t v = (uint16_t)(e[0] | (e[1] << 8));
+                d[i * 4] = (uint8_t)((v >> 11 & 0x1f) * 255 / 31);
+                d[i * 4 + 1] = (uint8_t)((v >> 6 & 0x1f) * 255 / 31);
+                d[i * 4 + 2] = (uint8_t)((v >> 1 & 0x1f) * 255 / 31);
+                d[i * 4 + 3] = (uint8_t)((v & 1) * 255);
+                break;
+            }
+        }
+    }
+    return true;
+}
+
 static void h_glTexImage2D(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     uint32_t pixels = a.arg(8);
     GLsizei w = (GLsizei)a.r[3], h = (GLsizei)a.arg(4);
@@ -489,6 +675,27 @@ static void h_glTexImage2D(uc_engine *uc, const emu::Args &a, uint32_t *rv) {
     }
     glTexImage2D((GLenum)a.r[0], (GLint)a.r[1], (GLint)a.r[2], w, h,
                  (GLint)a.arg(5), format, type, p);
+    /* driver compat: retry converted when the upload was rejected */
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR && p && w > 0 && h > 0) {
+        static int s_retries = 0;
+        std::vector<uint8_t> conv;
+        if (tex_convert_rgba(w, h, format, type, (const uint8_t *)p, n,
+                             &conv)) {
+            glTexImage2D((GLenum)a.r[0], (GLint)a.r[1], GL_RGBA, w, h, 0,
+                         GL_RGBA, GL_UNSIGNED_BYTE, conv.data());
+            if (s_retries++ < 24)
+                diag_log("[texcompat] texImage2D f=0x%x t=0x%x %dx%d "
+                         "err=0x%x -> RGBA8888 retry",
+                         format, type, w, h, err);
+        } else {
+            if (s_retries++ < 24)
+                diag_log("[texcompat] texImage2D REJECTED f=0x%x t=0x%x "
+                         "%dx%d err=0x%x (no converter)",
+                         format, type, w, h, err);
+        }
+    }
+    tex_compat_fixup(w, h);
     /* track on the 2D base level only (mip uploads replace the estimate) */
     if ((GLenum)a.r[0] == GL_TEXTURE_2D && (GLint)a.r[1] == 0) {
         GLuint bound = 0;
@@ -506,6 +713,26 @@ static void h_glCompressedTexImage2D(uc_engine *uc, const emu::Args &a,
     glCompressedTexImage2D((GLenum)a.r[0], (GLint)a.r[1], (GLenum)a.r[2],
                            (GLsizei)a.r[3], (GLsizei)a.arg(4), (GLint)a.arg(5),
                            size, p);
+    /* driver compat: paletted formats are gone on new drivers - expand */
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR && p && size > 0) {
+        GLsizei w = (GLsizei)a.r[3], h = (GLsizei)a.arg(4);
+        std::vector<uint8_t> conv;
+        if (tex_decompress_palette((GLenum)a.r[2], w, h,
+                                   (const uint8_t *)p, (size_t)size, &conv)) {
+            glTexImage2D((GLenum)a.r[0], (GLint)a.r[1], GL_RGBA, w, h, 0,
+                         GL_RGBA, GL_UNSIGNED_BYTE, conv.data());
+            static int s_pal = 0;
+            if (s_pal++ < 24)
+                diag_log("[texcompat] palette 0x%x %dx%d err=0x%x -> "
+                         "RGBA8888", (unsigned)a.r[2], w, h, err);
+        } else {
+            diag_log("[texcompat] compressed REJECTED fmt=0x%x %dx%d "
+                     "err=0x%x (no decompressor)",
+                     (unsigned)a.r[2], (int)a.r[3], (int)a.arg(4), err);
+        }
+    }
+    tex_compat_fixup((GLsizei)a.r[3], (GLsizei)a.arg(4));
     if ((GLenum)a.r[0] == GL_TEXTURE_2D && (GLint)a.r[1] == 0) {
         GLuint bound = 0;
         glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint *)&bound);

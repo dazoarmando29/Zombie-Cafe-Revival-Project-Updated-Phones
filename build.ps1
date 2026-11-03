@@ -18,7 +18,8 @@ param(
     [switch]$Install,
     [switch]$Clean,
     [switch]$ModMenu,
-    [string]$Version = "0.3.0"
+    [string]$Version = "0.3.0",
+    [string]$VersionCode = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -146,16 +147,22 @@ try {
     # The in-game UpdateChecker compares versionName against the release tag,
     # and versionCode must rise monotonically for the system installer to
     # accept the update. versionCode scheme: major*10000 + minor*100 + patch.
+    # -VersionCode overrides the computed code (e.g. when a test build left
+    # a higher code on a device but the visible version must stay put).
     Write-Host "[4c/7] stamping version $Version..." -ForegroundColor Cyan
     $VerParts = ($Version.TrimStart('v')) -split '\.'
     $VerCode = ([int]$VerParts[0]) * 10000 + ([int]$VerParts[1]) * 100 + [int]$VerParts[2]
+    if ($VersionCode -ne "") { $VerCode = [int]$VersionCode }
     $Yml = Join-Path $BuildDir "apktool.yml"
     (Get-Content $Yml) `
         -replace 'versionCode: \d+', "versionCode: $VerCode" `
         -replace 'versionName: .*', "versionName: $Version" | Set-Content $Yml
 
     # ------------------------------------------------ 5. apktool rebuild
+    # NOTE: apktool caches the compiled manifest in build\build; a stale
+    # cache silently IGNORES the version stamp above. Always drop it.
     Write-Host "[5/7] apktool: rebuilding APK..." -ForegroundColor Cyan
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $BuildDir "build")
     New-Item -ItemType Directory -Force -Path (Split-Path $OutUnsigned) | Out-Null
     & $Java -jar $ApktoolJar b build -o $OutUnsigned
     if ($LASTEXITCODE -ne 0) { throw "apktool failed" }
@@ -176,6 +183,13 @@ try {
         $OutAligned
     if ($LASTEXITCODE -ne 0) { throw "apksigner failed" }
     & (Join-Path $BuildTools "apksigner.bat") verify --print-certs $OutApk | Select-Object -First 3
+
+    # ---- verify the stamp actually landed (apktool cache bugs lie) ----
+    $Badging = & (Join-Path $BuildTools "aapt.exe") dump badging $OutApk | Out-String
+    if ($Badging -notmatch "versionCode='$VerCode'") {
+        throw "version stamp LOST: expected versionCode=$VerCode, got: $([regex]::Match($Badging, "versionCode='\d+'").Value)"
+    }
+    Write-Host "version verified: $Version ($VerCode)" -ForegroundColor Green
 
     $size = [math]::Round((Get-Item $OutApk).Length / 1MB, 1)
     Write-Host "`nOK: $OutApk ($size MB)" -ForegroundColor Green
