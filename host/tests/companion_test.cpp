@@ -626,6 +626,7 @@ static void test_boss_abilities() {
     /* Shield (Frost Queen id 4): absorbs the first 120 */
     BossState s;
     s.boss_id = 4;
+    CHECK(sync_level(&s, 100, 0));
     CHECK(start(&s, 0));
     CHECK_EQ(s.shield_left, 120);
     CHECK_EQ(apply_damage(&s, 50, 1, 0), 0);
@@ -635,6 +636,7 @@ static void test_boss_abilities() {
     /* Rage (Pumpkin King id 3): below 50% HP damage is halved */
     BossState r;
     r.boss_id = 3;
+    CHECK(sync_level(&r, 100, 0));
     CHECK(start(&r, 0));
     CHECK_EQ(apply_damage(&r, 350, 1, 0), 350);
     CHECK_EQ(r.hp, 350);
@@ -643,6 +645,7 @@ static void test_boss_abilities() {
     /* Regen (Baron id 2): 3 HP per minute */
     BossState g;
     g.boss_id = 2;
+    CHECK(sync_level(&g, 100, 0));
     CHECK(start(&g, 0));
     apply_damage(&g, 100, 1, 0);
     CHECK_EQ(g.hp, 300);
@@ -651,6 +654,7 @@ static void test_boss_abilities() {
     /* Expiry + Thief penalty */
     BossState t;
     t.boss_id = 3;
+    CHECK(sync_level(&t, 100, 0));
     CHECK(start(&t, 0));
     CHECK(tick(&t, 25 * 3600));
     CHECK_EQ(t.phase, (int)Expired);
@@ -661,6 +665,7 @@ static void test_boss_roundtrip() {
     using namespace zcr_boss;
     BossState s;
     s.boss_id = 5;
+    CHECK(sync_level(&s, 100, 0));
     CHECK(start(&s, 777));
     apply_damage(&s, 250, 3, 778);
     std::string js = serialize(s);

@@ -1285,9 +1285,16 @@ void events_tick() {
         objs[0] = 0;
         for (size_t i = 0; i < g_event.objectives.size(); i++) {
             const zcr_ev::Objective &o = g_event.objectives[i];
-            int n = snprintf(objs + pos, sizeof(objs) - pos, "%s%s: %lld",
-                             i ? "; " : "", zcr_ev::event_name(eff),
-                             (long long)o.target);
+            const char *kn = "Goal";
+            switch (o.kind) {
+                case zcr_ev::ObjServe: kn = "Serve"; break;
+                case zcr_ev::ObjCook: kn = "Cook"; break;
+                case zcr_ev::ObjCookEvent: kn = "Cook specialties"; break;
+                case zcr_ev::ObjCoins: kn = "Earn"; break;
+                case zcr_ev::ObjToxin: kn = "Spend"; break;
+            }
+            int n = snprintf(objs + pos, sizeof(objs) - pos, "%s%s %lld",
+                             i ? "; " : "", kn, (long long)o.target);
             if (n > 0) pos += (size_t)n;
             if (pos >= sizeof(objs)) break;
         }

@@ -116,7 +116,23 @@ void on_frame(int event_id, float delta_s) {
             seed_particle(p, event_id, true);
     }
 
-    /* draw: save the pipeline state we touch */
+    /* draw: SAVE the pipeline state we touch - the engine assumes its
+     * client arrays and enables persist across frames (2026-11-04: a
+     * bare glDisableClientState(GL_VERTEX_ARRAY) here blanked the whole
+     * game render on the next frame). */
+    GLboolean en_tex = glIsEnabled(GL_TEXTURE_2D);
+    GLboolean en_depth = glIsEnabled(GL_DEPTH_TEST);
+    GLboolean en_cull = glIsEnabled(GL_CULL_FACE);
+    GLboolean en_light = glIsEnabled(GL_LIGHTING);
+    GLboolean en_blend = glIsEnabled(GL_BLEND);
+    GLboolean en_vtx = glIsEnabled(GL_VERTEX_ARRAY);
+    GLboolean en_col = glIsEnabled(GL_COLOR_ARRAY);
+    GLint prev_mode = GL_MODELVIEW;
+    glGetIntegerv(GL_MATRIX_MODE, &prev_mode);
+    GLint prev_blend_src = 0, prev_blend_dst = 0;
+    glGetIntegerv(0x0BE1, &prev_blend_src); /* GL_BLEND_SRC */
+    glGetIntegerv(0x0BE2, &prev_blend_dst); /* GL_BLEND_DST */
+
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -172,12 +188,26 @@ void on_frame(int event_id, float delta_s) {
     }
     glDisableClientState(GL_COLOR_ARRAY);
 
-    /* restore */
-    glDisableClientState(GL_VERTEX_ARRAY);
+    /* restore EVERYTHING we touched */
+    if (!en_vtx) glDisableClientState(GL_VERTEX_ARRAY);
+    if (!en_col) glDisableClientState(GL_COLOR_ARRAY);
+    else glEnableClientState(GL_COLOR_ARRAY);
+    if (en_tex) glEnable(GL_TEXTURE_2D);
+    else glDisable(GL_TEXTURE_2D);
+    if (en_depth) glEnable(GL_DEPTH_TEST);
+    else glDisable(GL_DEPTH_TEST);
+    if (en_cull) glEnable(GL_CULL_FACE);
+    else glDisable(GL_CULL_FACE);
+    if (en_light) glEnable(GL_LIGHTING);
+    else glDisable(GL_LIGHTING);
+    if (en_blend) glEnable(GL_BLEND);
+    else glDisable(GL_BLEND);
+    glBlendFunc((GLenum)prev_blend_src, (GLenum)prev_blend_dst);
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
+    glMatrixMode((GLenum)prev_mode);
 }
 
 }  // namespace zcr_weather
