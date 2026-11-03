@@ -125,7 +125,10 @@ void tex_track_upload(GLuint id, GLsizei w, GLsizei h, GLenum format,
     g_tex_upload_bytes += bytes;
     if (g_tex_live_bytes > g_tex_peak_bytes) g_tex_peak_bytes = g_tex_live_bytes;
     if (pixels && bytes && bytes <= (64u << 20)) {
-        r.hash = fnv1a((const uint8_t *)pixels, bytes) ^
+        /* hash only the first 8KB: full-atlas hashing cost 8MB of reads
+         * per upload (load-time jank); duplicate detection still works */
+        size_t hn = bytes > 8192 ? 8192 : bytes;
+        r.hash = fnv1a((const uint8_t *)pixels, hn) ^
                  ((uint64_t)w << 32) ^ ((uint64_t)h << 8) ^ format;
         auto it = g_tex_by_hash.find(r.hash);
         if (it != g_tex_by_hash.end() && it->second != id) {
