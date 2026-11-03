@@ -12,11 +12,13 @@
   .\build.ps1 -ModMenu     # build mod-menu APK (out-mod.apk)
   .\build.ps1 -Install     # build + adb install (bypasses low-target-sdk block)
   .\build.ps1 -Clean       # remove build output first
+  .\build.ps1 -Version 0.3.1   # stamp versionName/versionCode (release builds)
 #>
 param(
     [switch]$Install,
     [switch]$Clean,
-    [switch]$ModMenu
+    [switch]$ModMenu,
+    [string]$Version = "0.3.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -136,8 +138,21 @@ try {
         # -ModMenu build so the clean APK stays clean
         Remove-Item -Force -ErrorAction SilentlyContinue `
             (Join-Path $BuildDir "smali\com\capcom\zombiecafeandroid\DebugMenuButtonListener.smali"),
-            (Join-Path $BuildDir "smali\com\capcom\zombiecafeandroid\DebugMenuItemClickListener.smali")
+            (Join-Path $BuildDir "smali\com\capcom\zombiecafeandroid\DebugMenuItemClickListener.smali"),
+            (Join-Path $BuildDir "smali\com\capcom\zombiecafeandroid\ModDragTouchListener.smali")
     }
+
+    # ------------------------------------------------ 4c. version stamping
+    # The in-game UpdateChecker compares versionName against the release tag,
+    # and versionCode must rise monotonically for the system installer to
+    # accept the update. versionCode scheme: major*10000 + minor*100 + patch.
+    Write-Host "[4c/7] stamping version $Version..." -ForegroundColor Cyan
+    $VerParts = ($Version.TrimStart('v')) -split '\.'
+    $VerCode = ([int]$VerParts[0]) * 10000 + ([int]$VerParts[1]) * 100 + [int]$VerParts[2]
+    $Yml = Join-Path $BuildDir "apktool.yml"
+    (Get-Content $Yml) `
+        -replace 'versionCode: \d+', "versionCode: $VerCode" `
+        -replace 'versionName: .*', "versionName: $Version" | Set-Content $Yml
 
     # ------------------------------------------------ 5. apktool rebuild
     Write-Host "[5/7] apktool: rebuilding APK..." -ForegroundColor Cyan

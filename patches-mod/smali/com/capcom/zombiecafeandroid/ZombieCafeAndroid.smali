@@ -4564,6 +4564,9 @@
     move-result-object v6
     invoke-static {v6}, Lcom/capcom/zombiecafeandroid/WindowCompat;->apply(Landroid/view/Window;)V
 
+    # ZCR: in-game updater (popup -> download -> system install -> cleanup)
+    invoke-static {p0}, Lcom/capcom/zombiecafeandroid/UpdateChecker;->init(Landroid/app/Activity;)V
+
     # ZCR: targetSdk >= 23 enables the runtime-permission model; request the
     # dangerous permissions the original game used plus POST_NOTIFICATIONS
     # (Android 13+, without it game notifications are silently blocked).
@@ -5287,6 +5290,9 @@
 
     # ZCR: resume the in-game music paused in onPause()
     invoke-static {}, Lcom/capcom/zombiecafeandroid/CC_Android;->resumeAllMusics()V
+
+    # ZCR: continue a pending update install after the permission trip
+    invoke-static {p0}, Lcom/capcom/zombiecafeandroid/UpdateChecker;->onResume(Landroid/content/Context;)V
 
     new-instance v0, Landroid/content/IntentFilter;
 

@@ -506,3 +506,56 @@ that restores the purchase index. Log lines: `zukan buy: confirm queued
 - RULE: always build release APKs from the MERGED main HEAD, and grep
   the built `classes.dex` for the headline fix before uploading. Never
   build release artifacts from a feature branch.
+
+## 13. In-game updater (2026-11-03) - device-tested
+
+`UpdateChecker.smali` + `ZcrFileProvider.smali` (patches/smali), called
+from `ZombieCafeAndroid.onCreate` / `onResume`:
+
+- On launch: GET the GitHub releases feed, pick the newest release with
+  an APK for this variant (asset name "ModMenu" = mod build, detected at
+  runtime via `DebugMenuButtonListener`), compare its tag against
+  `versionName` (legacy ".... ZCR v0.1.3" strings parse too).
+- If newer: in-game dialog -> "Install" -> download to
+  `files/zcr_update/update.apk` -> system installer via
+  `content://com.capcom.zombiecafeandroid.zcrfile/update` (a minimal
+  framework-only ContentProvider; targetSdk 28 blocks file:// install
+  URIs and the project has no androidx FileProvider).
+- Version stamping: `build.ps1 -Version X.Y.Z` writes
+  versionName/versionCode (major*10000+minor*100+patch) into
+  apktool.yml. versionCode must rise or the system blocks the update.
+- After install: the APK is deleted on the next launch (update.version
+  marker: marker <= installed version -> delete APK + marker).
+- Permission trip workaround (user request): if the user is sent to
+  Settings for "install unknown apps" and backs out, the install
+  continues automatically - `onResume` re-fires the installer once the
+  grant is present, and a relaunch does the same via the marker state
+  machine. Verified live: the 0.2.9 test build self-updated to the
+  v0.3.0 release build (versionCode 209 -> 300) despite the dialog
+  being backed out mid-flow.
+
+### 13.1 Smali branch-polarity - the bug class that bit 7 times
+
+Every one of these shipped in a first draft and was caught by auditing
+assembled bytecode / device logs, never by reading the source (the
+mnemonics read "correctly" while being inverted):
+
+1. `WindowCompat`: `if-nez p0, :end` (skipped a non-null window) and
+   `if-ge` for the API-27 guard (skipped on modern devices).
+2. `UpdateChecker.init`: `if-eqz v0, :already` returned immediately
+   when NOT started - the updater silently never ran.
+3. `UpdateChecker.check`: `if-ltz v2, :done` skipped the prompt exactly
+   when an update WAS available.
+4. `readAll`/`copyStream`: `if-gtz` (jump when n > 0) returned empty
+   buffers on the first read - "JSONException: End of input at 0".
+5. `parseVer` `if-gez` guards and the `ModMenu` test: "found" and "not
+   found" swapped -> `StringIndexOutOfBoundsException: begin 0, end -1`.
+
+RULE: after writing any smali conditional, audit the ASSEMBLED dex with
+a concrete truth table ("with v=1 the branch must go to label X").
+Reading the .smali source is not enough - the mnemonic flips silently.
+
+### 13.2 Device note: vivo suppresses Debug-level logcat
+
+`Log.d` lines from the app never appear in logcat on the test device;
+`Log.i`/`Log.e` do. Diagnostics in smali must use Log.i or higher.
