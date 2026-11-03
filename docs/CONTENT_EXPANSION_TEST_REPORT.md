@@ -493,3 +493,16 @@ that restores the purchase index. Log lines: `zukan buy: confirm queued
 - Honest limits: minSdk 23; GLES 1.x required (manifest
   `glEsVersion="1"`); 64-bit-only devices are untested (host libs are
   provided for both ABIs so they should work, but no device evidence).
+
+### 12.4 Release process rule (learned the hard way, 2026-11-03)
+
+- The first v0.3.0 APKs were built from the feature branch BEFORE the
+  merge to main and therefore silently lacked the in-game music fix
+  (`41a9ee8`, main-only at build time) while the release notes claimed
+  it. Caught on install request, rebuilt from main, verified the fix in
+  the dex (`pauseAllMusics`/`resumeAllMusics`) and on device
+  (`dumpsys audio`: started -> HOME: paused -> resume: started), and the
+  release assets were replaced with `gh release upload --clobber`.
+- RULE: always build release APKs from the MERGED main HEAD, and grep
+  the built `classes.dex` for the headline fix before uploading. Never
+  build release artifacts from a feature branch.
