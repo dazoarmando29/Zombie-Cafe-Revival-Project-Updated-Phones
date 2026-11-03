@@ -4531,7 +4531,7 @@
 .end method
 
 .method public onCreate(Landroid/os/Bundle;)V
-    .locals 6
+    .locals 7
 
     const/16 v3, 0x400
 
@@ -4546,6 +4546,11 @@
     invoke-virtual {p0, v0}, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->setVolumeControlStream(I)V
 
     invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V
+
+    # ZCR: keep-screen-on + display cutout shortEdges (UI-thread only)
+    invoke-virtual {p0}, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->getWindow()Landroid/view/Window;
+    move-result-object v6
+    invoke-static {v6}, Lcom/capcom/zombiecafeandroid/WindowCompat;->apply(Landroid/view/Window;)V
 
     # ZCR: targetSdk >= 23 enables the runtime-permission model; request the
     # dangerous permissions the original game used plus POST_NOTIFICATIONS

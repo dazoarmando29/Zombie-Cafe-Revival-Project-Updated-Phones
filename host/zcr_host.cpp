@@ -364,73 +364,11 @@ uint32_t jf(jfloat f) {
 
 }  // namespace
 
-/* Phone-compat window fixes (2026-11-03): keep the screen on while the
- * cafe runs (the game is a long-session idle game and the display would
- * otherwise sleep mid-cook). CC_Android.a is the live Activity. */
-static void apply_window_compat(JNIEnv *env) {
-    static int state = 0; /* 0=pending, 1=done */
-    if (state) return;
-    jclass cc = env->FindClass("com/capcom/zombiecafeandroid/CC_Android");
-    if (!cc || env->ExceptionCheck()) {
-        env->ExceptionClear();
-        return;
-    }
-    jfieldID fid = env->GetStaticFieldID(
-        cc, "a", "Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;");
-    if (!fid || env->ExceptionCheck()) {
-        env->ExceptionClear();
-        return;
-    }
-    jobject act = env->GetStaticObjectField(cc, fid);
-    if (!act || env->ExceptionCheck()) {
-        env->ExceptionClear();
-        return;
-    }
-    jmethodID gwm = env->GetMethodID(env->GetObjectClass(act), "getWindow",
-                                     "()Landroid/view/Window;");
-    if (!gwm || env->ExceptionCheck()) {
-        env->ExceptionClear();
-        return;
-    }
-    jobject win = env->CallObjectMethod(act, gwm);
-    if (!win || env->ExceptionCheck()) {
-        env->ExceptionClear();
-        return;
-    }
-    jmethodID af = env->GetMethodID(env->GetObjectClass(win), "addFlags", "(I)V");
-    if (!af || env->ExceptionCheck()) {
-        env->ExceptionClear();
-        return;
-    }
-    env->CallVoidMethod(win, af, 0x80); /* FLAG_KEEP_SCREEN_ON */
-    if (env->ExceptionCheck()) {
-        env->ExceptionClear();
-        return;
-    }
-    /* cutout: render into the notch area (SHORT_EDGES) instead of being
-     * letterboxed ("Game zoomed in - display cutout area unavailable").
-     * Set via WindowManager.LayoutParams (API 27+; skipped elsewhere). */
-    jmethodID ga = env->GetMethodID(env->GetObjectClass(win), "getAttributes",
-                                    "()Landroid/view/WindowManager$LayoutParams;");
-    if (ga && !env->ExceptionCheck()) {
-        jobject lp = env->CallObjectMethod(win, ga);
-        if (lp && !env->ExceptionCheck()) {
-            jfieldID cm = env->GetFieldID(env->GetObjectClass(lp),
-                                          "layoutInDisplayCutoutMode", "I");
-            if (cm && !env->ExceptionCheck()) {
-                env->SetIntField(lp, cm, 1); /* LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES */
-                jmethodID sa = env->GetMethodID(env->GetObjectClass(win),
-                                                "setAttributes",
-                                                "(Landroid/view/WindowManager$LayoutParams;)V");
-                if (sa && !env->ExceptionCheck())
-                    env->CallVoidMethod(win, sa, lp);
-            }
-        }
-    }
-    if (env->ExceptionCheck()) env->ExceptionClear();
-    state = 1;
-    diag_log("[diag] window: FLAG_KEEP_SCREEN_ON + cutout shortEdges applied");
-}
+/* Phone-compat window fixes (keep-screen-on + display cutout) live in
+ * smali: patches[-mod]/smali/.../WindowCompat.smali, called from
+ * ZombieCafeAndroid.onCreate on the UI thread. Window.setAttributes()
+ * touches the view hierarchy and throws CalledFromWrongThreadException
+ * from the GL thread (2026-11-03) - do NOT move this back to JNI. */
 
 /* --- no-arg / simple --- */
 extern "C" JNIEXPORT jint JNICALL
@@ -460,7 +398,6 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
 
     static int frame_count = 0;
     frame_count++;
-    if (frame_count == 1) apply_window_compat(env);
     /* companion save safety net: the Java onPause never calls the native
      * pause entry, so backgrounding cannot flush from there - piggyback on
      * the render tick (flush_locked is throttled + dirty-guarded, this is

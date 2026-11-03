@@ -458,16 +458,34 @@ that restores the purchase index. Log lines: `zukan buy: confirm queued
 
 ### 12.3 Phone compatibility - fixes + honest limits
 
-- FIXED: screen no longer sleeps mid-play - `FLAG_KEEP_SCREEN_ON`
-  applied at frame 1 via `CC_Android.a` (the live Activity) from
-  `zcr_host.cpp` `apply_window_compat()` (log: "window: FLAG_KEEP_SCREEN_ON
-  + cutout shortEdges applied").
-- FIXED: display cutout handling - `LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES`
-  set on the window at runtime (the vivo used to show "Game zoomed in -
-  display cutout area unavailable"). Set via
-  `WindowManager.LayoutParams.layoutInDisplayCutoutMode` (API 27+,
-  skipped gracefully below; a manifest attribute is NOT usable - the
-  apktool framework rejects the API-27 attr).
+- FIXED: screen no longer sleeps mid-play + display cutout (notch)
+  handling - `WindowCompat.smali` (in `patches/smali` + `patches-mod/smali`)
+  is called from `ZombieCafeAndroid.onCreate` and sets
+  `FLAG_KEEP_SCREEN_ON` plus `LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES`
+  (API 27+ guarded). The vivo used to show "Game zoomed in - display
+  cutout area unavailable" and letterbox the game to 2696px of the
+  2800px screen.
+- Verification (device, `dumpsys window`): `mAttrs=... layoutInDisplayCutoutMode=shortEdges`,
+  `fl=KEEP_SCREEN_ON ...`, `Requested w=2800` (was 2696) - the game
+  window now spans the full panel including the notch area.
+- Two real bugs were found and fixed during the release double-check
+  (both kept out of the shipped APK):
+  1. The first implementation ran from JNI on the GL thread:
+     `Window.setAttributes()` threw
+     `CalledFromWrongThreadException: Expected: main Calling: GLThread`
+     (only `addFlags` tolerated the wrong thread). Lesson: window/view
+     hierarchy mutations must happen on the UI thread - hence the smali
+     `onCreate` hook, matching the repo's existing patch pattern.
+  2. The first smali draft had TWO inverted branches
+     (`if-nez p0, :end` instead of `if-eqz`, and `if-ge` instead of
+     `if-lt` for the API-27 guard) which made the helper a no-op on
+     modern devices. Caught by dexdump-ing the built APK and verifying
+     the bytecode, then by `dumpsys window` showing the attr missing.
+     Lesson: always verify smali branch polarity from the built dex,
+     and verify window flags from `dumpsys window`, not from logs.
+- A manifest attribute is NOT usable for the cutout mode: the apktool
+  framework rejects API-27 attrs ("attribute android:layoutInDisplayCutoutMode
+  not found") - runtime `WindowManager.LayoutParams` is the way.
 - Architecture note: the engine (`assets/engine/game.so`) is a 32-bit
   ARM binary that runs EMULATED (Unicorn, `uc_open(UC_ARCH_ARM)`)
   inside the host library, so device ABI is not a limitation - both
