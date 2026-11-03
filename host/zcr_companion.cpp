@@ -740,28 +740,8 @@ void on_can_follow(uc_engine *uc, uint64_t, int32_t, void *) {
     uc_reg_write(uc, UC_ARM_REG_PC, &pc);
 }
 
-/* GameStateCafe::cook entry - record the add-on (variant) the player cooks
- * each recipe with, so auto-cook replays the same choice. try_lock: the
- * auto-cook driver itself nested-calls cook while holding g_mu - those
- * calls skip recording (their variant is already the stored one). */
-void on_cook_start(uc_engine *uc, uint64_t, int32_t, void *) {
-    std::unique_lock<std::mutex> lk(g_mu, std::try_to_lock);
-    if (!lk.owns_lock() || !g_ready) return;
-    uint32_t row = 0, variant = 0;
-    uc_reg_read(uc, UC_ARM_REG_R2, &row);
-    uc_reg_read(uc, UC_ARM_REG_R3, &variant);
-    if (row >= 250) return;
-    int32_t v = (int32_t)(variant & 0xff);
-    auto it = g_state.cook_variant.find((int32_t)row);
-    if (it == g_state.cook_variant.end() || it->second != v) {
-        g_state.cook_variant[(int32_t)row] = v;
-        g_dirty = true;
-        logi("cook add-on: row=%u variant=%d", row, v);
-    }
-}
-
 /* Preferred chef: the character the player selects ("YOU" panel) - pinned
- * so the cook/serve tasks always go to the chef even after deselect. */
+ * so the carry tasks always go to the chef even after deselect. */
 uint32_t g_pref_chef = 0;
 
 void on_select_char(uc_engine *uc, uint64_t, int32_t, void *) {
@@ -789,16 +769,16 @@ void on_select_char(uc_engine *uc, uint64_t, int32_t, void *) {
     logi("chef pinned: char=0x%x idx=%d/%u", chr, idx, count);
 }
 
-/* Auto-cook driver (from the render tick). Idle stove -> cook the most
- * recently cooked recipe; when coins are short, fire a "needs you" Android
- * notification (throttled). The engine cook call performs the real cost
- * check + deduction; this pre-check only decides between cook/notify. */
+/* Auto-serve driver (from the render tick + the pause hook). When a dish
+ * the player cooked finishes, the chef carries it to the serving counter.
+ * The host never starts cooking (auto-cook removed by request). */
 void qol_tick_impl() {
     std::lock_guard<std::mutex> lk(g_mu);
     if (!g_ready || !g_uc) return;
-    static int64_t s_last_cook = 0, s_last_notif = 0;
+    static int64_t s_last_run = 0;
     int64_t now = (int64_t)time(nullptr);
-    if (now - s_last_cook < kAutoCookGapSec) return;
+    if (now - s_last_run < 5) return;
+    s_last_run = now;
     uc_engine *uc = g_uc;
 
     uint32_t game = game_instance();
@@ -810,79 +790,15 @@ void qol_tick_impl() {
         emu::read(uc, state + OFF_STATE_CAFE, &cafe, 4) && plausible_ptr(cafe) &&
         emu::read(uc, cafe + 0x38, &head, 4) &&
         (head == 0 || plausible_ptr(head)); /* furniture list ready */
-    if (!state_ok) {
-        static int64_t s_dbg = 0;
-        if (now - s_dbg >= 30) {
-            s_dbg = now;
-            logi("auto-cook wait: game=0x%x state=0x%x zgame=0x%x cafe=0x%x",
-                 game, state, zgame, cafe);
-        }
-        return;
-    }
+    if (!state_ok) return;
 
-    int32_t row = g_state.last_cooked_row;
-    if (row < 0 || row >= 250) {
-        /* migrated save without the field: repeat the most recently
-         * cooked recipe from the per-recipe stats */
-        int64_t best_ts = 0;
-        for (const auto &kv : g_state.recipes) {
-            if (kv.second.row >= 0 && kv.second.row < 250 &&
-                kv.second.last_ts >= best_ts) {
-                best_ts = kv.second.last_ts;
-                row = kv.second.row;
-            }
-        }
-    }
-    if (row < 0 || row >= 250) return;
+    /* AUTO-SERVE ONLY (auto-cook removed by request): when a dish the
+     * player cooked finishes, the chef carries it to the serving counter.
+     * The host never starts cooking. Dishes progress by wall-clock while
+     * the app is away; this runs on the first tick after return (and from
+     * the pause hook before backgrounding), so the carry always happens
+     * within seconds of opening the game. */
 
-    static int64_t s_last_status = 0;
-    bool do_status = (now - s_last_status >= 60);
-    if (do_status) s_last_status = now;
-
-    Regs snap;
-    snap.save(uc);
-    uint32_t sp = (snap.r[13] - 512u) & ~7u;
-
-    /* repeat recipe with the player's chosen add-on (fallback: BULK) */
-    int32_t variant = kBulkVariant;
-    auto vit = g_state.cook_variant.find(row);
-    if (vit != g_state.cook_variant.end()) variant = vit->second;
-
-    /* engine-accurate stove pick (exitRecipeBook's own auto-pick):
-     * createDistanceSortedStoveList(cafe, recipe.cookType, 0) and the
-     * first appliance with the +0x2e busy flag clear. The generic
-     * furniture list previously matched the wrong appliance (fridge). */
-    uint32_t table = 0, recipe = 0;
-    emu::read(uc, game + OFF_GAME_RECIPES, &table, 4);
-    if (plausible_ptr(table))
-        recipe = table + (uint32_t)row * RECIPE_STRIDE;
-    uint8_t cook_type = 0;
-    if (recipe) emu::read(uc, recipe + OFF_RECIPE_COOKTYPE, &cook_type, 1);
-    uint32_t list_words[2] = {cook_type, 0u};
-    uint32_t list = jni_call_engine_r0_sp(uc, RVA_STOVE_LIST | 1u, cafe,
-                                          list_words, 2, sp);
-    uint32_t stove = 0, busy = 0;
-    if (plausible_ptr(list)) {
-        uint32_t node = 0, guard = 0;
-        emu::read(uc, list + 8, &node, 4);
-        while (plausible_ptr(node) && guard++ < 256) {
-            uint32_t item = 0, next = 0;
-            emu::read(uc, node, &item, 4);
-            emu::read(uc, node + 8, &next, 4);
-            if (plausible_ptr(item)) {
-                uint8_t flag = 1;
-                emu::read(uc, item + OFF_OBJ_BUSY, &flag, 1);
-                if (flag == 0) {
-                    if (!stove) stove = item;
-                } else if (!busy) {
-                    busy = item;
-                }
-            }
-            jni_call_engine_r0_sp(uc, RVA_FREE | 1u, node, nullptr, 0, sp);
-            node = next;
-        }
-        jni_call_engine_r0_sp(uc, RVA_FREE | 1u, list, nullptr, 0, sp);
-    }
     /* Chef resolution: the selected character ("YOU" panel) is the chef.
      * Zero-tap fallback: the avatar is character-array[0] (created first in
      * GameStateChooseChef), so fresh sessions pin him automatically. */
@@ -904,21 +820,8 @@ void qol_tick_impl() {
         emu::read(uc, state + OFF_STATE_SELCHAR, &sel, 4);
         if (sel != chef) emu::write(uc, state + OFF_STATE_SELCHAR, &chef, 4);
     }
+    if (!plausible_ptr(chef)) return;
 
-    /* keep the engine's own chef-loop pointing at the same stove */
-    uint32_t target = stove ? stove : busy;
-    if (target) {
-        uint32_t loop = 0;
-        emu::read(uc, state + OFF_STATE_LOOPSTOVE, &loop, 4);
-        if (loop != target) {
-            emu::write(uc, state + OFF_STATE_SELSTOVE, &target, 4);
-            emu::write(uc, state + OFF_STATE_LOOPSTOVE, &target, 4);
-        }
-    }
-
-    /* Direct task assignment to the chef. The engine's per-frame chef state
-     * machine can leave him idle (health/tutorial gating); assign the
-     * cook/carry/clean task straight to him whenever he is idle. */
     auto chef_idle = [&]() -> bool {
         uint32_t data = 0;
         int32_t v = 0;
@@ -926,106 +829,54 @@ void qol_tick_impl() {
             emu::read(uc, data + OFF_CHARDATA_IDLE, &v, 4);
         return v <= 0;
     };
-    auto assign_task = [&](uint32_t kind, uint32_t tgt) {
-        static uint32_t s_kind = 9, s_tgt = 0;
-        static int64_t s_ts = 0;
-        if (kind == s_kind && tgt == s_tgt && now - s_ts < 30) return;
-        uint32_t alloc = kind == 0 ? 0x30u : (kind == 1 ? 0x44u : 0x40u);
-        uint32_t task =
-            jni_call_engine_r0_sp(uc, RVA_NEW | 1u, alloc, nullptr, 0, sp);
-        if (!plausible_ptr(task)) return;
-        uint32_t a_csc[3] = {chef, tgt, cafe};
-        uint32_t a_ccs[3] = {chef, cafe, tgt};
-        uint32_t ctor = kind == 0 ? RVA_COOK_TASK
-                       : (kind == 1 ? RVA_DISH_TASK : RVA_CLEAN_TASK);
-        jni_call_engine_r0_sp(uc, ctor | 1u, task, kind == 0 ? a_csc : a_ccs,
-                              3, sp);
-        uint32_t aargs[1] = {task};
-        jni_call_engine_r0_sp(uc, RVA_ASSIGN_TASK | 1u, chef, aargs, 1, sp);
-        s_kind = kind;
-        s_tgt = tgt;
-        s_ts = now;
-        logi("chef task: %s stove=0x%x chef=0x%x",
-             kind == 0 ? "cook" : (kind == 1 ? "carry-to-counter" : "clean"),
-             tgt, chef);
-    };
 
-    if (!stove) {
-        /* busy stove: carry the done dish (auto-serve), clean burns, tend */
-        if (busy && chef && plausible_ptr(chef) && chef_idle()) {
-            uint32_t burnt =
-                jni_call_engine_r0_sp(uc, RVA_IS_BURNED | 1u, busy, nullptr, 0, sp);
-            uint32_t done =
-                jni_call_engine_r0_sp(uc, RVA_IS_DONE | 1u, busy, nullptr, 0, sp);
-            assign_task(burnt ? 2u : (done ? 1u : 0u), busy);
-        }
-        if (do_status) {
-            uint32_t f = 0, el = 0, fl = 0;
-            if (busy) {
-                emu::read(uc, busy + 0x60, &f, 4);
-                emu::read(uc, busy + 0x68, &el, 4);
-                uint8_t b = 0;
-                emu::read(uc, busy + 0x2e, &b, 1);
-                fl = b;
+    Regs snap;
+    snap.save(uc);
+    uint32_t sp = (snap.r[13] - 512u) & ~7u;
+
+    /* walk the real stove lists (all appliance types) for finished dishes */
+    static int64_t s_last_carry = 0;
+    for (uint32_t type = 0; type < 16; type++) {
+        uint32_t list_words[2] = {type, 0u};
+        uint32_t list = jni_call_engine_r0_sp(uc, RVA_STOVE_LIST | 1u, cafe,
+                                              list_words, 2, sp);
+        if (!plausible_ptr(list)) continue;
+        uint32_t node = 0, guard = 0;
+        emu::read(uc, list + 8, &node, 4);
+        while (plausible_ptr(node) && guard++ < 256) {
+            uint32_t item = 0, next = 0;
+            emu::read(uc, node, &item, 4);
+            emu::read(uc, node + 8, &next, 4);
+            if (plausible_ptr(item) && chef_idle() &&
+                now - s_last_carry >= 15) {
+                uint8_t flag = 0;
+                emu::read(uc, item + OFF_OBJ_BUSY, &flag, 1);
+                if (flag != 0) {
+                    uint32_t done = jni_call_engine_r0_sp(
+                        uc, RVA_IS_DONE | 1u, item, nullptr, 0, sp);
+                    if (done) {
+                        uint32_t task = jni_call_engine_r0_sp(
+                            uc, RVA_NEW | 1u, 0x44u, nullptr, 0, sp);
+                        if (plausible_ptr(task)) {
+                            uint32_t a[3] = {chef, cafe, item};
+                            jni_call_engine_r0_sp(uc, RVA_DISH_TASK | 1u, task,
+                                                  a, 3, sp);
+                            uint32_t aa[1] = {task};
+                            jni_call_engine_r0_sp(uc, RVA_ASSIGN_TASK | 1u,
+                                                  chef, aa, 1, sp);
+                            s_last_carry = now;
+                            logi("auto-serve: chef=0x%x carries the done dish "
+                                 "from stove=0x%x", chef, item);
+                        }
+                    }
+                }
             }
-            logi("auto-cook status: row=%d no idle stove (busy=0x%x food=0x%x "
-                 "elapsed=%u flag=%u)", row, busy, f, el, fl);
+            jni_call_engine_r0_sp(uc, RVA_FREE | 1u, node, nullptr, 0, sp);
+            node = next;
         }
-        snap.restore(uc);
-        return;
+        jni_call_engine_r0_sp(uc, RVA_FREE | 1u, list, nullptr, 0, sp);
     }
-    if (do_status) logi("auto-cook status: row=%d stove=0x%x", row, stove);
-
-    /* cost of the repeat recipe vs coins */
-    uint32_t cost = 0;
-    if (recipe) {
-        uint32_t cost_args[1] = {(uint32_t)(variant & 0xff)};
-        cost = jni_call_engine_r0_sp(uc, RVA_RECIPE_COST | 1u, recipe,
-                                     cost_args, 1, sp);
-    }
-    uint32_t money = 0;
-    emu::read(uc, zgame + OFF_GAME_MONEY, &money, 4);
-
-    if (cost > money) {
-        if (now - s_last_notif >= kNotifGapSec) {
-            s_last_notif = now;
-            uint32_t msg = emu::intern_string(
-                uc, "Your cafe needs you! Not enough coins to keep cooking.");
-            uint32_t n_args[3] = {msg, 0u, 0u}; /* extra=0, delay=0s */
-            jni_call_engine_r0_sp(uc, RVA_SEND_NOTIF | 1u, 0u, n_args, 3, sp);
-            logi("auto-cook: unaffordable (row=%u cost=%u money=%u) - "
-                 "notified user", row, cost, money);
-        }
-        snap.restore(uc);
-        return;
-    }
-
-    /* CapcomDate now + two empty Strings, then cook. String is non-trivial:
-     * by-value args are addresses of caller-built temporaries. */
-    uint32_t scratch = emu::heap_alloc(uc, 32);
-    if (!scratch) {
-        snap.restore(uc);
-        return;
-    }
-    jni_call_engine_r0_sp(uc, RVA_DATE_NOW | 1u, scratch, nullptr, 0, sp);
-    uint32_t zero = 0;
-    jni_call_engine_r0_sp(uc, RVA_STR_FROM_INT | 1u, scratch + 8, &zero, 1, sp);
-    jni_call_engine_r0_sp(uc, RVA_STR_FROM_INT | 1u, scratch + 12, &zero, 1, sp);
-    uint32_t date0 = 0, date1 = 0;
-    emu::read(uc, scratch, &date0, 4);
-    emu::read(uc, scratch + 4, &date1, 4);
-    uint32_t cook_words[7] = {stove, (uint32_t)row, (uint32_t)(variant & 0xff),
-                              date0, date1, scratch + 8, scratch + 12};
-    jni_call_engine_r0_sp(uc, RVA_COOK | 1u, state, cook_words, 7, sp);
-    emu::heap_free(uc, scratch);
-    s_last_cook = now;
-    uint32_t money_after = 0, food_after = 0;
-    emu::read(uc, zgame + OFF_GAME_MONEY, &money_after, 4);
-    emu::read(uc, stove + OFF_STOVE_FOOD, &food_after, 4);
     snap.restore(uc);
-    logi("auto-cook: stove=0x%x row=%u variant=%d cost=%u money=%u->%u "
-         "foodstack=0x%x", stove, row, (int)variant, cost, money, money_after,
-         food_after);
 }
 
 }  // namespace
@@ -1162,29 +1013,24 @@ bool init(uc_engine *uc, void *asset_mgr) {
         }
     }
 
-    /* QoL hooks: serve guard (overwrite fix) + auto-serve gate + cook
-     * add-on recording + chef pin */
-    uc_hook h7 = 0, h8 = 0, h9 = 0, h10 = 0;
+    /* QoL hooks: serve guard (overwrite fix) + auto-serve gate + chef pin */
+    uc_hook h7 = 0, h8 = 0, h10 = 0;
     uc_err e7 = uc_hook_add(uc, &h7, UC_HOOK_CODE, (void *)on_serve_place,
                             nullptr, ENG_ADDR(RVA_SERVE_PLACE),
                             ENG_ADDR(RVA_SERVE_PLACE));
     uc_err e8 = uc_hook_add(uc, &h8, UC_HOOK_CODE, (void *)on_can_follow,
                             nullptr, ENG_ADDR(RVA_CAN_FOLLOW),
                             ENG_ADDR(RVA_CAN_FOLLOW));
-    uc_err e9 = uc_hook_add(uc, &h9, UC_HOOK_CODE, (void *)on_cook_start,
-                            nullptr, ENG_ADDR(RVA_COOK),
-                            ENG_ADDR(RVA_COOK));
     uc_err e10 = uc_hook_add(uc, &h10, UC_HOOK_CODE, (void *)on_select_char,
                              nullptr, ENG_ADDR(RVA_SELECT_CHAR),
                              ENG_ADDR(RVA_SELECT_CHAR));
-    if (e7 != UC_ERR_OK || e8 != UC_ERR_OK || e9 != UC_ERR_OK ||
-        e10 != UC_ERR_OK) {
-        logi("qol hooks failed: %s / %s / %s / %s", uc_strerror(e7),
-             uc_strerror(e8), uc_strerror(e9), uc_strerror(e10));
+    if (e7 != UC_ERR_OK || e8 != UC_ERR_OK || e10 != UC_ERR_OK) {
+        logi("qol hooks failed: %s / %s / %s", uc_strerror(e7),
+             uc_strerror(e8), uc_strerror(e10));
     } else {
         logi("qol hooks installed (serve guard@0x%x auto-serve@0x%x "
-             "cook-rec@0x%x chef-pin@0x%x)", RVA_SERVE_PLACE, RVA_CAN_FOLLOW,
-             RVA_COOK, RVA_SELECT_CHAR);
+             "chef-pin@0x%x)", RVA_SERVE_PLACE, RVA_CAN_FOLLOW,
+             RVA_SELECT_CHAR);
     }
     flush_locked(false);
     return true;
