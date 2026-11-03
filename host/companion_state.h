@@ -61,6 +61,13 @@ struct AchState {
     int64_t claimed_ts = 0;
 };
 
+/* one toxin spend, attributed to its engine flow (RE caller map) */
+struct SpendEvent {
+    int64_t ts = 0;
+    int32_t amount = 0;
+    std::string flow; /* "cook_finish", "recipe_unlock", ... */
+};
+
 struct State {
     int32_t version = 1;
     int64_t created_ts = 0;
@@ -68,14 +75,25 @@ struct State {
     int64_t total_cooked = 0;
     int64_t toxin_spent = 0;
     int64_t toxin_earned = 0;
+    /* foodData row of the most recently cooked dish (-1 = none yet);
+     * auto-cook repeats this recipe when no other food is needed */
+    int32_t last_cooked_row = -1;
     /* key = zcrId when known else "row:N" */
     std::map<std::string, RecipeStat> recipes;
     /* favorite recipes: key -> foodData row (presence = favorite; the
      * original game's star flag resets every launch - Recipe+0x1e) */
     std::map<std::string, int32_t> favorites;
+    /* per-recipe cook add-on (the variant the player cooked with, e.g.
+     * 5 = BULK); auto-cook replays it. Missing rows use the bulk default. */
+    std::map<int32_t, int32_t> cook_variant;
+    /* toxin spend ledger, newest last, capped (toxin_ledger_cap) */
+    std::vector<SpendEvent> toxin_log;
     /* key = achievement id */
     std::map<std::string, AchState> achievements;
 };
+
+/* ledger capacity: keep the most recent events (anti-growth) */
+constexpr size_t kToxinLogCap = 32;
 
 /* Mastery level for a cook count: 0 = none, 1..N = tier (thresholds in
  * Defs::mastery_levels, ascending). */
@@ -91,7 +109,8 @@ std::vector<std::string> on_dish_cooked(State &s, const Defs &d,
                                         const std::string &key, int32_t row,
                                         int64_t now);
 std::vector<std::string> on_toxin_spent(State &s, const Defs &d, int64_t amount,
-                                        int64_t now);
+                                        int64_t now,
+                                        const std::string &flow = "");
 std::vector<std::string> on_toxin_earned(State &s, const Defs &d,
                                          int64_t amount, int64_t now);
 

@@ -340,3 +340,156 @@ save.
 * Adopt-from-engine path (companion empty + engine restored favorites)
   is implemented but not yet exercised on device (the test companion was
   non-empty by then).
+
+## 10. Toxin-spend confirmation (2026-11-02, Stage B QoL)
+
+### 10.1 Audit (RE-verified, ASSET_EXPANSION_GUIDE A9.6)
+
+Complete 20-site `spendToxin` map with per-site gating evidence:
+19 of 20 spends are already behind the engine's ConfirmDialog (GOT-wired
+yes-callbacks verified per site; `ConfirmDialog::tick` fires the callback
+on the affirmative button only). `CharacterDetails::heal` is dead code
+(no xrefs). The single real gap was the zookdex character purchase
+(`GameStateZukan::buyCharacter` common path: one-tap spend after a
+balance check).
+
+### 10.2 Implemented
+
+| Component | Status |
+|---|---|
+| Zookdex purchase confirm gate (entry hook + engine ConfirmDialog + Thumb re-entry cave) | implemented + built (out-mod.apk) |
+| Dialog wording ("DO YOU WISH TO BUY THIS CHARACTER?" BUY/CANCEL) - neutral, covers toxin- and coin-priced characters | implemented |
+| Failure-safe pass-through (no dialog instance -> vanilla behavior) | implemented |
+| Device verification (dialog appears, YES buys, CANCEL aborts) | PENDING (phone unplugged at build time) |
+
+### 10.3 Design notes
+
+No engine binary patching: the spend path itself is untouched engine
+code; the gate only intercepts the entry, queues the engine's own dialog
+(ConfirmDialog* at zukan+0xb0) and re-enters through a host-mapped cave
+that restores the purchase index. Log lines: `zukan buy: confirm queued
+(index=N ...)` and `toxin spent: N via zukan_buy` after YES.
+
+## 11. Cooking/serving QoL: auto-cook, auto-serve, serve guard (2026-11-02)
+
+### 11.1 Implemented (engine RE: ASSET_EXPANSION_GUIDE A9.8)
+
+| Component | Status |
+|---|---|
+| Auto-cook: idle stove -> cook last-cooked recipe (companion `last_cooked_row`), engine `GameStateCafe::cook` handles cost + deduction | implemented + built |
+| Unaffordable -> Android notification "Your cafe needs you!" (throttled 30 min) via `javaSendNotification` -> AlarmManager | implemented + built |
+| Auto-serve: `characterCanFollow` gate forced eligible (staff carry dishes at full pace) | implemented + built |
+| Serve guard: busy-spot (CafeObject+0x2e) serves divert to the engine's return-dish path (overwrite fix) | implemented + built |
+| Unit tests (155 checks incl. `last_cooked_row` roundtrip) | PENDING (phone unplugged at test time; 153/153 passed pre-change) |
+| Device verification (auto-cook log lines, serve-guard lines, notification visible) | PENDING (phone unplugged) |
+
+### 11.2 Honest labels
+
+- RE-verified: cook ABI, cost/money fields, stove list, ServeTask flow,
+  +0x2e flag lifecycle (set by FindSeatTask/ServeTask, cleared by EatTask),
+  notification AlarmManager semantics.
+- Code paths built clean; behavior on device not yet observed (the hook
+  points redirect PC inside engine frames - same technique as the zukan
+  gate, but ServeTask/characterCanFollow have not been exercised live).
+- Risk notes: auto-serve forces eligibility for all staff/customer pairs
+  (original is probabilistic); if live testing shows over-eager task
+  churn, the gate needs pacing. The serve guard assumes +0x2e semantics
+  hold for all target types (verified for seats + the ServeTask target).
+
+## 11.1 Device verification update (2026-11-02, later session)
+
+| Component | Status |
+|---|---|
+| Auto-cook with player add-on (bulk): `variant=5 cost=16 money=13572->13556 foodstack=...` | DEVICE-TESTED (cost 16 = the cook UI's BULK $16 exactly; coins deducted; cooking started) |
+| Chef loop (walk/cook/carry): `chef assigned to stove=...`; chef visibly tending the cooking pot | DEVICE-TESTED |
+| Auto-serve (done dish -> counter): armed via GameStateCafe+0x54; chef loop carry path | implemented + armed (carry event visual confirmation pending) |
+| Hands-free/idle operation + background catch-up (pause leaves stoves cooking; wall-clock progress continues) | implemented + built |
+| Serve guard (busy-spot divert) | implemented + built (live repro pending) |
+| Staff cleanup gate (dirty fridge/sink "!") forced eligible (`auto-serve gate: forced N eligible checks`) | implemented + firing on device |
+| Unit tests | 158/158 PASS |
+
+### 11.2 RE corrections (verified against raw bytes)
+
+- Stove selection must use `Cafe::createDistanceSortedStoveList(cafe,
+  recipe+0x1a cookType, 0)` and the **+0x2e busy flag** - the generic
+  furniture list matched the wrong appliance (the fridge), and
+  Stove+0x60 goes stale after a dish is carried (false "busy").
+- The chef loop (GameStateCafe::tick): `Stove::isBurned` -> CleanupTask;
+  `Stove::isDoneCooking` -> DishToCounterTask (the auto-serve carry);
+  else CookTask (tend). Driven by the stove assignment at +0x54.
+- The tickStaff CleanupTask gate (dirty furniture, incl. fridge/sink)
+  is `characterCanFollow` - covered by the forced auto-serve gate.
+
+## 12. Stability pass (2026-11-03) - device-tested
+
+### 12.1 Magenta boot flash - root-caused and FIXED
+
+- Symptom: every cold launch showed a solid magenta/pink screen with a
+  pink-tinted Beeline splash for the first frame(s).
+- Root cause (pixel-solved, not guessed): the splash draws over an
+  *uncleared* framebuffer while its fade-in alpha is still low. Sample
+  solve: measured frame-1 pixels are exactly
+  `blend(magenta(255,0,255), splash, a=0.32)` - e.g. bg (244,111,43)
+  -> (251,35,189) and white logo (255,244,255) -> (255,76,255).
+  The magenta dest was OUR OWN diagnostic underlay in
+  `zcr_host.cpp` `Java_..._CapcomRenderer_render`: `glClearColor(1,0,1)`
+  every frame "so a dead engine shows magenta". The engine's boot
+  splash fades in over it -> the underlay showed through.
+- Fix: underlay changed to black (`zcr_host.cpp`). Boot flash can no
+  longer occur regardless of fade timing (black = neutral under any
+  alpha-blended screen).
+- Verification: 10-screenshot cold-launch sweep before = frame 1 at
+  89.5% magenta; after = 0.0% on all 10 frames (device-tested).
+
+### 12.2 Frame rate - no cap to remove (measured)
+
+- Display: vivo 120Hz panel (`settings get system peak_refresh_rate`
+  = 120.0); SurfaceFlinger vsync period 16666666ns.
+- Java render loop (`CapcomRenderer.onDrawFrame` smali): passes the
+  frame delta to the native render and `Thread.sleep(5)` - no fixed
+  timestep, no 30fps limiter; `setRenderMode`/`requestRender` are
+  never called (continuous render).
+- Measured render rate: 12 diag lines (=12x60 frames) in 6.246s =
+  **~115fps** (vsync-locked to the 120Hz panel). The game already
+  runs at the display's full rate; engine stepping is delta-based
+  (frame-rate independent). No fps unlock needed or possible.
+- Note: the emulator-hosted engine (Unicorn ARM32 in the arm64 host)
+  keeps up comfortably; our hook overhead is a per-frame bool check.
+
+### 12.3 Phone compatibility - fixes + honest limits
+
+- FIXED: screen no longer sleeps mid-play + display cutout (notch)
+  handling - `WindowCompat.smali` (in `patches/smali` + `patches-mod/smali`)
+  is called from `ZombieCafeAndroid.onCreate` and sets
+  `FLAG_KEEP_SCREEN_ON` plus `LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES`
+  (API 27+ guarded). The vivo used to show "Game zoomed in - display
+  cutout area unavailable" and letterbox the game to 2696px of the
+  2800px screen.
+- Verification (device, `dumpsys window`): `mAttrs=... layoutInDisplayCutoutMode=shortEdges`,
+  `fl=KEEP_SCREEN_ON ...`, `Requested w=2800` (was 2696) - the game
+  window now spans the full panel including the notch area.
+- Two real bugs were found and fixed during the release double-check
+  (both kept out of the shipped APK):
+  1. The first implementation ran from JNI on the GL thread:
+     `Window.setAttributes()` threw
+     `CalledFromWrongThreadException: Expected: main Calling: GLThread`
+     (only `addFlags` tolerated the wrong thread). Lesson: window/view
+     hierarchy mutations must happen on the UI thread - hence the smali
+     `onCreate` hook, matching the repo's existing patch pattern.
+  2. The first smali draft had TWO inverted branches
+     (`if-nez p0, :end` instead of `if-eqz`, and `if-ge` instead of
+     `if-lt` for the API-27 guard) which made the helper a no-op on
+     modern devices. Caught by dexdump-ing the built APK and verifying
+     the bytecode, then by `dumpsys window` showing the attr missing.
+     Lesson: always verify smali branch polarity from the built dex,
+     and verify window flags from `dumpsys window`, not from logs.
+- A manifest attribute is NOT usable for the cutout mode: the apktool
+  framework rejects API-27 attrs ("attribute android:layoutInDisplayCutoutMode
+  not found") - runtime `WindowManager.LayoutParams` is the way.
+- Architecture note: the engine (`assets/engine/game.so`) is a 32-bit
+  ARM binary that runs EMULATED (Unicorn, `uc_open(UC_ARCH_ARM)`)
+  inside the host library, so device ABI is not a limitation - both
+  `arm64-v8a` and `armeabi-v7a` host libs ship and are verified.
+- Honest limits: minSdk 23; GLES 1.x required (manifest
+  `glEsVersion="1"`); 64-bit-only devices are untested (host libs are
+  provided for both ABIs so they should work, but no device evidence).

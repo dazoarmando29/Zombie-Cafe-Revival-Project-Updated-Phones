@@ -8,7 +8,10 @@ for evidence and `docs/CONTENT_EXPANSION_ROADMAP.md` Stage B for order.
 
 | Feature | Design notes | Status |
 |---|---|---|
-| Recipe favorites | The engine already ships the star UI (toggle, favorites tab, 14-slot list) but state round-trips through the engine save with save-timing staleness. Companion save now records toggles write-through and reconciles at book-open (adopt-on-empty / companion-wins). | implemented + device-tested (2026-11-02, test report §9) |
+| Auto-serve (cooked food) | When a dish YOU cooked finishes, the chef carries it to the serving counter automatically (DishToCounterTask assigned to the chef; chef = the "YOU" avatar, auto-pinned as character-array[0]). Employees then keep serving it to customers (staff serving gate forced). Works while away: dishes progress by wall-clock, and the carry fires within seconds of reopening (plus a catch-up pass on backgrounding). | implemented + device-tested (2026-11-03) |
+| Serve overwrite fix | `ServeTask` placed dishes without checking the spot's in-use flag (CafeObject+0x2e) - a second dish landed on an occupied spot and the new dish vanished. Guard hook diverts busy-spot serves to the engine's own return-to-counter path. | implemented + built; live repro pending (guard log lines) |
+| Auto-cook | Auto-starting cooking was implemented and then **removed by request** - cooking is always the player's choice. | removed (2026-11-03) |
+| Recipe favorites | The engine already ships the star UI (toggle, favorites tab, 14-slot list) but state round-trips through the engine save with save-timing staleness. Companion save now records toggles write-through and reconciles at book-open (adopt-on-empty / companion-wins). | implemented + device-tested (2026-11-02, test report A9) |
 | One-tap repeat cooking | Remember last recipe per stove (companion file); re-issue the cook command after affordability checks. Must not spend currency before confirmation. | planned |
 | Multi-stove cooking | Extend repeat-cooking to apply to selected idle stoves; validate each stove independently; never touch active cook slots. | planned (investigate stove state machine first) |
 | Recipe sorting | Sort options (time/profit/XP/servings/mastery/favorites) with data-order as default. | planned |
@@ -27,11 +30,11 @@ for evidence and `docs/CONTENT_EXPANSION_ROADMAP.md` Stage B for order.
 | Raid team presets | Save/load team compositions locally. | planned |
 | Zombie collection book | Encyclopedic discovery list (uses `ZcrId`s). | planned |
 
-## Economy & safety
+## Economy
 
 | Feature | Design notes | Status |
 |---|---|---|
-| Toxin-spend confirmation | Optional confirm dialog before toxin purchases. NOTE: the original game already confirms toxin spends for cook instant-finish ("DO YOU WISH TO USE 1 TOXIN?" - device-observed 2026-11-02); the remaining gap is the buy/upgrade flows. | planned |
+| Toxin-spend confirmation | Audit (ASSET_EXPANSION_GUIDE §9.6): 19/20 engine spend paths already confirm via the shared ConfirmDialog (cook instant-finish device-observed). The one gap (zookdex character purchase) is now gated with the engine's own dialog + cave re-entry (§9.7). | implemented + RE-verified; device verification pending (test report §10) |
 | Earnable toxins | Limited rewards via achievements/mastery/quests; never infinitely farmable. | prototype (achievement rewards implemented: bounded, non-repeatable, see CONTENT_EXPANSION_TEST_REPORT.md §8) |
 | Daily/weekly objectives | Local tracker + reward claiming with save/reload exploit protection. | planned |
 

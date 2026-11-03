@@ -255,3 +255,98 @@ runtime behavior; do not re-derive, and re-verify before changing.
 * Note: the detail panel's ADD/REMOVE-star button label can show the
   engine's stale default on the auto-selected recipe right after opening
   the book; it refreshes on any recipe selection (self-correcting).
+
+### 9.6 spendToxin call-site audit (2026-11-02)
+
+`ZombieCafe::spendToxin(int)` (0x11fc94, `game+0xb8 -= amount`) has 20
+direct BL call sites (raw-byte Thumb-2 BL scan; note BL operands carry a
+`0x10000000` base in disasm listings and the Thumb `|1` bit). Audit
+verdict per site - 19 of 20 are gated behind the engine's shared
+`ConfirmDialog` (`show(String,String,String, PFvPv cb, void* ctx)` at
+0x78e58; the YES button fires cb with ctx - `ConfirmDialog::tick`
+0x794f6 path - the NO path discards without invoking):
+
+| flow | site (BL) | engine fn | gating evidence |
+|---|---|---|---|
+| character_heal | 0x6fcea | CharacterCommandBar::healConfirmed | `*Confirmed` dialog callback |
+| character_heal | 0x72552 | CharacterDetails::heal | **dead code** - no BL/GOT/movw/vtable xrefs |
+| cook_finish | 0x7eaa2 | CookCommandBar::finishDish | device-observed dialog; tick show-sites |
+| cafe_buy | 0x9bc4e | GameStateCafe::buyConfirmed | `*Confirmed` callback |
+| infect_purchase | 0xa2cae | completeInfectPurchase | task-completion path (dialog at task start) |
+| revive | 0xa56dc | onReviveConfirmed | `*Confirmed` callback (onReviveButtonPressed shows) |
+| character_heal | 0xa756c | onHealConfirmed | `*Confirmed` callback |
+| store_purchase | 0xaaf18 | completeStorePurchase | tickEditModes show-sites |
+| chef_buy | 0xb1364 | GameStateChooseChef::buyConfirmed | `*Confirmed` callback |
+| friend_heal | 0xba7d6 | onHealConfirmed | `*Confirmed` callback |
+| map_reopen | 0xc9126 | GameStateMap::onReOpen | GOT-wired cb of GameStateMap::tick show |
+| raid_heal | 0xcf3c4 | onHealConfirmed | `*Confirmed` callback |
+| objective_bribe | 0xe55b4 | onBribeConfirmed | `*Confirmed` callback |
+| order_finish | 0xf2a2e | CookingOrder::finish | GOT-wired cb of CookingOrder::tick shows |
+| recipe_unlock | 0x10129e | RecipeBook::onUnlockButtonPressed | GOT-wired cb of 3 RecipeBook::tick shows |
+| cookbook_buy | 0x1015a0 | onConfirmbuyCookBookbyToxin | `*Confirmed` callback |
+| tombstone_recharge | 0x11614c | rechargeTombstone | GOT-wired cb of TombstoneCommandBar::tick shows |
+| locker_buy | 0x13162e | GameStateMeetLocker::buyConfirmed | `*Confirmed` callback |
+| zukan_buy | 0x135a56 | GameStateZukan::buyCharacter | **was the one gap** - now gated (§9.7) |
+| zukan_buy | 0x135b86 | GameStateZukan::buyConfirmed | GOT-wired cb of buyCharacter's cap-expansion dialog (+5 slots for 5 toxin) |
+
+GOT-wired = the show-site loads the callback from a `.got` slot whose
+literal-pool offset matches the handler's GOT entry (verified per site).
+The 17 `addToxin` callers (video/DLC/referral/invite rewards) are grants,
+not spends.
+
+### 9.7 zookdex purchase confirmation gate
+
+`GameStateZukan::buyCharacter` (0x1358b4) spent toxin one-tap (balance
+check -> spend at 0x135a56) on its common path. The companion layer gates
+it without engine patching: a `UC_HOOK_CODE` at the function entry queues
+the engine's own ConfirmDialog (instance at `zukan+0xb0`), then redirects
+PC to LR (abort). On YES the dialog invokes a 24-byte Thumb code cave
+(mapped RWX at 0xF3000000 by the host) which restores the saved purchase
+index literal and re-enters `buyCharacter`; the hook recognizes the cave
+return address and lets the engine spend normally. Key ABI facts:
+`String::String(char const*)` 0x141f1c (String = 4-byte value in r1..r3),
+`ConfirmDialog::show` stack args are cb at `[sp]`, ctx at `[sp+4]`.
+
+### 9.8 Cook / serve engine ABI (2026-11-02)
+
+Cooking (used by the auto-cook QoL driver):
+
+* `GameStateCafe::cook(GameStateCafe*, Stove*, int row, int variant,
+  CapcomDate, String, String)` @0x9d534 - CapcomDate is 8B by value
+  (stack words 0-1), then two 4B String handles (words 2-3). The engine
+  builds a FoodStack(recipeRow, variant), looks up the coin cost
+  (`Recipe` cost fn @0xfa350 with (Recipe*, variant)), compares against
+  `ZombieCafe+0x1ac` (coins) and silently returns when short. The cook
+  is dispatched via `Stove::startCooking` @0x113c58.
+* Object graph: `CapcomApp+4` = `ZombieCafe*`; `ZombieCafe+0x8` = active
+  `GameStateCafe*`; `GameStateCafe+0xc` = `ZombieCafe*`;
+  `GameStateCafe+0x14` = `Cafe*`; `ZombieCafe+0x128` = recipe table
+  (0x20-byte rows).
+* Stove enumeration: `Cafe::createDistanceSortedFurnitureList(cafe,
+  type, 0)` @0x65e7c (type 1 = stoves, 2 = counters, 4 = seats) returns
+  a list object; `[list+8]` = head node, `node+0` = item, `node+8` =
+  next (caller frees the list). `Stove+0x60` = FoodStack* (idle iff 0).
+
+Serving (used by the serve guard + auto-serve QoL):
+
+* `ServeTask(CharacterInstance*, Cafe*, CharacterInstance*)` @0x10d8f8
+  is created per staff/customer pair in `GameStateCafe::tickStaff`
+  @0xa3ebc behind the eligibility gate `characterCanFollow` @0x9b35c
+  (probabilistic in the original game).
+* `ServeTask::tick` @0x10d038: walk -> pick a random serving from a
+  counter (`ServingCounter::getNewRandomFoodServing` @0x10de2c) -> on
+  arrival construct `Food` @0x8a510 and call the target's virtual
+  placeFood (`vtable+0x24`).
+* **CafeObject+0x2e = in-use flag**: set by `FindSeatTask::start`
+  (seat claim) and by ServeTask after placing food; cleared by
+  `EatTask` when the customer starts waiting / finishes eating.
+  ServeTask never checks it before placing - two dishes land on one
+  spot and the new one is lost (the overwrite bug). The placement
+  block at 0x10d386 is the guard hook point; 0x10d408 is the engine's
+  own return-dish-to-counter abort path (same register frame).
+
+Notifications: `javaSendNotification(type, msg, extra, delaySec)`
+@0x17e474 -> `CC_Android.fromNative_SendNotification` ->
+`ZombieCafeAndroid.sendNotification` -> AlarmManager at now+delaySec
+(p3 is seconds; the Java side was rewritten in the "dead notifications"
+modernization).

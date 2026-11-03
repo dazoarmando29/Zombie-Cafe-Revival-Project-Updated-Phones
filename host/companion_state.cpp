@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -376,14 +377,23 @@ std::vector<std::string> on_dish_cooked(State &s, const Defs &d,
     if (r.zcr_id.empty() && key.rfind("row:", 0) != 0) r.zcr_id = key;
     if (r.row < 0) r.row = row;
     s.total_cooked++;
+    if (row >= 0) s.last_cooked_row = row;
     s.updated_ts = now;
     return evaluate(s, d, now);
 }
 
 std::vector<std::string> on_toxin_spent(State &s, const Defs &d, int64_t amount,
-                                        int64_t now) {
+                                        int64_t now, const std::string &flow) {
     if (amount <= 0) return {};
     s.toxin_spent += amount;
+    SpendEvent ev;
+    ev.ts = now;
+    ev.amount = (int32_t)amount;
+    ev.flow = flow.empty() ? "unknown" : flow;
+    s.toxin_log.push_back(ev);
+    if (s.toxin_log.size() > kToxinLogCap)
+        s.toxin_log.erase(s.toxin_log.begin(),
+                          s.toxin_log.end() - (ptrdiff_t)kToxinLogCap);
     s.updated_ts = now;
     return evaluate(s, d, now);
 }
@@ -435,6 +445,21 @@ std::string serialize(const State &s) {
     write_int("cooked", s.total_cooked, &out, &tf);
     write_int("toxin_spent", s.toxin_spent, &out, &tf);
     write_int("toxin_earned", s.toxin_earned, &out, &tf);
+    write_int("last_cooked_row", s.last_cooked_row, &out, &tf);
+    out += "}";
+    /* per-recipe cook add-on (row -> variant) */
+    out += ",\"cookVariant\":{";
+    bool vf = true;
+    for (const auto &kv : s.cook_variant) {
+        if (!vf) out += ",";
+        vf = false;
+        char kbuf[16];
+        snprintf(kbuf, sizeof(kbuf), "\"%d\":", (int)kv.first);
+        out += kbuf;
+        char vbuf[16];
+        snprintf(vbuf, sizeof(vbuf), "%d", (int)kv.second);
+        out += vbuf;
+    }
     out += "}";
     /* recipes (std::map = sorted keys = deterministic) */
     out += ",\"recipes\":{";
@@ -466,6 +491,23 @@ std::string serialize(const State &s) {
         out += buf;
     }
     out += "}";
+    /* toxin spend ledger (newest last) */
+    out += ",\"toxin_log\":[";
+    for (size_t i = 0; i < s.toxin_log.size(); i++) {
+        const SpendEvent &e = s.toxin_log[i];
+        if (i) out += ",";
+        out += "{\"t\":";
+        char buf[32];
+        snprintf(buf, sizeof(buf), "%lld", (long long)e.ts);
+        out += buf;
+        out += ",\"n\":";
+        snprintf(buf, sizeof(buf), "%d", (int)e.amount);
+        out += buf;
+        out += ",\"f\":";
+        json_escape(e.flow, &out);
+        out += "}";
+    }
+    out += "]";
     /* achievements */
     out += ",\"achievements\":{";
     bool af = true;
@@ -506,6 +548,7 @@ bool parse_state(const std::string &json, State *out, std::string *err) {
         st.total_cooked = t->int_or("cooked", 0);
         st.toxin_spent = t->int_or("toxin_spent", 0);
         st.toxin_earned = t->int_or("toxin_earned", 0);
+        st.last_cooked_row = (int32_t)t->int_or("last_cooked_row", -1);
     }
     if (const JsonVal *r = root.find("recipes")) {
         for (const auto &kv : r->o) {
@@ -524,6 +567,32 @@ bool parse_state(const std::string &json, State *out, std::string *err) {
             if (kv.second.type != JsonVal::Int) continue;
             if (kv.second.i < 0 || kv.second.i > 255) continue;
             st.favorites[kv.first] = (int32_t)kv.second.i;
+        }
+    }
+    if (const JsonVal *cv = root.find("cookVariant")) {
+        for (const auto &kv : cv->o) {
+            if (kv.second.type != JsonVal::Int) continue;
+            int32_t row = (int32_t)atoi(kv.first.c_str());
+            if (row < 0 || row >= 250) continue;
+            if (kv.second.i < 0 || kv.second.i > 255) continue;
+            st.cook_variant[row] = (int32_t)kv.second.i;
+        }
+    }
+    if (const JsonVal *tl = root.find("toxin_log")) {
+        if (tl->type == JsonVal::Arr) {
+            for (const JsonVal &e : tl->a) {
+                if (e.type != JsonVal::Obj) continue;
+                SpendEvent ev;
+                ev.ts = e.int_or("t", 0);
+                ev.amount = (int32_t)e.int_or("n", 0);
+                ev.flow = e.str_or("f", "unknown");
+                if (ev.amount <= 0) continue;
+                st.toxin_log.push_back(ev);
+            }
+            /* cap: keep the most recent */
+            if (st.toxin_log.size() > kToxinLogCap)
+                st.toxin_log.erase(st.toxin_log.begin(),
+                                   st.toxin_log.end() - (ptrdiff_t)kToxinLogCap);
         }
     }
     if (const JsonVal *a = root.find("achievements")) {

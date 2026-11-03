@@ -51,6 +51,76 @@ constexpr uint32_t OFF_APP_GAME = 0x4;    /* CapcomApp+4 = ZombieCafe* */
 constexpr uint32_t OFF_TOXIN = 0xb8;      /* ZombieCafe+0xb8 = toxin (spendToxin disasm) */
 constexpr int32_t kMaxToxin = 999;
 
+/* ---- toxin-spend confirmation gate (docs/ASSET_EXPANSION_GUIDE.md §9.6/9.7)
+ * The 20-site spendToxin audit found every player-facing spend behind the
+ * engine's ConfirmDialog except GameStateZukan::buyCharacter (zookdex
+ * character purchase: one-tap spend after a balance check). Gate it with the
+ * engine's own dialog (ConfirmDialog* at zukan+0xb0) and re-enter the
+ * purchase through a tiny Thumb code cave that restores the saved purchase
+ * index - the spend itself stays 100% engine code. The dialog's callback
+ * fires only on the affirmative button (ConfirmDialog::tick 0x794f6 path). */
+constexpr uint32_t RVA_ZUKAN_BUY = 0x1358b4;   /* GameStateZukan::buyCharacter */
+constexpr uint32_t OFF_ZUKAN_DLG = 0xb0;       /* GameStateZukan+0xb0 = ConfirmDialog* */
+constexpr uint32_t RVA_STR_CTOR = 0x141f1c;    /* String::String(char const*) */
+constexpr uint32_t RVA_STR_DTOR = 0x142470;    /* String::~String() */
+constexpr uint32_t RVA_CONFIRM_SHOW = 0x78e58; /* ConfirmDialog::show(msg,yes,no,cb,ctx) */
+constexpr uint32_t CAVE_PAGE = 0xF3000000u;    /* Thumb re-entry cave (mapped RWX) */
+constexpr uint32_t CAVE_INDEX_OFF = 0x0c;      /* cave literal: saved purchase index */
+constexpr uint32_t CAVE_RET_OFF = 8u;          /* blx site+4 = LR of cave re-entry */
+
+/* ---- QoL: auto-cook / auto-serve / serve guard (docs/QOL_RE_NOTES) ----
+ * Verified engine ABI (2026-11-02 disasm):
+ *   GameStateCafe::cook(GameStateCafe*, Stove*, row, variant, CapcomDate,
+ *                       String, String) @0x9d534 - CapcomDate = 8B by value
+ *   then 2 String handles; cost check inside (Recipe cost @0xfa350,
+ *   money at ZombieCafe+0x1ac); silent return when unaffordable.
+ *   ZombieCafe+0x8 = active GameStateCafe*, GameStateCafe+0x14 = Cafe*.
+ *   Cafe::createDistanceSortedFurnitureList(cafe, type, 0) @0x65e7c returns
+ *   a list object ([list+8] = head; node+0 = item, node+8 = next); type 1 =
+ *   stoves (matches advanceStoves), 2 = counters, 4 = seats.
+ *   Stove+0x60 = FoodStack* (idle iff 0).
+ *   CafeObject+0x2e = in-use flag: seat claimed (FindSeatTask) or food
+ *   placed (ServeTask); EatTask clears it when waiting/eaten. ServeTask
+ *   never checks it before placing - the overwrite bug.
+ *   javaSendNotification(type, msg, extra, delaySec) @0x17e474 -> Java
+ *   AlarmManager notification at now+delaySec. */
+constexpr uint32_t RVA_COOK = 0x9d534;         /* GameStateCafe::cook */
+constexpr uint32_t RVA_STOVE_LIST = 0x65f20;   /* Cafe::createDistanceSortedStoveList */
+constexpr uint32_t RVA_RECIPE_COST = 0xfa350;  /* Recipe cost (Recipe*, variant) */
+constexpr uint32_t RVA_DATE_NOW = 0x199cc8;    /* CapcomDate now (out* 8B) */
+constexpr uint32_t RVA_STR_FROM_INT = 0x141ba8;/* String::String(int) (empty for 0) */
+constexpr uint32_t RVA_SEND_NOTIF = 0x17e474;  /* javaSendNotification */
+constexpr uint32_t RVA_FREE = 0x138e88;        /* operator delete */
+constexpr uint32_t OFF_GAME_STATE = 0x8;       /* ZombieCafe+0x8 = GameStateCafe* */
+constexpr uint32_t OFF_STATE_CAFE = 0x14;      /* GameStateCafe+0x14 = Cafe* */
+constexpr uint32_t OFF_STATE_GAME = 0xc;       /* GameStateCafe+0xc = ZombieCafe* */
+constexpr uint32_t OFF_GAME_MONEY = 0x1ac;     /* ZombieCafe+0x1ac = coins */
+constexpr uint32_t OFF_STOVE_FOOD = 0x60;      /* Stove+0x60 = FoodStack* (may go stale) */
+constexpr uint32_t OFF_RECIPE_COOKTYPE = 0x1a; /* Recipe+0x1a = appliance filter */
+constexpr uint32_t OFF_TASK_TARGET = 0x28;     /* ServeTask+0x28 = target */
+constexpr uint32_t OFF_OBJ_BUSY = 0x2e;        /* CafeObject+0x2e = in-use */
+constexpr uint32_t RVA_SERVE_PLACE = 0x10d386; /* ServeTask::tick placement block */
+constexpr uint32_t RVA_SERVE_ABORT = 0x10d408; /* ServeTask::tick return-dish path */
+constexpr uint32_t RVA_CAN_FOLLOW = 0x9b35c;   /* characterCanFollow gate */
+constexpr uint32_t OFF_STATE_SELSTOVE = 0x50;  /* GameStateCafe+0x50 = UI stove sel */
+constexpr uint32_t OFF_STATE_LOOPSTOVE = 0x54; /* GameStateCafe+0x54 = chef-loop stove */
+constexpr uint32_t OFF_STATE_SELCHAR = 0x58;   /* GameStateCafe+0x58 = selected char */
+constexpr uint32_t OFF_STATE_CHARS = 0x20;     /* GameStateCafe+0x20 = char count */
+constexpr uint32_t OFF_STATE_CHARARR = 0x24;   /* GameStateCafe+0x24 = char array */
+constexpr uint32_t RVA_COOK_TASK = 0x80d9c;    /* CookTask(char, stove, cafe) ctor */
+constexpr uint32_t RVA_DISH_TASK = 0x81f8c;    /* DishToCounterTask(char, cafe, stove) */
+constexpr uint32_t RVA_CLEAN_TASK = 0x789c8;   /* CleanupTask(char, cafe, furniture) */
+constexpr uint32_t RVA_ASSIGN_TASK = 0x6b1f0;  /* CharacterInstance::assignTask */
+constexpr uint32_t RVA_IS_DONE = 0x77ecc;      /* Stove::isDoneCooking */
+constexpr uint32_t RVA_IS_BURNED = 0x77f04;    /* Stove::isBurned */
+constexpr uint32_t RVA_NEW = 0x138eac;         /* operator new */
+constexpr uint32_t OFF_CHAR_DATA = 0x94;       /* CharacterInstance+0x94 = CharacterData* */
+constexpr uint32_t OFF_CHARDATA_IDLE = 0x48;   /* CharacterData+0x48: <=0 = idle */
+constexpr uint32_t RVA_SELECT_CHAR = 0x9b3dc;  /* GameStateCafe::select(char) */
+constexpr int kBulkVariant = 5;                /* BULK add-on (cost x2, double servings) */
+constexpr int64_t kAutoCookGapSec = 5;         /* driver throttle */
+constexpr int64_t kNotifGapSec = 1800;         /* unaffordable notif throttle */
+
 constexpr const char *kFileName = "zcr_companion.json";
 constexpr const char *kAchAsset = "data/zcr_achievements.json";
 constexpr const char *kLockAsset = "data/zcr_registry.lock.json";
@@ -309,17 +379,62 @@ void on_cooked(uc_engine *uc, uint64_t, int32_t, void *) {
     flush_locked(false);
 }
 
+/* ---- toxin spend flow attribution ----
+ * spendToxin's LR = return address = caller BL site + 4. The table below is
+ * the complete BL-site map from the 2026-11-02 raw-byte BL scan (docs/
+ * ASSET_EXPANSION_GUIDE.md §9.6). Audit verdict per site: 19 of 20 sit in
+ * ConfirmDialog-gated flows (GOT-wired yes-callbacks / *Confirmed handlers);
+ * zukan_buy's common path was the single one-tap gap and is now gated by the
+ * on_zukan_buy hook below; CharacterDetails::heal is dead code (no xrefs). */
+struct SpendSite {
+    uint32_t site; /* BL instruction RVA */
+    const char *flow;
+};
+const SpendSite kSpendSites[] = {
+    {0x6fcea, "character_heal"},     /* CharacterCommandBar::healConfirmed */
+    {0x72552, "character_heal"},     /* CharacterDetails::heal */
+    {0x7eaa2, "cook_finish"},        /* CookCommandBar::finishDish */
+    {0x9bc4e, "cafe_buy"},           /* GameStateCafe::buyConfirmed */
+    {0xa2cae, "infect_purchase"},    /* GameStateCafe::completeInfectPurchase */
+    {0xa56dc, "revive"},             /* GameStateCafe::onReviveConfirmed */
+    {0xa756c, "character_heal"},     /* GameStateCafe::onHealConfirmed */
+    {0xaaf18, "store_purchase"},     /* GameStateCafe::completeStorePurchase */
+    {0xb1364, "chef_buy"},           /* GameStateChooseChef::buyConfirmed */
+    {0xba7d6, "friend_heal"},        /* GameStateFriendCafe::onHealConfirmed */
+    {0xc9126, "map_reopen"},         /* GameStateMap::onReOpen */
+    {0xcf3c4, "raid_heal"},          /* GameStateRaid::onHealConfirmed */
+    {0xe55b4, "objective_bribe"},    /* ObjectiveDialog::onBribeConfirmed */
+    {0xf2a2e, "order_finish"},       /* CookingOrder::finish */
+    {0x10129e, "recipe_unlock"},     /* RecipeBook::onUnlockButtonPressed */
+    {0x1015a0, "cookbook_buy"},      /* RecipeBook::onConfirmbuyCookBookbyToxin */
+    {0x11614c, "tombstone_recharge"},/* TombstoneCommandBar::rechargeTombstone */
+    {0x13162e, "locker_buy"},        /* GameStateMeetLocker::buyConfirmed */
+    {0x135a56, "zukan_buy"},         /* GameStateZukan::buyCharacter */
+    {0x135b86, "zukan_buy"},         /* GameStateZukan::buyConfirmed */
+};
+
+std::string flow_for_caller(uint32_t lr) {
+    uint32_t site = (lr & ~1u) - 4u; /* Thumb return addr -> BL site */
+    for (const SpendSite &s : kSpendSites)
+        if (s.site == site) return s.flow;
+    char buf[32];
+    snprintf(buf, sizeof(buf), "other_0x%x", (unsigned)site);
+    return buf;
+}
+
 void on_spend(uc_engine *uc, uint64_t, int32_t, void *) {
     std::lock_guard<std::mutex> lk(g_mu);
     if (!g_ready) return;
-    uint32_t amount = 0;
+    uint32_t amount = 0, lr = 0;
     uc_reg_read(uc, UC_ARM_REG_R1, &amount);
+    uc_reg_read(uc, UC_ARM_REG_LR, &lr);
     if (amount == 0 || amount > 100000u) return;
+    std::string flow = flow_for_caller(lr);
     int64_t now = (int64_t)time(nullptr);
     auto unlocked =
-        zcr_comp::on_toxin_spent(g_state, g_defs, (int64_t)amount, now);
+        zcr_comp::on_toxin_spent(g_state, g_defs, (int64_t)amount, now, flow);
     g_dirty = true;
-    logi("toxin spent: %u (total %lld)", (unsigned)amount,
+    logi("toxin spent: %u via %s (total %lld)", (unsigned)amount, flow.c_str(),
          (long long)g_state.toxin_spent);
     handle_unlocked(unlocked, now);
     flush_locked(false);
@@ -505,6 +620,265 @@ void on_load_book(uc_engine *uc, uint64_t, int32_t, void *) {
     if (adopted) flush_locked(false);
 }
 
+/* ---- zookdex purchase confirmation gate ----
+ * Thumb cave at CAVE_PAGE (the dialog's yes-callback):
+ *   push {lr}            ; B5 00
+ *   ldr  r1, [pc, #8]    ; 49 02 -> saved purchase index at +0x0c
+ *   ldr  r3, [pc, #8]    ; 4B 02 -> buyCharacter|1 at +0x10
+ *   blx  r3              ; 47 98 -> LR = CAVE_PAGE+8|1 (re-entry marker)
+ *   pop  {pc}            ; BD 00 -> return to ConfirmDialog::tick
+ *   nop                  ; 46 C0
+ *   .word index
+ *   .word buyCharacter|1
+ * The entry hook intercepts every buyCharacter call, queues the engine's own
+ * ConfirmDialog, and redirects PC to LR (abort). On YES the cave re-enters
+ * with the saved index; the hook sees LR == CAVE_PAGE+9 and lets it run. */
+void write_cave(uc_engine *uc) {
+    uint16_t code[6] = {0xB500, 0x4902, 0x4B02, 0x4798, 0xBD00, 0x46C0};
+    emu::write(uc, CAVE_PAGE, code, sizeof(code));
+    uint32_t zero = 0;
+    emu::write(uc, CAVE_PAGE + CAVE_INDEX_OFF, &zero, 4);
+    uint32_t fn = RVA_ZUKAN_BUY | 1u;
+    emu::write(uc, CAVE_PAGE + 0x10, &fn, 4);
+}
+
+void on_zukan_buy(uc_engine *uc, uint64_t, int32_t, void *) {
+    uint32_t lr = 0;
+    uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+    if ((lr & ~1u) == CAVE_PAGE + CAVE_RET_OFF) return; /* confirmed re-entry */
+    std::lock_guard<std::mutex> lk(g_mu);
+    if (!g_ready) return;
+    uint32_t zukan = 0, index = 0;
+    uc_reg_read(uc, UC_ARM_REG_R0, &zukan);
+    uc_reg_read(uc, UC_ARM_REG_R1, &index);
+    uint32_t dlg = 0;
+    if (!plausible_ptr(zukan) ||
+        !emu::read(uc, zukan + OFF_ZUKAN_DLG, &dlg, 4) || !plausible_ptr(dlg)) {
+        logi("zukan buy gate: no dialog (zukan=0x%x dlg=0x%x); vanilla pass",
+             zukan, dlg);
+        return;
+    }
+    Regs snap;
+    snap.save(uc);
+    uint32_t sp = (snap.r[13] - 1024u) & ~7u;
+
+    /* String scratch slots (4B each) live on the emu heap, reused per call */
+    static uint32_t s_slots = 0;
+    if (!s_slots) s_slots = emu::heap_alloc(uc, 16);
+    if (!s_slots) {
+        snap.restore(uc);
+        return;
+    }
+
+    static const char *kMsg = "DO YOU WISH TO BUY THIS CHARACTER?";
+    static const char *kYes = "BUY";
+    static const char *kNo = "CANCEL";
+    const char *texts[3] = {kMsg, kYes, kNo};
+    for (int i = 0; i < 3; i++) {
+        uint32_t t = emu::intern_string(uc, texts[i]);
+        uint32_t args[1] = {t};
+        jni_call_engine_r0_sp(uc, RVA_STR_CTOR | 1u, s_slots + (uint32_t)i * 4,
+                              args, 1, sp);
+    }
+
+    emu::write(uc, CAVE_PAGE + CAVE_INDEX_OFF, &index, 4);
+    /* String is non-trivial: by-value args are addresses of temporaries */
+    uint32_t words[5] = {s_slots, s_slots + 4, s_slots + 8,
+                         CAVE_PAGE | 1u, zukan};
+    jni_call_engine_r0_sp(uc, RVA_CONFIRM_SHOW | 1u, dlg, words, 5, sp);
+
+    for (int i = 0; i < 3; i++)
+        jni_call_engine_r0_sp(uc, RVA_STR_DTOR | 1u, s_slots + (uint32_t)i * 4,
+                              nullptr, 0, sp);
+
+    snap.restore(uc);
+    uint32_t pc = lr | 1u;
+    uc_reg_write(uc, UC_ARM_REG_PC, &pc); /* abort the unconfirmed call */
+    logi("zukan buy: confirm queued (index=%u zukan=0x%x)", index, zukan);
+}
+
+/* ---- QoL hooks ---- */
+
+/* ServeTask::tick placement block (RVA_SERVE_PLACE). The engine places the
+ * carried dish without checking the target's in-use flag (CafeObject+0x2e),
+ * so a second dish lands on a spot that already has one and the new dish
+ * vanishes (the overwrite bug). When the spot is busy, divert to the
+ * engine's own return-dish-to-counter path (RVA_SERVE_ABORT). Registers are
+ * untouched: the abort path sees the same frame state the engine would. */
+void on_serve_place(uc_engine *uc, uint64_t, int32_t, void *) {
+    uint32_t task = 0;
+    uc_reg_read(uc, UC_ARM_REG_R4, &task);
+    uint32_t target = 0;
+    if (!plausible_ptr(task) ||
+        !emu::read(uc, task + OFF_TASK_TARGET, &target, 4) ||
+        !plausible_ptr(target))
+        return;
+    uint8_t busy = 0;
+    emu::read(uc, target + OFF_OBJ_BUSY, &busy, 1);
+    if (busy == 0) return; /* empty spot: place normally */
+    uint32_t pc = RVA_SERVE_ABORT | 1u;
+    uc_reg_write(uc, UC_ARM_REG_PC, &pc);
+    logi("serve guard: spot busy - dish returned to counter (task=0x%x)", task);
+}
+
+/* GameStateCafe::characterCanFollow - the staff/serve eligibility gate in
+ * tickStaff (probabilistic in the original). Auto-serve: always eligible. */
+void on_can_follow(uc_engine *uc, uint64_t, int32_t, void *) {
+    std::lock_guard<std::mutex> lk(g_mu);
+    if (!g_ready) return;
+    static int64_t s_last = 0, s_count = 0;
+    s_count++;
+    int64_t now = (int64_t)time(nullptr);
+    if (now - s_last >= 60) {
+        s_last = now;
+        logi("auto-serve gate: forced %lld eligible checks", (long long)s_count);
+    }
+    uint32_t one = 1, lr = 0;
+    uc_reg_write(uc, UC_ARM_REG_R0, &one);
+    uc_reg_read(uc, UC_ARM_REG_LR, &lr);
+    uint32_t pc = lr | 1u;
+    uc_reg_write(uc, UC_ARM_REG_PC, &pc);
+}
+
+/* Preferred chef: the character the player selects ("YOU" panel) - pinned
+ * so the carry tasks always go to the chef even after deselect. */
+uint32_t g_pref_chef = 0;
+
+void on_select_char(uc_engine *uc, uint64_t, int32_t, void *) {
+    std::lock_guard<std::mutex> lk(g_mu);
+    if (!g_ready) return;
+    uint32_t chr = 0;
+    uc_reg_read(uc, UC_ARM_REG_R1, &chr);
+    if (!plausible_ptr(chr) || chr == g_pref_chef) return;
+    g_pref_chef = chr;
+    /* locate the avatar in the character array for zero-tap persistence */
+    uint32_t game = game_instance(), state = 0, arr = 0, count = 0;
+    int idx = -1;
+    if (plausible_ptr(game) &&
+        emu::read(uc, game + OFF_GAME_STATE, &state, 4) && plausible_ptr(state)) {
+        emu::read(uc, state + OFF_STATE_CHARARR, &arr, 4);
+        emu::read(uc, state + OFF_STATE_CHARS, &count, 4);
+        if (plausible_ptr(arr) && count < 4096) {
+            for (uint32_t i = 0; i < count; i++) {
+                uint32_t e = 0;
+                emu::read(uc, arr + i * 4, &e, 4);
+                if (e == chr) { idx = (int)i; break; }
+            }
+        }
+    }
+    logi("chef pinned: char=0x%x idx=%d/%u", chr, idx, count);
+}
+
+/* Auto-serve driver (from the render tick + the pause hook). When a dish
+ * the player cooked finishes, the chef carries it to the serving counter.
+ * The host never starts cooking (auto-cook removed by request). */
+void qol_tick_impl() {
+    std::lock_guard<std::mutex> lk(g_mu);
+    if (!g_ready || !g_uc) return;
+    static int64_t s_last_run = 0;
+    int64_t now = (int64_t)time(nullptr);
+    if (now - s_last_run < 5) return;
+    s_last_run = now;
+    uc_engine *uc = g_uc;
+
+    uint32_t game = game_instance();
+    uint32_t state = 0, cafe = 0, zgame = 0, head = 0;
+    bool state_ok =
+        plausible_ptr(game) &&
+        emu::read(uc, game + OFF_GAME_STATE, &state, 4) && plausible_ptr(state) &&
+        emu::read(uc, state + OFF_STATE_GAME, &zgame, 4) && plausible_ptr(zgame) &&
+        emu::read(uc, state + OFF_STATE_CAFE, &cafe, 4) && plausible_ptr(cafe) &&
+        emu::read(uc, cafe + 0x38, &head, 4) &&
+        (head == 0 || plausible_ptr(head)); /* furniture list ready */
+    if (!state_ok) return;
+
+    /* AUTO-SERVE ONLY (auto-cook removed by request): when a dish the
+     * player cooked finishes, the chef carries it to the serving counter.
+     * The host never starts cooking. Dishes progress by wall-clock while
+     * the app is away; this runs on the first tick after return (and from
+     * the pause hook before backgrounding), so the carry always happens
+     * within seconds of opening the game. */
+
+    /* Chef resolution: the selected character ("YOU" panel) is the chef.
+     * Zero-tap fallback: the avatar is character-array[0] (created first in
+     * GameStateChooseChef), so fresh sessions pin him automatically. */
+    uint32_t chef = 0;
+    emu::read(uc, state + OFF_STATE_SELCHAR, &chef, 4);
+    if (!plausible_ptr(chef) && plausible_ptr(g_pref_chef))
+        chef = g_pref_chef;
+    if (!plausible_ptr(chef)) {
+        uint32_t arr = 0;
+        if (emu::read(uc, state + OFF_STATE_CHARARR, &arr, 4) &&
+            plausible_ptr(arr))
+            emu::read(uc, arr, &chef, 4);
+        if (plausible_ptr(chef))
+            logi("chef auto-pinned: char=0x%x (array[0])", chef);
+    }
+    if (plausible_ptr(chef)) {
+        g_pref_chef = chef;
+        uint32_t sel = 0;
+        emu::read(uc, state + OFF_STATE_SELCHAR, &sel, 4);
+        if (sel != chef) emu::write(uc, state + OFF_STATE_SELCHAR, &chef, 4);
+    }
+    if (!plausible_ptr(chef)) return;
+
+    auto chef_idle = [&]() -> bool {
+        uint32_t data = 0;
+        int32_t v = 0;
+        if (emu::read(uc, chef + OFF_CHAR_DATA, &data, 4) && plausible_ptr(data))
+            emu::read(uc, data + OFF_CHARDATA_IDLE, &v, 4);
+        return v <= 0;
+    };
+
+    Regs snap;
+    snap.save(uc);
+    uint32_t sp = (snap.r[13] - 512u) & ~7u;
+
+    /* walk the real stove lists (all appliance types) for finished dishes */
+    static int64_t s_last_carry = 0;
+    for (uint32_t type = 0; type < 16; type++) {
+        uint32_t list_words[2] = {type, 0u};
+        uint32_t list = jni_call_engine_r0_sp(uc, RVA_STOVE_LIST | 1u, cafe,
+                                              list_words, 2, sp);
+        if (!plausible_ptr(list)) continue;
+        uint32_t node = 0, guard = 0;
+        emu::read(uc, list + 8, &node, 4);
+        while (plausible_ptr(node) && guard++ < 256) {
+            uint32_t item = 0, next = 0;
+            emu::read(uc, node, &item, 4);
+            emu::read(uc, node + 8, &next, 4);
+            if (plausible_ptr(item) && chef_idle() &&
+                now - s_last_carry >= 15) {
+                uint8_t flag = 0;
+                emu::read(uc, item + OFF_OBJ_BUSY, &flag, 1);
+                if (flag != 0) {
+                    uint32_t done = jni_call_engine_r0_sp(
+                        uc, RVA_IS_DONE | 1u, item, nullptr, 0, sp);
+                    if (done) {
+                        uint32_t task = jni_call_engine_r0_sp(
+                            uc, RVA_NEW | 1u, 0x44u, nullptr, 0, sp);
+                        if (plausible_ptr(task)) {
+                            uint32_t a[3] = {chef, cafe, item};
+                            jni_call_engine_r0_sp(uc, RVA_DISH_TASK | 1u, task,
+                                                  a, 3, sp);
+                            uint32_t aa[1] = {task};
+                            jni_call_engine_r0_sp(uc, RVA_ASSIGN_TASK | 1u,
+                                                  chef, aa, 1, sp);
+                            s_last_carry = now;
+                            logi("auto-serve: chef=0x%x carries the done dish "
+                                 "from stove=0x%x", chef, item);
+                        }
+                    }
+                }
+            }
+            jni_call_engine_r0_sp(uc, RVA_FREE | 1u, node, nullptr, 0, sp);
+            node = next;
+        }
+        jni_call_engine_r0_sp(uc, RVA_FREE | 1u, list, nullptr, 0, sp);
+    }
+    snap.restore(uc);
+}
+
 }  // namespace
 
 bool init(uc_engine *uc, void *asset_mgr) {
@@ -598,7 +972,7 @@ bool init(uc_engine *uc, void *asset_mgr) {
              ok ? "ok" : "FAILED", (long long)probe.total_cooked, (int)ok);
     }
 
-    uc_hook h1 = 0, h2 = 0, h3 = 0, h4 = 0, h5 = 0;
+    uc_hook h1 = 0, h2 = 0, h3 = 0, h4 = 0, h5 = 0, h6 = 0;
     uc_err e1 = uc_hook_add(uc, &h1, UC_HOOK_CODE, (void *)on_cooked, nullptr,
                             ENG_ADDR(RVA_COOKED), ENG_ADDR(RVA_COOKED));
     uc_err e2 = uc_hook_add(uc, &h2, UC_HOOK_CODE, (void *)on_spend, nullptr,
@@ -620,6 +994,44 @@ bool init(uc_engine *uc, void *asset_mgr) {
     }
     logi("hooks installed (cooked@0x%x spend@0x%x add@0x%x fav@0x%x book@0x%x)",
          RVA_COOKED, RVA_SPEND, RVA_ADD, RVA_UPDATE_FAV, RVA_LOAD_BOOK);
+
+    /* zookdex purchase gate: cave first, hook only when the cave is live
+     * (without it the gate could abort purchases without re-entry) */
+    uc_err em = uc_mem_map(uc, CAVE_PAGE, 0x1000, UC_PROT_ALL);
+    if (em != UC_ERR_OK) {
+        logi("zukan gate disabled: cave map failed: %s", uc_strerror(em));
+    } else {
+        write_cave(uc);
+        uc_err e6 = uc_hook_add(uc, &h6, UC_HOOK_CODE, (void *)on_zukan_buy,
+                                nullptr, ENG_ADDR(RVA_ZUKAN_BUY),
+                                ENG_ADDR(RVA_ZUKAN_BUY));
+        if (e6 != UC_ERR_OK) {
+            logi("zukan gate disabled: hook add failed: %s", uc_strerror(e6));
+        } else {
+            logi("zukan buy gate installed (buy@0x%x cave@0x%x)",
+                 RVA_ZUKAN_BUY, CAVE_PAGE);
+        }
+    }
+
+    /* QoL hooks: serve guard (overwrite fix) + auto-serve gate + chef pin */
+    uc_hook h7 = 0, h8 = 0, h10 = 0;
+    uc_err e7 = uc_hook_add(uc, &h7, UC_HOOK_CODE, (void *)on_serve_place,
+                            nullptr, ENG_ADDR(RVA_SERVE_PLACE),
+                            ENG_ADDR(RVA_SERVE_PLACE));
+    uc_err e8 = uc_hook_add(uc, &h8, UC_HOOK_CODE, (void *)on_can_follow,
+                            nullptr, ENG_ADDR(RVA_CAN_FOLLOW),
+                            ENG_ADDR(RVA_CAN_FOLLOW));
+    uc_err e10 = uc_hook_add(uc, &h10, UC_HOOK_CODE, (void *)on_select_char,
+                             nullptr, ENG_ADDR(RVA_SELECT_CHAR),
+                             ENG_ADDR(RVA_SELECT_CHAR));
+    if (e7 != UC_ERR_OK || e8 != UC_ERR_OK || e10 != UC_ERR_OK) {
+        logi("qol hooks failed: %s / %s / %s", uc_strerror(e7),
+             uc_strerror(e8), uc_strerror(e10));
+    } else {
+        logi("qol hooks installed (serve guard@0x%x auto-serve@0x%x "
+             "chef-pin@0x%x)", RVA_SERVE_PLACE, RVA_CAN_FOLLOW,
+             RVA_SELECT_CHAR);
+    }
     flush_locked(false);
     return true;
 }
@@ -628,5 +1040,7 @@ void flush(bool force) {
     std::lock_guard<std::mutex> lk(g_mu);
     flush_locked(force);
 }
+
+void qol_tick() { qol_tick_impl(); }
 
 }  // namespace zcr_companion

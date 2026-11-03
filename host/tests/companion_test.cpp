@@ -224,6 +224,9 @@ static void test_state_roundtrip() {
     on_dish_cooked(s, d, "recipe.brain_burger", 217, 1001);
     on_dish_cooked(s, d, "recipe.brain_burger", 217, 1002);
     on_dish_cooked(s, d, "row:7", 7, 1003);
+    CHECK_EQ(s.last_cooked_row, 7);
+    s.cook_variant[0] = 5;
+    s.cook_variant[7] = 3;
     on_toxin_spent(s, d, 4, 1004);
     on_toxin_earned(s, d, 3, 1005);
     mark_claimed(s, "ach.cook_first", 1006);
@@ -237,6 +240,10 @@ static void test_state_roundtrip() {
     CHECK_EQ(back.total_cooked, 3);
     CHECK_EQ(back.toxin_spent, 4);
     CHECK_EQ(back.toxin_earned, 3);
+    CHECK_EQ(back.last_cooked_row, 7);
+    CHECK_EQ((int)back.cook_variant.size(), 2);
+    CHECK_EQ(back.cook_variant[0], 5);
+    CHECK_EQ(back.cook_variant[7], 3);
     CHECK_EQ(back.recipes.size(), 2);
     CHECK_EQ(back.recipes["recipe.brain_burger"].cooked, 2);
     CHECK(back.recipes["recipe.brain_burger"].zcr_id == "recipe.brain_burger");
@@ -392,6 +399,60 @@ static void test_favorites() {
                                        * list rebuild caps at 14 */
 }
 
+static void test_toxin_ledger() {
+    Defs d = make_defs();
+    State s;
+    on_toxin_spent(s, d, 1, 100, "cook_finish");
+    on_toxin_spent(s, d, 2, 101, "recipe_unlock");
+    on_toxin_spent(s, d, 3, 102, "");
+    CHECK_EQ(s.toxin_log.size(), 3);
+    CHECK(s.toxin_log[0].flow == "cook_finish");
+    CHECK_EQ(s.toxin_log[0].amount, 1);
+    CHECK(s.toxin_log[1].flow == "recipe_unlock");
+    CHECK(s.toxin_log[2].flow == "unknown"); /* empty -> unknown */
+    /* zero/negative amounts do not log */
+    on_toxin_spent(s, d, 0, 103, "x");
+    on_toxin_spent(s, d, -5, 103, "x");
+    CHECK_EQ(s.toxin_log.size(), 3);
+    CHECK_EQ(s.toxin_spent, 6);
+
+    /* round-trip */
+    std::string json = serialize(s);
+    State back;
+    std::string err;
+    CHECK(parse_state(json, &back, &err));
+    CHECK_EQ(back.toxin_log.size(), 3);
+    CHECK(back.toxin_log[0].flow == "cook_finish");
+    CHECK_EQ(back.toxin_log[2].amount, 3);
+    CHECK(serialize(back) == json);
+
+    /* cap: keep the most recent 32 */
+    State c;
+    for (int i = 0; i < 40; i++) {
+        char f[16];
+        snprintf(f, sizeof(f), "flow%d", i);
+        on_toxin_spent(c, d, 1, 200 + i, f);
+    }
+    CHECK_EQ(c.toxin_log.size(), kToxinLogCap);
+    CHECK(c.toxin_log.front().flow == "flow8");   /* oldest 8 dropped */
+    CHECK(c.toxin_log.back().flow == "flow39");
+
+    /* parse: oversized file capped, junk entries dropped */
+    State u;
+    std::string big = "{\"version\":1,\"toxin_log\":[";
+    for (int i = 0; i < 50; i++) {
+        if (i) big += ",";
+        char e[64];
+        snprintf(e, sizeof(e), "{\"t\":%d,\"n\":%d,\"f\":\"f%d\"}", i, i + 1, i);
+        big += e;
+    }
+    big += ",{\"t\":1,\"n\":0,\"f\":\"zero\"},{\"t\":1,\"f\":\"noN\"}]}";
+    CHECK(parse_state(big, &u, &err));
+    CHECK_EQ(u.toxin_log.size(), kToxinLogCap);
+    CHECK(u.toxin_log.back().flow == "f49");
+    CHECK(u.toxin_log.front().flow == "f18");
+}
+
 int main() {
     test_mastery();
     test_recipe_key();
@@ -405,6 +466,7 @@ int main() {
     test_registry_rows();
     test_json_escapes();
     test_favorites();
+    test_toxin_ledger();
 
     printf("companion tests: %d checks, %d failures\n", g_checks, g_failures);
     return g_failures == 0 ? 0 : 1;

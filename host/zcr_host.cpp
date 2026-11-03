@@ -364,6 +364,12 @@ uint32_t jf(jfloat f) {
 
 }  // namespace
 
+/* Phone-compat window fixes (keep-screen-on + display cutout) live in
+ * smali: patches[-mod]/smali/.../WindowCompat.smali, called from
+ * ZombieCafeAndroid.onCreate on the UI thread. Window.setAttributes()
+ * touches the view hierarchy and throws CalledFromWrongThreadException
+ * from the GL thread (2026-11-03) - do NOT move this back to JNI. */
+
 /* --- no-arg / simple --- */
 extern "C" JNIEXPORT jint JNICALL
 Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
@@ -374,9 +380,11 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
         glClear(GL_COLOR_BUFFER_BIT);
         return 0;
     }
-    /* diag: underlay so a dead engine shows magenta; the engine normally
-       draws over it. */
-    glClearColor(1.f, 0.f, 1.f, 1.f);
+    /* diag: underlay so a dead engine shows black; the engine normally
+       draws over it. MUST be black (or fully covered): the boot splash
+       fades in with alpha blending and a colored underlay shows through
+       (the magenta boot flash bug - 2026-11-03). */
+    glClearColor(0.f, 0.f, 0.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     uint32_t w[2] = {jni_handle_for(cls), (uint32_t)frame};
@@ -395,6 +403,8 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
      * the render tick (flush_locked is throttled + dirty-guarded, this is
      * a cheap mutex+bool check every ~2s) */
     if ((frame_count % 120) == 0) zcr_companion::flush(false);
+    /* QoL driver (auto-cook): throttled internally to >=5s */
+    if ((frame_count % 120) == 0) zcr_companion::qol_tick();
     if (frame_count == 2 || (frame_count % 1800) == 0) {
         /* periodic memory report (heap + textures + host RSS) */
         diag_report(frame_count == 2 ? "startup" : "periodic");
@@ -422,6 +432,9 @@ ENTRY(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_InitMethodCalls) {
     CALL(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_InitMethodCalls);
 }
 ENTRY(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_pause) {
+    /* leave stoves cooking before backgrounding: engine wall-clock progress
+     * keeps them cooking while away and the chef loop resumes on return */
+    zcr_companion::qol_tick();
     zcr_companion::flush(true); /* persist companion save on backgrounding */
     GUARD();
     CALL(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_pause);
