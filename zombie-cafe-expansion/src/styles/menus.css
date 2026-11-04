@@ -1,0 +1,743 @@
+/* ==========================================================================
+   Component + game-menu-mock styling
+   ========================================================================== */
+
+/* ---------- EVENT SELECTOR ----------------------------------------- */
+.event-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 4px 0 14px;
+}
+
+@media (max-width: 860px) {
+  .event-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.event-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.event-pick:hover {
+  transform: translateY(-2px);
+}
+
+.event-pick.active {
+  background: linear-gradient(180deg, var(--btn-face-hi), var(--btn-face));
+  box-shadow: 0 4px 0 var(--btn-edge), 0 8px 14px rgba(0, 0, 0, 0.28);
+  transform: translateY(-2px);
+}
+
+.event-pick-icon {
+  flex: none;
+  display: flex;
+}
+
+.event-pick-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.event-pick-text strong {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.4px;
+}
+
+.event-pick-text small {
+  font-size: 10.5px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+/* ---------- COUNTDOWN ---------------------------------------------- */
+.countdown {
+  text-align: center;
+  margin: 8px 0 14px;
+}
+
+.countdown-label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: var(--panel-text);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  margin-bottom: 8px;
+}
+
+.countdown-boxes {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.cd-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 58px;
+  background: linear-gradient(180deg, #2a1c10, #17100a);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  padding: 6px 10px;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.5), 0 4px 0 rgba(0, 0, 0, 0.25);
+  color: #ffe9a8;
+}
+
+.cd-box b {
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cd-box i {
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.cd-sep {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--panel-text);
+  opacity: 0.8;
+}
+
+/* ---------- CHARACTER CARDS ---------------------------------------- */
+.char-card {
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s ease;
+}
+
+.char-card:hover {
+  transform: translateY(-3px) rotate(-0.5deg);
+}
+
+.char-card .char-art-wrap {
+  width: 100%;
+  max-width: 190px;
+  margin: 0 auto;
+}
+
+.char-card .card-art {
+  min-height: 210px;
+}
+
+.char-card .lock-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  background: rgba(20, 12, 30, 0.82);
+  color: #eee;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* ---------- MODAL --------------------------------------------------- */
+.modal-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-art {
+  display: flex;
+  justify-content: center;
+  background:
+    radial-gradient(140px 110px at 50% 35%, rgba(255, 255, 255, 0.35), transparent 70%);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  padding: 8px;
+}
+
+.modal-art svg {
+  width: 100%;
+  height: auto;
+}
+
+/* ---------- HERO / OVERVIEW ---------------------------------------- */
+.hero {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 18px;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hero-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.hero-art svg {
+  width: min(320px, 78%);
+  height: auto;
+  filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.35));
+}
+
+.challenge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.challenge .ch-goal {
+  font-family: var(--font-display);
+  font-size: 18px;
+  min-width: 64px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 10px;
+  padding: 6px 8px;
+}
+
+.challenge .ch-body {
+  flex: 1;
+}
+
+.challenge .ch-body strong {
+  display: block;
+  font-size: 14px;
+}
+
+.challenge .ch-body small {
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.reward-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.reward-icon {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+}
+
+/* ---------- SHOP / RECIPE CARDS ------------------------------------ */
+.item-card .card-art {
+  min-height: 130px;
+}
+
+.item-card .price {
+  align-self: flex-start;
+}
+
+.recipe-card .card-art {
+  min-height: 150px;
+}
+
+.recipe-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ingredient {
+  font-size: 10.5px;
+  font-weight: 800;
+  background: rgba(124, 76, 34, 0.12);
+  border: 1.6px solid rgba(42, 28, 16, 0.35);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* ---------- MENU MOCK ---------------------------------------------- */
+.phone-frame {
+  border: 4px solid var(--ink);
+  border-radius: 30px;
+  background: #17100a;
+  padding: 10px;
+  box-shadow:
+    inset 0 0 0 3px #3a2c1c,
+    0 14px 26px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 330px;
+  margin: 0 auto;
+}
+
+.menu-mock {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(200px 140px at 80% -20px, rgba(255, 255, 255, 0.35), transparent 70%),
+    linear-gradient(var(--bg-sky) 0 30%, var(--bg-wall) 30% 82%, var(--bg-floor) 82% 100%);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.mock-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.mock-decor span {
+  position: absolute;
+  display: block;
+}
+
+.mock-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 14px 3px;
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.mock-status-notch {
+  width: 74px;
+  height: 12px;
+  border-radius: 999px;
+  background: #17100a;
+}
+
+.mock-currency {
+  display: flex;
+  gap: 6px;
+  padding: 4px 12px 6px;
+}
+
+.mock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  background: rgba(23, 16, 10, 0.82);
+  color: #ffe9a8;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.mock-title-bar {
+  text-align: center;
+  padding: 6px 12px 10px;
+}
+
+.mock-title {
+  font-family: var(--font-display);
+  font-size: 25px;
+  letter-spacing: 1px;
+  color: var(--title-text);
+  text-shadow:
+    -1.5px -1.5px 0 var(--title-stroke),
+     1.5px -1.5px 0 var(--title-stroke),
+    -1.5px  1.5px 0 var(--title-stroke),
+     1.5px  1.5px 0 var(--title-stroke),
+     0 4px 0 var(--title-stroke);
+}
+
+.mock-subtitle {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--panel-text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  margin-top: 3px;
+}
+
+.mock-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 14px 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.mock-btn {
+  display: block;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: var(--btn-text);
+  background: linear-gradient(180deg, var(--btn-face-hi) 0 22%, var(--btn-face) 22% 100%);
+  border: 2.5px solid var(--ink);
+  border-radius: 12px;
+  padding: 9px 10px;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.16), 0 4px 0 var(--btn-edge);
+}
+
+.mock-btn.wide {
+  width: 100%;
+}
+
+.mock-btn.gold {
+  background: linear-gradient(180deg, #ffdc82, #e8b84b);
+}
+
+.mock-btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.mock-play {
+  font-size: 21px;
+  padding: 14px;
+  animation: play-pulse 2.2s ease-in-out infinite;
+}
+
+.mock-play.small {
+  font-size: 15px;
+  padding: 10px;
+  animation: none;
+}
+
+@keyframes play-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.mock-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.mock-star {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+.mock-star svg {
+  width: 150px;
+  height: auto;
+  filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.35));
+}
+
+.mock-progress {
+  height: 16px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.mock-progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, var(--good), #4c9c2e);
+  border-right: 2.5px solid var(--ink);
+}
+
+.mock-sub {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  margin: 6px 0 10px;
+  opacity: 0.85;
+}
+
+.mock-pedia {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.mock-portrait-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.mock-portrait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--card-face);
+  border: 2.5px solid var(--ink);
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.mock-portrait.locked {
+  filter: grayscale(0.9) brightness(0.8);
+}
+
+.mock-portrait .portrait {
+  width: 62px;
+  height: 62px;
+}
+
+.mock-shop {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  flex: 1;
+  align-content: start;
+}
+
+.mock-shop.four {
+  grid-template-columns: 1fr 1fr;
+}
+
+.mock-shop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: var(--card-face);
+  border: 2.5px solid var(--ink);
+  border-radius: 12px;
+  padding: 8px 6px;
+}
+
+.mock-shop-card svg {
+  width: 92px;
+  height: auto;
+}
+
+.mock-shop-name {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: capitalize;
+  text-align: center;
+}
+
+.mock-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #7c4c0e;
+  background: linear-gradient(180deg, #ffe9a8, #f2c14e);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.mock-events {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.mock-event-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card-face);
+  border: 2.5px solid var(--ink);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.mock-event-card.live {
+  box-shadow: 0 0 0 3px var(--accent), 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mock-event-card strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 13px;
+}
+
+.mock-event-card small {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.mock-event-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--accent);
+  flex: none;
+}
+
+.mock-live-tag {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1px;
+  background: var(--good);
+  color: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.mock-reward {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: center;
+}
+
+.mock-chest {
+  animation: chest-bob 2.4s ease-in-out infinite;
+}
+
+@keyframes chest-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.mock-reward-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+}
+
+.mock-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--card-face);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+.mock-tabs {
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 6px 10px;
+  background: rgba(23, 16, 10, 0.88);
+  border-top: 3px solid var(--ink);
+}
+
+.mock-tabs span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255, 240, 210, 0.6);
+}
+
+.mock-tabs span.on {
+  color: #ffe9a8;
+}
+
+/* ---------- MENU PREVIEW GRID -------------------------------------- */
+.menu-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 22px;
+}
+
+.menu-preview-cell h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--panel-text);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  margin: 10px 2px 2px;
+  text-align: center;
+}
+
+.menu-preview-cell .hint {
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 6px;
+}
+
+/* ---------- COMPARE ------------------------------------------------- */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .compare-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.compare-col h3 {
+  font-family: var(--font-display);
+  text-align: center;
+  color: var(--panel-text);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  margin: 0 0 10px;
+}
