@@ -138,6 +138,8 @@
     if-nez v2, :do_drag
 
     # start dragging once the finger moved past the touch slop
+    # (was if-lez: INVERTED - taps were classified as drags, so
+    # performClick never fired and the mod menu never opened)
     invoke-static {v4}, Ljava/lang/Math;->abs(F)F
 
     move-result v6
@@ -146,7 +148,7 @@
 
     cmpl-float v6, v6, v7
 
-    if-lez v6, :set_drag
+    if-gtz v6, :set_drag
 
     invoke-static {v5}, Ljava/lang/Math;->abs(F)F
 
@@ -154,7 +156,7 @@
 
     cmpl-float v6, v6, v7
 
-    if-lez v6, :set_drag
+    if-gtz v6, :set_drag
 
     goto :do_drag
 
