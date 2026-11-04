@@ -143,6 +143,28 @@ void tex_track_upload(GLuint id, GLsizei w, GLsizei h, GLenum format,
     }
 }
 
+/* draw-state cache: apply_arrays re-binds the same arrays for hundreds of
+ * draws per frame - skip the rebind when nothing changed (~600 redundant
+ * GL calls/frame in a busy cafe). Invalidated by the client-state
+ * handlers below. */
+struct AppliedArr {
+    const void *p;
+    int size;
+    unsigned type;
+    int stride;
+};
+static bool g_applied_valid = false;
+static AppliedArr g_ap_v = {nullptr, 0, 0, 0};
+static AppliedArr g_ap_t = {nullptr, 0, 0, 0};
+static AppliedArr g_ap_c = {nullptr, 0, 0, 0};
+static AppliedArr g_ap_n = {nullptr, 0, 0, 0};
+
+static bool arr_changed(const AppliedArr &ap, const void *p,
+                        const ClientArray &a) {
+    return !g_applied_valid || ap.p != p || ap.size != a.size ||
+           ap.type != a.type || ap.stride != a.stride;
+}
+
 void apply_arrays(uc_engine *uc, uint32_t first, uint32_t elems) {
     /* zero-filled fallback so a bad pointer never feeds garbage to the GPU */
     static std::vector<uint8_t> s_zero;
@@ -169,27 +191,52 @@ void apply_arrays(uc_engine *uc, uint32_t first, uint32_t elems) {
     if (g_va.enabled && g_va.ptr) {
         const void *p = nullptr;
         resolve(g_va, g_tmp_va, &p);
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(g_va.size, g_va.type, g_va.stride, p);
+        if (arr_changed(g_ap_v, p, g_va)) {
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer(g_va.size, g_va.type, g_va.stride, p);
+            g_ap_v.p = p;
+            g_ap_v.size = g_va.size;
+            g_ap_v.type = g_va.type;
+            g_ap_v.stride = g_va.stride;
+        }
     }
     if (g_tc.enabled && g_tc.ptr) {
         const void *p = nullptr;
         resolve(g_tc, g_tmp_tc, &p);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer(g_tc.size, g_tc.type, g_tc.stride, p);
+        if (arr_changed(g_ap_t, p, g_tc)) {
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            glTexCoordPointer(g_tc.size, g_tc.type, g_tc.stride, p);
+            g_ap_t.p = p;
+            g_ap_t.size = g_tc.size;
+            g_ap_t.type = g_tc.type;
+            g_ap_t.stride = g_tc.stride;
+        }
     }
     if (g_co.enabled && g_co.ptr) {
         const void *p = nullptr;
         resolve(g_co, g_tmp_co, &p);
-        glEnableClientState(GL_COLOR_ARRAY);
-        glColorPointer(g_co.size, g_co.type, g_co.stride, p);
+        if (arr_changed(g_ap_c, p, g_co)) {
+            glEnableClientState(GL_COLOR_ARRAY);
+            glColorPointer(g_co.size, g_co.type, g_co.stride, p);
+            g_ap_c.p = p;
+            g_ap_c.size = g_co.size;
+            g_ap_c.type = g_co.type;
+            g_ap_c.stride = g_co.stride;
+        }
     }
     if (g_no.enabled && g_no.ptr) {
         const void *p = nullptr;
         resolve(g_no, g_tmp_no, &p);
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glNormalPointer(g_no.type, g_no.stride, p);
+        if (arr_changed(g_ap_n, p, g_no)) {
+            glEnableClientState(GL_NORMAL_ARRAY);
+            glNormalPointer(g_no.type, g_no.stride, p);
+            g_ap_n.p = p;
+            g_ap_n.size = 0;
+            g_ap_n.type = g_no.type;
+            g_ap_n.stride = g_no.stride;
+        }
     }
+    g_applied_valid = true;
 }
 
 }  // namespace
@@ -259,6 +306,7 @@ static void h_glEnableClientState(uc_engine *uc, const emu::Args &a, uint32_t *r
         case GL_COLOR_ARRAY: g_co.enabled = true; break;
         case GL_NORMAL_ARRAY: g_no.enabled = true; break;
     }
+    g_applied_valid = false;
     /* MUST reach the real context: with the array disabled GLES1 draws every
        vertex from one constant - degenerate triangles, zero fragments. */
     glEnableClientState(state);
@@ -273,6 +321,7 @@ static void h_glDisableClientState(uc_engine *uc, const emu::Args &a, uint32_t *
         case GL_COLOR_ARRAY: g_co.enabled = false; break;
         case GL_NORMAL_ARRAY: g_no.enabled = false; break;
     }
+    g_applied_valid = false;
     glDisableClientState(state);
     *rv = 0;
 }
