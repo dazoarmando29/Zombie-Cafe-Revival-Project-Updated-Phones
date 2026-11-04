@@ -449,9 +449,12 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
     uint32_t draws_before = g_diag_draws;
     uint32_t rv = jni_call_engine(g_uc, rva, w, 2);
 
-    /* seasonal weather overlay: particles + theme tint on EVERY frame
-     * (title screen, cafe, raids). frame = delta ms from the Java loop. */
-    int ev = zcr_companion::weather_event();
+    /* seasonal weather overlay: DISABLED 2026-11-04 by request. Its
+     * tint/fog washes characters translucent-white across the scene
+     * (the "white ghost" reports) and its grid draws bright seam lines;
+     * per the master brief, tints must NEVER obscure gameplay. */
+    int ev = 0;
+    (void)zcr_companion::weather_event();
     if (ev > 0) {
         float dt = (frame > 0 && frame < 200) ? (float)frame / 1000.0f
                                               : 0.016f;
@@ -512,6 +515,12 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
         diag_summary();
     }
     return (jint)rv;
+}
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_GetZombiePerkSummary(
+    JNIEnv *env, jobject) {
+    std::string txt = zcr_companion::zombie_perks_text();
+    return env->NewStringUTF(txt.c_str());
 }
 ENTRY(Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_InitMethodCalls) {
     GUARD();

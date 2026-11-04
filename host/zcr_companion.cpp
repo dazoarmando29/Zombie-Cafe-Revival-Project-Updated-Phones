@@ -31,6 +31,10 @@ namespace zcr_companion {
  * called from hooks inside it). Must be declared here, at this scope. */
 void event_progress_locked(int32_t kind, int64_t amount);
 void boss_damage_locked(int64_t amount, int source);
+void grant_coins(int64_t reward);
+void notify_user(const std::string &msg);
+void flush_pending_notifs();
+static int32_t serve_coin_bonus(int32_t lvl);
 void zombie_add_xp_locked(uint32_t char_data, uint32_t instance, int64_t xp,
                           const char *why);
 
@@ -823,6 +827,16 @@ void on_serve_place(uc_engine *uc, uint64_t, int32_t, void *) {
         if (plausible_ptr(g_pref_chef))
             emu::read(uc, g_pref_chef + OFF_CHAR_DATA, &cd, 4);
         zombie_add_xp_locked(cd, g_pref_chef, 1, "service");
+        /* perk passives: Tip Jar tiers pay bonus coins per served dish */
+        if (cd) {
+            int32_t pl = perk_level_of(cd);
+            int64_t bonus = serve_coin_bonus(pl);
+            if (bonus > 0) {
+                grant_coins(bonus);
+                logi("perk serve bonus: +%lld coins (chef lvl %d)", (long long)bonus,
+                     (int)pl);
+            }
+        }
         return;
     }
     uint32_t pc = RVA_SERVE_ABORT | 1u;
@@ -908,6 +922,9 @@ void qol_tick_impl() {
     if (now - s_last_run < 5) return;
     s_last_run = now;
     uc_engine *uc = g_uc;
+
+    /* deferred notifications: engine calls only from this safe context */
+    flush_pending_notifs();
 
     uint32_t game = game_instance();
     uint32_t state = 0, cafe = 0, zgame = 0, head = 0;
@@ -1211,6 +1228,27 @@ void grant_coins(int64_t reward) {
     logi("event reward granted: +%lld coins -> %u", (long long)reward, v);
 }
 
+
+/* notify_user performs an engine call - NEVER safe inside engine hooks
+ * (cookbook lesson 5: nested calls corrupt task state - dead cook taps,
+ * jammed serving). Hooks queue here; qol_tick flushes. */
+std::mutex g_notif_mu;
+std::vector<std::string> g_pending_notifs;
+
+void queue_notify(const std::string &msg) {
+    std::lock_guard<std::mutex> lk(g_notif_mu);
+    if (g_pending_notifs.size() < 8) g_pending_notifs.push_back(msg);
+}
+
+void flush_pending_notifs() {
+    std::vector<std::string> out;
+    {
+        std::lock_guard<std::mutex> lk(g_notif_mu);
+        out.swap(g_pending_notifs);
+    }
+    for (size_t i = 0; i < out.size(); i++) notify_user(out[i]);
+}
+
 void notify_user(const std::string &msg) {
     if (!g_uc) return;
     Regs snap;
@@ -1236,7 +1274,7 @@ void event_progress_locked(int32_t kind, int64_t amount) {
         snprintf(msg, sizeof(msg),
                  "%s EVENT objective complete! Reward: %lld coins.",
                  zcr_ev::event_name(g_event.event), (long long)o.reward_coins);
-        notify_user(msg);
+        queue_notify(msg);
         set_toast(msg);
         g_event.objectives[(size_t)idx].rewarded = true;
         flush_events(true);
@@ -1303,7 +1341,7 @@ void events_tick() {
                  "%s EVENT started! Objectives: %s. Special guest: %s!",
                  zcr_ev::event_name(eff), objs,
                  zcr_ev::event_special_name(eff));
-        notify_user(msg);
+        queue_notify(msg);
         set_toast(msg);
         g_event.announced = true;
         flush_events(true);
@@ -1378,14 +1416,161 @@ void power_up_flourish(uint32_t instance) {
 const zcr_boss::BossDef *boss_def() { return zcr_boss::boss_by_id(g_boss.boss_id); }
 
 void boss_announce(const char *msg) {
-    notify_user(msg);
+    queue_notify(msg);
     set_toast(msg);
+}
+
+/* Zombie perks are for the player's hired staff only. Battle XP flows to
+ * every transient CharacterInstance (customers, raid opponents) and each
+ * fired a "ZOMBIE LEVEL UP" notification - the notification storm. */
+static bool is_staff_instance(uint32_t inst) {
+    if (!g_uc || !plausible_ptr(inst)) return false;
+    uint32_t game = game_instance(), state = 0, arr = 0, count = 0;
+    if (!plausible_ptr(game)) return false;
+    if (!emu::read(g_uc, game + OFF_GAME_STATE, &state, 4) ||
+        !plausible_ptr(state))
+        return false;
+    if (!emu::read(g_uc, state + OFF_STATE_CHARARR, &arr, 4) ||
+        !plausible_ptr(arr))
+        return false;
+    if (!emu::read(g_uc, state + OFF_STATE_CHARS, &count, 4) || count == 0 ||
+        count > 64)
+        return false;
+    for (uint32_t i = 0; i < count; i++) {
+        uint32_t e = 0;
+        if (emu::read(g_uc, arr + i * 4, &e, 4) && e == inst) return true;
+    }
+    return false;
+}
+
+/* ---- zombie perks: REAL passive abilities (2026-11-04). Levels unlock
+ * named passives; the money/XP effects apply here so the upgrade the
+ * player is notified about actually does something. ---- */
+int32_t perk_level_of(uint32_t char_data) {
+    std::map<uint32_t, ZombiePerk>::const_iterator it =
+        g_zombies.find(char_data);
+    return it == g_zombies.end() ? 0 : it->second.level;
+}
+
+static const char *perk_ability_name(int32_t lvl) {
+    switch (lvl) {
+        case 2: return "Tip Jar I - +2 coins per dish served";
+        case 4: return "Tip Jar II - +5 coins per dish served";
+        case 6: return "Battle Sense - +1 bonus XP per battle";
+        case 8: return "Tip Jar III - +10 coins per dish served";
+        case 10: return "Master Chef - +20 coins per dish served";
+        default: return "none";
+    }
+}
+
+static int32_t serve_coin_bonus(int32_t lvl) {
+    if (lvl >= 10) return 20;
+    if (lvl >= 8) return 10;
+    if (lvl >= 4) return 5;
+    if (lvl >= 2) return 2;
+    return 0;
+}
+
+/* Perk panel text (MOD MENU -> ZOMBIE PERKS). Names come from the game
+ * save (globalData.dat, big-endian save format v63), levels from the
+ * companion perk map, joined with the staff array in hire order. */
+std::string zombie_perks_text() {
+    std::lock_guard<std::mutex> lk(g_mu);
+    std::vector<std::string> names;
+    {
+        std::string dir = g_path;
+        size_t slash = dir.find_last_of("/\\");
+        dir = (slash == std::string::npos) ? "globalData.dat"
+                                           : dir.substr(0, slash + 1) + "globalData.dat";
+        FILE *f = fopen(dir.c_str(), "rb");
+        if (f) {
+            std::vector<uint8_t> b(65536);
+            size_t n = fread(b.data(), 1, b.size(), f);
+            fclose(f);
+            size_t p = 0;
+            auto u8 = [&]() -> int { return p < n ? b[p++] : -1; };
+            auto u16 = [&]() -> int {
+                if (p + 2 > n) return -1;
+                int v = (b[p] << 8) | b[p + 1];
+                p += 2;
+                return v;
+            };
+            auto skip = [&](size_t k) { p += k; };
+            auto rstr = [&]() -> std::string {
+                int len = u16();
+                std::string s;
+                if (len > 0 && p + (size_t)len <= n) {
+                    s.assign((const char *)&b[p], (size_t)len);
+                    while (!s.empty() && s.back() == '\0') s.pop_back();
+                    p += (size_t)len;
+                }
+                return s;
+            };
+            if (u8() == 63) {
+                skip(8 + 4 + 28 + 1);          /* CafeState header */
+                u8(); rstr(); skip(1 + 1 + 4 + 1 + 8 + 1 + 8 + 8 + 16 + 1 + 4 + 4);
+                int nz = u8();                  /* NumZombies */
+                for (int i = 0; i < nz && i < 8; i++) {
+                    u8();                       /* Type */
+                    names.push_back(rstr());
+                    skip(1 + 1 + 4 + 1 + 8 + 1 + 8 + 8 + 16 + 1 + 4 + 4);
+                }
+            }
+        }
+    }
+    std::string out = "YOUR ZOMBIE STAFF (perks are passive)\n\n";
+    uint32_t game = game_instance(), state = 0, arr = 0, count = 0;
+    bool ok = plausible_ptr(game) &&
+              emu::read(g_uc, game + OFF_GAME_STATE, &state, 4) &&
+              plausible_ptr(state) &&
+              emu::read(g_uc, state + OFF_STATE_CHARARR, &arr, 4) &&
+              plausible_ptr(arr) &&
+              emu::read(g_uc, state + OFF_STATE_CHARS, &count, 4) &&
+              count > 0 && count <= 64;
+    int shown = 0;
+    if (ok) {
+        for (uint32_t i = 0; i < count; i++) {
+            uint32_t inst = 0, cd = 0;
+            if (!emu::read(g_uc, arr + i * 4, &inst, 4) || !plausible_ptr(inst))
+                continue;
+            emu::read(g_uc, inst + 0x94, &cd, 4);
+            int32_t lvl = perk_level_of(cd);
+            ZombiePerk &z = g_zombies[cd];
+            std::string nm =
+                (i < names.size() && !names[i].empty()) ? names[i]
+                                                        : ("Zombie #" + std::to_string(i + 1));
+            char line[192];
+            snprintf(line, sizeof(line), "%d. %s - Lv %d (xp %lld)\n", (int)(i + 1),
+                     nm.c_str(), (int)lvl, (long long)z.xp);
+            out += line;
+            for (int32_t l = 2; l <= lvl; l += 2) {
+                if (l == 2 || l == 4 || l == 6 || l == 8 || l == 10) {
+                    out += "     * ";
+                    out += perk_ability_name(l);
+                    out += "\n";
+                }
+            }
+            shown++;
+        }
+    }
+    if (shown == 0) out += "(no staff found in the cafe yet)\n";
+    out += "\nNEXT UNLOCKS\n";
+    for (int32_t l = 2; l <= 10; l += 2) {
+        out += "Lv ";
+        out += std::to_string(l);
+        out += ": ";
+        out += perk_ability_name(l);
+        out += "\n";
+    }
+    return out;
 }
 
 void zombie_add_xp_locked(uint32_t char_data, uint32_t instance,
                           int64_t xp, const char *why) {
     if (!char_data || xp <= 0) return;
+    if (!is_staff_instance(instance)) return;
     ZombiePerk &z = g_zombies[char_data];
+    if (z.level >= 6 && why && strcmp(why, "battle") == 0) xp += 1;
     z.xp += xp;
     g_zombies_dirty = true;
     int32_t newlvl = 1 + (int32_t)(z.xp / 5);
@@ -1398,10 +1583,19 @@ void zombie_add_xp_locked(uint32_t char_data, uint32_t instance,
             power_up_flourish(instance);
             char msg[192];
             snprintf(msg, sizeof(msg),
-                     "ZOMBIE LEVEL UP! Your zombie reached level %d and "
-                     "unlocked a new ability (%s)!",
-                     (int)newlvl, why);
-            boss_announce(msg);
+                     "ZOMBIE LEVEL UP! Reached level %d - unlocked: %s",
+                     (int)newlvl, perk_ability_name(newlvl));
+            /* in-app toast always shows; system notification throttled to
+             * one per 5 min so level bursts cannot flood the device */
+            set_toast(msg);
+            static int64_t s_last_znotif = 0;
+            int64_t tnow = (int64_t)time(nullptr);
+            if (tnow - s_last_znotif >= 300) {
+                s_last_znotif = tnow;
+                queue_notify(msg);
+            } else {
+                logi("zombie level announce throttled: %s", msg);
+            }
         }
     }
 }

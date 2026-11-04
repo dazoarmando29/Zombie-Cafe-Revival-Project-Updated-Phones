@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 struct uc_struct;
 typedef struct uc_struct uc_engine;
@@ -47,5 +48,7 @@ int weather_event();
 /* Pop the pending event announcement/progress toast (once). Safe from
  * any thread. */
 bool take_toast(char *buf, size_t n);
+std::string zombie_perks_text();
+int32_t perk_level_of(uint32_t char_data);
 
 }  // namespace zcr_companion

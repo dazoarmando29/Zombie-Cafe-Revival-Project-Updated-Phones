@@ -511,6 +511,36 @@
 
     invoke-virtual {v1, v2}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
 
+
+    const-string v2, "ZOMBIE PERKS"
+
+    invoke-static {v0, v2}, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;->hdr(Landroid/content/Context;Ljava/lang/String;)Landroid/widget/TextView;
+
+    move-result-object v2
+
+    invoke-virtual {v1, v2}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    invoke-static {v0}, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;->row(Landroid/content/Context;)Landroid/widget/LinearLayout;
+
+    move-result-object v2
+
+    const-string v3, "VIEW PERKS & ABILITIES"
+
+    const/4 v4, 0x7
+
+    const/4 v5, 0x1
+
+    invoke-static {v0, v3, v4, v5}, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;->btn(Landroid/content/Context;Ljava/lang/String;IZ)Landroid/widget/Button;
+
+    move-result-object v3
+
+    invoke-static {v0}, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;->cell(Landroid/content/Context;)Landroid/widget/LinearLayout$LayoutParams;
+
+    move-result-object v4
+
+    invoke-virtual {v2, v3, v4}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
+
+    invoke-virtual {v1, v2}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
     invoke-static {v0}, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;->div(Landroid/content/Context;)Landroid/view/View;
 
     move-result-object v2
@@ -693,6 +723,36 @@
 
     invoke-virtual {v1, v2}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
 
+
+    const-string v2, "ZOMBIE PERKS"
+
+    invoke-static {v0, v2}, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;->hdr(Landroid/content/Context;Ljava/lang/String;)Landroid/widget/TextView;
+
+    move-result-object v2
+
+    invoke-virtual {v1, v2}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
+
+    invoke-static {v0}, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;->row(Landroid/content/Context;)Landroid/widget/LinearLayout;
+
+    move-result-object v2
+
+    const-string v3, "VIEW PERKS & ABILITIES"
+
+    const/4 v4, 0x7
+
+    const/4 v5, 0x1
+
+    invoke-static {v0, v3, v4, v5}, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;->btn(Landroid/content/Context;Ljava/lang/String;IZ)Landroid/widget/Button;
+
+    move-result-object v3
+
+    invoke-static {v0}, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;->cell(Landroid/content/Context;)Landroid/widget/LinearLayout$LayoutParams;
+
+    move-result-object v4
+
+    invoke-virtual {v2, v3, v4}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V
+
+    invoke-virtual {v1, v2}, Landroid/widget/LinearLayout;->addView(Landroid/view/View;)V
     invoke-static {v0}, Lcom/capcom/zombiecafeandroid/DebugMenuButtonListener;->div(Landroid/content/Context;)Landroid/view/View;
 
     move-result-object v2
