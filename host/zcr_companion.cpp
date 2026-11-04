@@ -882,6 +882,34 @@ void on_dealt_damage(uc_engine *uc, uint64_t, int32_t, void *) {
     if (d2 != d1) zombie_add_xp_locked(d2, other, 2, "battle");
 }
 
+/* [charghost] draw-time ghost probe: hook CharacterInstance::draw
+ * (RVA_DRAW_CHAR 0x6d241) and log characters drawn with a nonzero fade
+ * flag (draw renders fade!=0 as WHITE-WITH-ALPHA - see 0x6d288). */
+constexpr uint32_t RVA_DRAW_CHAR = 0x6d241; /* CharacterInstance::draw */
+
+void on_draw_char(uc_engine *uc, uint64_t, int32_t, void *) {
+    uint32_t inst = 0;
+    uc_reg_read(uc, UC_ARM_REG_R0, &inst);
+    if (!plausible_ptr(inst)) return;
+    uint8_t fade = 0;
+    emu::read(uc, inst + 0xb4, &fade, 1);
+    if (fade == 0) return;
+    static int64_t s_last = 0;
+    static int s_count = 0;
+    int64_t now = (int64_t)time(nullptr);
+    s_count++;
+    if (now - s_last < 1) return;
+    s_last = now;
+    int32_t fadeT = 0, repl = -1;
+    uint32_t cdata = 0;
+    emu::read(uc, inst + 0xb8, &fadeT, 4);
+    emu::read(uc, inst + 0x64, &repl, 4);
+    emu::read(uc, inst + 0x94, &cdata, 4);
+    logi("[ghostprobe] DRAW with fade=%u fadeT=%d repl=%d data=0x%x "
+         "inst=0x%x (draws this second: %d)",
+         (unsigned)fade, fadeT, repl, cdata, inst, s_count);
+}
+
 /* Preferred chef (g_pref_chef, declared in the globals block): the
  * character the player selects ("YOU" panel) - pinned so the carry tasks
  * always go to the chef even after deselect. */
@@ -936,6 +964,67 @@ void qol_tick_impl() {
         emu::read(uc, cafe + 0x38, &head, 4) &&
         (head == 0 || plausible_ptr(head)); /* furniture list ready */
     if (!state_ok) return;
+
+    /* ---- [charghost] character-state sampler (white-ghost bug chase).
+     * Dumps per-instance visual state so affected (white) characters can
+     * be compared against normal ones: fade(+0xB4/+0xB8), animation
+     * replacement(+0x64 idx,+0x68..+0x74 struct), power-up(+0xBC/+0xC0/
+     * +0xC4), ToonAnimation*(+0x38). Throttled to 1/10s. */
+    static int64_t s_last_dump = 0;
+    if (now - s_last_dump >= 10) {
+        s_last_dump = now;
+        /* staff array + candidate linked lists (node: +0=item, +8=next) */
+        auto dump_inst = [&](uint32_t inst, const char *tag, int idx) {
+            uint8_t fade = 0, pow = 0;
+            int32_t fadeT = 0, repl = -1, powT = 0, powTy = 0;
+            uint32_t toon = 0, cdata = 0;
+            emu::read(uc, inst + 0xb4, &fade, 1);
+            emu::read(uc, inst + 0xb8, &fadeT, 4);
+            emu::read(uc, inst + 0x64, &repl, 4);
+            emu::read(uc, inst + 0xbc, &pow, 1);
+            emu::read(uc, inst + 0xc0, &powT, 4);
+            emu::read(uc, inst + 0xc4, &powTy, 4);
+            emu::read(uc, inst + 0x38, &toon, 4);
+            emu::read(uc, inst + 0x94, &cdata, 4);
+            logi("[charghost] %s i=%d inst=0x%x fade=%u fadeT=%d repl=%d "
+                 "pow=%u powT=%d powTy=%d toon=0x%x data=0x%x",
+                 tag, idx, inst, (unsigned)fade, fadeT, repl, (unsigned)pow,
+                 powT, powTy, toon, cdata);
+        };
+        uint32_t bases[2] = {state, cafe};
+        const char *bname[2] = {"state", "cafe"};
+        for (int b = 0; b < 2; b++) {
+            /* count+array pairs */
+            int32_t pairs[4][2] = {{0x20, 0x24}, {0x28, 0x2c}, {0x30, 0x34}, {0x44, 0x48}};
+            for (int p = 0; p < 4; p++) {
+                uint32_t count = 0, arr = 0;
+                emu::read(uc, bases[b] + (uint32_t)pairs[p][0], &count, 4);
+                emu::read(uc, bases[b] + (uint32_t)pairs[p][1], &arr, 4);
+                if (count == 0 || count > 64 || !plausible_ptr(arr)) continue;
+                for (uint32_t i = 0; i < count; i++) {
+                    uint32_t inst = 0;
+                    emu::read(uc, arr + i * 4, &inst, 4);
+                    if (plausible_ptr(inst))
+                        dump_inst(inst, (std::string(bname[b]) + "arr" + std::to_string(p)).c_str(), (int)i);
+                }
+            }
+            /* linked-list heads: any word that looks like a node ptr */
+            for (int off = 0; off <= 0x80; off += 4) {
+                uint32_t node = 0;
+                emu::read(uc, bases[b] + (uint32_t)off, &node, 4);
+                if (!plausible_ptr(node)) continue;
+                int guard = 0;
+                while (plausible_ptr(node) && guard++ < 48) {
+                    uint32_t item = 0, next = 0;
+                    emu::read(uc, node, &item, 4);
+                    emu::read(uc, node + 8, &next, 4);
+                    if (plausible_ptr(item))
+                        dump_inst(item, (std::string(bname[b]) + "list" + std::to_string(off)).c_str(), guard);
+                    node = next;
+                }
+            }
+        }
+    }
 
     /* AUTO-SERVE ONLY (auto-cook removed by request): when a dish the
      * player cooked finishes, the chef carries it to the serving counter.
@@ -1183,6 +1272,12 @@ bool init(uc_engine *uc, void *asset_mgr) {
                              ENG_ADDR(RVA_DEALT_DAMAGE));
     logi("boss hook (battle damage@0x%x): %s", RVA_DEALT_DAMAGE,
          e11 == UC_ERR_OK ? "ok" : uc_strerror(e11));
+    uc_hook h12 = 0;
+    uc_err e12 = uc_hook_add(uc, &h12, UC_HOOK_CODE, (void *)on_draw_char,
+                             nullptr, ENG_ADDR(RVA_DRAW_CHAR),
+                             ENG_ADDR(RVA_DRAW_CHAR));
+    logi("ghostprobe (draw@0x%x): %s", RVA_DRAW_CHAR,
+         e12 == UC_ERR_OK ? "ok" : uc_strerror(e12));
     flush_locked(false);
     return true;
 }
@@ -1404,13 +1499,12 @@ int32_t player_level() {
 }
 
 void power_up_flourish(uint32_t instance) {
-    if (!g_uc || !plausible_ptr(instance)) return;
-    Regs snap;
-    snap.save(g_uc);
-    uint32_t sp = (snap.r[13] - 512u) & ~7u;
-    uint32_t args[1] = {1u}; /* the tombstone power-up type */
-    jni_call_engine_r0_sp(g_uc, RVA_POWERUP | 1u, instance, args, 1, sp);
-    snap.restore(g_uc);
+    /* DISABLED 2026-11-04: CharacterInstance::startPowerUp(1) leaves its
+     * white-flash power-up visual stuck on the zombie (the "white ghost
+     * customers" bug). The tombstone effect's decay does not survive our
+     * repeated calls. Perk unlocks stay companion-side (levels + rewards
+     * + announcements) until the power-up visual is understood. */
+    (void)instance;
 }
 
 const zcr_boss::BossDef *boss_def() { return zcr_boss::boss_by_id(g_boss.boss_id); }

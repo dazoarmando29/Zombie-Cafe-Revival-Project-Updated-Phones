@@ -27,7 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES = os.path.join(ROOT, "src", "assets", "images")
 CHARS_JSON = os.path.join(ROOT, "src", "assets", "data",
                           "characterData.bin.mid.json")
-OUT_SHEET = os.path.join(IMAGES, "characterParts5")
+OUT_SHEET = os.path.join(IMAGES, "characterParts2")  # engine-native sheet 2
 
 # hue rotation (deg), saturation scale, value scale
 COSTUMES = [

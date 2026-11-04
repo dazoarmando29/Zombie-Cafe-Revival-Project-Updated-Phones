@@ -469,6 +469,15 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
 
     static int frame_count = 0;
     frame_count++;
+    if (frame_count == 1) {
+        /* low-end tier: <3GB RAM -> lighter weather */
+        long pages = sysconf(_SC_PHYS_PAGES);
+        long psize = sysconf(_SC_PAGE_SIZE);
+        bool low = (pages > 0 && psize > 0 && (long long)pages * psize < 3000000000LL);
+        zcr_weather::set_quality(low);
+        diag_log("[perf] low-end tier: %s (ram=%lldMB)", low ? "yes" : "no",
+                 (long long)pages * psize / (1024 * 1024));
+    }
     /* [perf] frame-time stats (frame = delta ms from the Java loop).
      * Reported every ~300 frames so smoothness is measurable on-device. */
     static double s_ms_sum = 0, s_ms_max = 0;
@@ -498,7 +507,7 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
     }
     if ((frame_count % 600) == 1) {
         /* readback probe: what did the engine actually put on screen?
-         * glReadPixels is a FULL GPU pipeline stall - keep it rare
+         * glReadPixels is a full GPU pipeline stall - keep it rare
          * (was every 60 frames: a ~1Hz stutter while navigating). */
         unsigned char px[4] = {0, 0, 0, 0};
         glReadPixels(1400, 630, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, px);

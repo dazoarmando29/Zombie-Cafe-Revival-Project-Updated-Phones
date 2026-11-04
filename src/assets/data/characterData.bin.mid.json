@@ -6087,7 +6087,7 @@
         "U20": 0,
         "U21": 8,
         "HumanDescription": "This old vampire can still scare a young soul.",
-        "ZombieDescription": "This vampire is so old, he can't stop coffin'�"
+        "ZombieDescription": "This vampire is so old, he can't stop coffin'\ufffd"
     },
     {
         "ZcrId": "char.pure_blood",
@@ -6506,8 +6506,8 @@
         "U19": false,
         "U20": 0,
         "U21": 0,
-        "HumanDescription": "最近メイド服が私服な楽天家の妹。",
-        "ZombieDescription": "家事をしてもらうと得した気分になる。"
+        "HumanDescription": "\u6700\u8fd1\u30e1\u30a4\u30c9\u670d\u304c\u79c1\u670d\u306a\u697d\u5929\u5bb6\u306e\u59b9\u3002",
+        "ZombieDescription": "\u5bb6\u4e8b\u3092\u3057\u3066\u3082\u3089\u3046\u3068\u5f97\u3057\u305f\u6c17\u5206\u306b\u306a\u308b\u3002"
     },
     {
         "ZcrId": "char.maid_2",
@@ -6536,8 +6536,8 @@
         "U19": false,
         "U20": 0,
         "U21": 0,
-        "HumanDescription": "最近メイド服が私服なやる気のない姉。",
-        "ZombieDescription": "やる気はないが、殺る気はある。"
+        "HumanDescription": "\u6700\u8fd1\u30e1\u30a4\u30c9\u670d\u304c\u79c1\u670d\u306a\u3084\u308b\u6c17\u306e\u306a\u3044\u59c9\u3002",
+        "ZombieDescription": "\u3084\u308b\u6c17\u306f\u306a\u3044\u304c\u3001\u6bba\u308b\u6c17\u306f\u3042\u308b\u3002"
     },
     {
         "ZcrId": "char.lieutenant_colonel",
@@ -6636,7 +6636,7 @@
         "U3": 153,
         "Name": "Santa Zombie",
         "CharacterArtStringHead": "generic",
-        "CharacterArtString": "generic",
+        "CharacterArtString": "santazombie",
         "U4": 255,
         "Energy": 120,
         "Speed": 5,
@@ -6666,7 +6666,7 @@
         "U3": 0,
         "Name": "Santaclaus Zombie",
         "CharacterArtStringHead": "genericfemale",
-        "CharacterArtString": "genericfemale",
+        "CharacterArtString": "santaclauszombie",
         "U4": 255,
         "Energy": 115,
         "Speed": 6,
@@ -6696,7 +6696,7 @@
         "U3": 153,
         "Name": "Phantom Zombie",
         "CharacterArtStringHead": "oldman",
-        "CharacterArtString": "faris",
+        "CharacterArtString": "phantomzombie",
         "U4": 255,
         "Energy": 150,
         "Speed": 6,
@@ -6726,7 +6726,7 @@
         "U3": 0,
         "Name": "Neon Zombie",
         "CharacterArtStringHead": "genericfemale",
-        "CharacterArtString": "genericfemale",
+        "CharacterArtString": "neonzombie",
         "U4": 255,
         "Energy": 130,
         "Speed": 7,
@@ -6756,7 +6756,7 @@
         "U3": 0,
         "Name": "Frost Zombie",
         "CharacterArtStringHead": "businesswoman",
-        "CharacterArtString": "businesswoman",
+        "CharacterArtString": "frostzombie",
         "U4": 255,
         "Energy": 160,
         "Speed": 5,

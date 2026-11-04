@@ -18,8 +18,8 @@ param(
     [switch]$Install,
     [switch]$Clean,
     [switch]$ModMenu,
-    [string]$Version = "0.3.0",
-    [string]$VersionCode = ""
+[string]$Version = "0.3.1",
+[string]$VersionCode = ""
 )
 
 $ErrorActionPreference = "Stop"
