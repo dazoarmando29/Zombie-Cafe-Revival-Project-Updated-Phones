@@ -526,6 +526,12 @@ Java_com_capcom_zombiecafeandroid_CapcomRenderer_render(JNIEnv *env, jclass cls,
     return (jint)rv;
 }
 extern "C" JNIEXPORT jstring JNICALL
+Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_GetRaidBossSummary(
+    JNIEnv *env, jobject) {
+    std::string txt = zcr_companion::boss_status_text();
+    return env->NewStringUTF(txt.c_str());
+}
+extern "C" JNIEXPORT jstring JNICALL
 Java_com_capcom_zombiecafeandroid_ZombieCafeAndroid_GetZombiePerkSummary(
     JNIEnv *env, jobject) {
     std::string txt = zcr_companion::zombie_perks_text();

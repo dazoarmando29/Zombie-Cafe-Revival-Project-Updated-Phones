@@ -50,5 +50,7 @@ int weather_event();
 bool take_toast(char *buf, size_t n);
 std::string zombie_perks_text();
 int32_t perk_level_of(uint32_t char_data);
+std::string boss_status_text();
+std::string staff_name_of(uint32_t instance);
 
 }  // namespace zcr_companion

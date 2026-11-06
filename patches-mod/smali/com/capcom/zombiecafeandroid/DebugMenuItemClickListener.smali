@@ -129,6 +129,10 @@
     invoke-static {v0}, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->ShowZombiePerkDialog(Landroid/content/Context;)V
 
     goto :goto_0
+    :pswitch_8
+    invoke-static {v0}, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->ShowRaidBossDialog(Landroid/content/Context;)V
+
+    goto :goto_0
     :pswitch_data_0
     .packed-switch 0x0
         :pswitch_0
@@ -139,5 +143,6 @@
         :pswitch_5
         :pswitch_6
         :pswitch_7
+        :pswitch_8
     .end packed-switch
 .end method

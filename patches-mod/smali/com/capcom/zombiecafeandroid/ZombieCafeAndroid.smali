@@ -559,6 +559,47 @@
 
 .method public static native GetZombiePerkSummary()Ljava/lang/String;
 .end method
+.method public static native GetRaidBossSummary()Ljava/lang/String;
+.end method
+
+.method public static ShowRaidBossDialog(Landroid/content/Context;)V
+    .locals 3
+
+    new-instance v0, Landroid/app/AlertDialog$Builder;
+
+    invoke-direct {v0, p0}, Landroid/app/AlertDialog$Builder;-><init>(Landroid/content/Context;)V
+
+    const-string v1, "Raid Boss"
+
+    invoke-virtual {v0, v1}, Landroid/app/AlertDialog$Builder;->setTitle(Ljava/lang/CharSequence;)Landroid/app/AlertDialog$Builder;
+
+    invoke-static {}, Lcom/capcom/zombiecafeandroid/ZombieCafeAndroid;->GetRaidBossSummary()Ljava/lang/String;
+
+    move-result-object v1
+
+    invoke-virtual {v0, v1}, Landroid/app/AlertDialog$Builder;->setMessage(Ljava/lang/CharSequence;)Landroid/app/AlertDialog$Builder;
+
+    const-string v1, "Close"
+
+    const/4 v2, 0x0
+
+    invoke-virtual {v0, v1, v2}, Landroid/app/AlertDialog$Builder;->setPositiveButton(Ljava/lang/CharSequence;Landroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
+
+    invoke-virtual {v0}, Landroid/app/AlertDialog$Builder;->show()Landroid/app/AlertDialog;
+
+    move-result-object v0
+
+    invoke-virtual {v0}, Landroid/app/AlertDialog;->getWindow()Landroid/view/Window;
+
+    move-result-object v0
+
+    const v1, 0x1000000
+
+    invoke-virtual {v0, v1}, Landroid/view/Window;->clearFlags(I)V
+
+    return-void
+.end method
+
 
 .method public static ShowZombiePerkDialog(Landroid/content/Context;)V
     .locals 3
