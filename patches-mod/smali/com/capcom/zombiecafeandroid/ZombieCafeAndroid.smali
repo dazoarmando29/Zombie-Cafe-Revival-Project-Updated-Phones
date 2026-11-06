@@ -584,7 +584,11 @@
     invoke-virtual {v0, v1, v2}, Landroid/app/AlertDialog$Builder;->setPositiveButton(Ljava/lang/CharSequence;Landroid/content/DialogInterface$OnClickListener;)Landroid/app/AlertDialog$Builder;
 
     invoke-virtual {v0}, Landroid/app/AlertDialog$Builder;->show()Landroid/app/AlertDialog;
-
+    move-result-object v0
+    invoke-virtual {v0}, Landroid/app/AlertDialog;->getWindow()Landroid/view/Window;
+    move-result-object v0
+    const v1, 0x1000000
+    invoke-virtual {v0, v1}, Landroid/view/Window;->clearFlags(I)V
     return-void
 .end method
 .method public static native PurchaseAndroidToxin(I)V

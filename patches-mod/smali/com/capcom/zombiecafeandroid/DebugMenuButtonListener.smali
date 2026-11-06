@@ -870,6 +870,10 @@
 
     if-eqz v2, :cond_end
 
+
+    const v3, 0x1000000
+
+    invoke-virtual {v2, v3}, Landroid/view/Window;->clearFlags(I)V
     new-instance v3, Landroid/graphics/drawable/ColorDrawable;
 
     const/4 v4, 0x0

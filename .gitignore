@@ -5,3 +5,5 @@ src/lib/cpp/build/*
 .vscode/settings.json
 server/wrangler.toml
 host/build-*/
+
+dist/

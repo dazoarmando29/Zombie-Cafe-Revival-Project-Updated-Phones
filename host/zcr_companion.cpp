@@ -839,9 +839,22 @@ void on_serve_place(uc_engine *uc, uint64_t, int32_t, void *) {
         }
         return;
     }
-    uint32_t pc = RVA_SERVE_ABORT | 1u;
+    /* busy spot: do NOT abandon the dish (the old RVA_SERVE_ABORT
+     * redirect left it stuck on the counter forever - the "chef won't
+     * serve" bug). Return from the tick normally instead: the task
+     * survives and the placement retries next tick once the spot frees
+     * (ServeTask::tick epilogue @0x10d07c, frame intact at the hook). */
+    {
+        static int64_t s_busy_log = 0;
+        int64_t now = (int64_t)time(nullptr);
+        if (now - s_busy_log >= 10) {
+            s_busy_log = now;
+            logi("serve guard: spot busy - will retry next tick (task=0x%x)",
+                 task);
+        }
+    }
+    uint32_t pc = 0x10d07cu | 1u;
     uc_reg_write(uc, UC_ARM_REG_PC, &pc);
-    logi("serve guard: spot busy - dish returned to counter (task=0x%x)", task);
 }
 
 /* GameStateCafe::characterCanFollow - the staff/serve eligibility gate in
