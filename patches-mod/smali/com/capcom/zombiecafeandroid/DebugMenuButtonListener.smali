@@ -934,6 +934,10 @@
     const v3, 0x1000000
 
     invoke-virtual {v2, v3}, Landroid/view/Window;->clearFlags(I)V
+
+    const v3, 0x88
+
+    invoke-virtual {v2, v3}, Landroid/view/Window;->addFlags(I)V
     new-instance v3, Landroid/graphics/drawable/ColorDrawable;
 
     const/4 v4, 0x0

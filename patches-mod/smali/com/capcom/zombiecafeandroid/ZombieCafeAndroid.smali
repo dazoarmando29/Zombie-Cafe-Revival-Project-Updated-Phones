@@ -597,6 +597,10 @@
 
     invoke-virtual {v0, v1}, Landroid/view/Window;->clearFlags(I)V
 
+    const v1, 0x88
+
+    invoke-virtual {v0, v1}, Landroid/view/Window;->addFlags(I)V
+
     return-void
 .end method
 
@@ -630,6 +634,10 @@
     move-result-object v0
     const v1, 0x1000000
     invoke-virtual {v0, v1}, Landroid/view/Window;->clearFlags(I)V
+
+    const v1, 0x88
+
+    invoke-virtual {v0, v1}, Landroid/view/Window;->addFlags(I)V
     return-void
 .end method
 .method public static native PurchaseAndroidToxin(I)V
